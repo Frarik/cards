@@ -233,9 +233,9 @@
         </div>
       </div>
 
-      <!-- ── DISTINTIVI / CHIPS ── -->
+      <!-- ── DISTINTIVI ── -->
       <div class="sect-section" id="sect-badge-tab">
-        <span class="sect-section-lbl">🏷️ Distintivi / Chips</span>
+        <span class="sect-section-lbl">🏷️ Distintivi</span>
         <div class="flbl">Allineamento distintivi</div>
         <div class="sect-align-pick" style="margin-bottom:10px">
           <button class="sect-align-btn" id="sba-left"   data-action="setSectBadgesAlign" data-action-arg="left">⬅ Sinistra</button>
@@ -875,9 +875,6 @@
                 <button class="ghc-tab on" id="ghs-tab-cards-grp" data-action="ghStoreTab" data-action-arg="cards-non-installate">
                   <span class="ghc-tab-ico">⚡</span><span class="ghc-tab-lbl">Cards</span>
                 </button>
-                <button class="ghc-tab" id="ghs-tab-chips-grp" data-action="ghStoreTab" data-action-arg="chips-non-installate">
-                  <span class="ghc-tab-ico">🔹</span><span class="ghc-tab-lbl">Chips</span>
-                </button>
                 <button class="ghc-tab" id="ghs-tab-distintivi-grp" data-action="ghStoreTab" data-action-arg="distintivi-non-installate">
                   <span class="ghc-tab-ico">🏷️</span><span class="ghc-tab-lbl">Distintivi</span>
                 </button>
@@ -913,15 +910,6 @@
                 <span class="ghc-tab-ico">⬇️</span><span class="ghc-tab-lbl">Non installate</span>
               </button>
               <button class="ghc-tab ghc-tab-sm" id="ghs-tab-cards-installate" data-action="ghStoreTab" data-action-arg="cards-installate">
-                <span class="ghc-tab-ico">✅</span><span class="ghc-tab-lbl">Installate</span>
-              </button>
-            </div>
-            <!-- Sub-tab Chips: Non installate | Installate -->
-            <div id="ghs-subtabs-chips" style="display:none;gap:4px;padding:4px 2px 2px;border-top:1px solid rgba(255,255,255,.06);margin-top:4px;overflow-x:auto;scrollbar-width:none">
-              <button class="ghc-tab ghc-tab-sm on" id="ghs-tab-chips-non-installate" data-action="ghStoreTab" data-action-arg="chips-non-installate">
-                <span class="ghc-tab-ico">⬇️</span><span class="ghc-tab-lbl">Non installate</span>
-              </button>
-              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-chips-installate" data-action="ghStoreTab" data-action-arg="chips-installate">
                 <span class="ghc-tab-ico">✅</span><span class="ghc-tab-lbl">Installate</span>
               </button>
             </div>
@@ -1133,7 +1121,6 @@
       <div class="flbl">Cartella di destinazione</div>
       <select class="finp" id="ghpub-folder" style="margin-bottom:8px">
         <option value="card-js">⚡ card-js (card normali)</option>
-        <option value="card-chips">🔹 card-chips (chips)</option>
         <option value="card-distintivi">🏷️ card-distintivi (distintivi)</option>
       </select>
       <div class="flbl">Nome file</div>

@@ -1050,23 +1050,42 @@ function _epRenderJsStore(){
     return;
   }
 
-  // Quali card sono già nella vista corrente (solo informativo, non blocca l'aggiunta)
+  // Quali card sono già nella vista corrente / intestazione (solo informativo, non blocca l'aggiunta)
   const curCards = (curPage()||{cards:[]}).cards||[];
   const usedInPage = new Set();
   curCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInPage.add(c.jsCardId); });
+  const usedInHeader = new Set();
+  ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInHeader.add(b.jsCardId); });
 
   listEl.innerHTML = items.map(item=>{
     const m = item.meta||{};
+    const isDist = !!window.FratechCardRegistry?.[m.id]?.isDistintivo;
     const inPage = usedInPage.has(m.id);
+    const inHeader = usedInHeader.has(m.id);
+    let actionsHtml;
+    if(isDist){
+      const hBtn = inHeader
+        ? '<span style="font-size:9px;font-weight:700;color:#4ade80" title="Già in intestazione"><i class="mdi mdi-check-circle-outline"></i> Header</span>'
+        : `<button data-action="_jsStoreAddToHeaderAndRefresh" data-action-arg="${m.id||''}" title="Aggiungi all'intestazione" style="padding:4px 8px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap"><i class="mdi mdi-flag-outline"></i> Header</button>`;
+      const dBtn = inPage
+        ? '<span style="font-size:9px;font-weight:700;color:#4ade80" title="Già in dashboard"><i class="mdi mdi-check-circle-outline"></i> Dash</span>'
+        : `<button data-action="_jsStoreAddToDashboardAndRefresh" data-action-arg="${m.id||''}" title="Aggiungi alla dashboard" style="padding:4px 8px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap"><i class="mdi mdi-view-dashboard-outline"></i> Dash</button>`;
+      actionsHtml = `<div style="display:flex;gap:4px;flex-shrink:0">${hBtn}${dBtn}</div>`;
+    } else {
+      actionsHtml = inPage
+        ? '<span style="flex-shrink:0;font-size:10px;font-weight:700;color:#4ade80;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:7px;padding:4px 9px;white-space:nowrap">✓ In vista</span>'
+        : `<button data-action="jsStoreAddCard" data-action-arg="${m.id||''}" style="flex-shrink:0;padding:4px 9px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:10px;font-weight:700;cursor:pointer">➕</button>`;
+    }
+    const statusTxt = isDist
+      ? [inHeader?'✓ header':null, inPage?'✓ dashboard':null].filter(Boolean).join(' · ')
+      : (inPage?'✓ in questa vista':'');
     return `<div style="display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid rgba(255,255,255,.04)">
       <span style="font-size:18px;flex-shrink:0">${m.icon||'📦'}</span>
       <div style="flex:1;min-width:0">
         <div style="font-size:11px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name||m.id}</div>
-        <div style="font-size:9px;color:var(--muted)">v${m.version||'?'} · ${m.id}${inPage?' · <span style="color:#4ade80">✓ in questa vista</span>':''}</div>
+        <div style="font-size:9px;color:var(--muted)">v${m.version||'?'} · ${m.id}${statusTxt?` · <span style="color:#4ade80">${statusTxt}</span>`:''}</div>
       </div>
-      ${inPage
-        ? '<span style="flex-shrink:0;font-size:10px;font-weight:700;color:#4ade80;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:7px;padding:4px 9px;white-space:nowrap">✓ In vista</span>'
-        : `<button data-action="jsStoreAddCard" data-action-arg="${m.id||''}" style="flex-shrink:0;padding:4px 9px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:10px;font-weight:700;cursor:pointer">➕</button>`}
+      ${actionsHtml}
     </div>`;
   }).join('');
 }
@@ -1648,7 +1667,7 @@ async function _ghApiListAllWithPkgs(){
     .map(t=>({name:t.path.split('/').pop(),sha:t.sha,path:t.path,download_url:mkUrl(t.path)}));
   return {cards,pkgFiles};
 }
-/* Lista TUTTE le card .js da tutte le cartelle installabili (card-js, card-chips, card-distintivi)
+/* Lista TUTTE le card .js da tutte le cartelle installabili (card-js, card-distintivi)
    con UNA sola richiesta (git tree), così il controllo automatico copre ogni cartella senza esaurire il limite. */
 async function _ghApiListAll(){
   return (await _ghApiListAllWithPkgs()).cards;
@@ -1858,13 +1877,12 @@ async function _ghCheck(force){
       if(g.notifiedShas[f.name]===f.sha) return;   // questa versione è già stata notificata
       const nm=_ghCardName(g, f.name);
       const _fp=f.path||f.name;
-      const _isChip=_fp.startsWith('card-chips/');
       const _isDist=_fp.startsWith('card-distintivi/');
-      const _kindLabel=_isDist?'distintivo':_isChip?'chip':'card';
-      const _kindIco=_isDist?'🏷️':_isChip?'🔹':'⚡';
-      const _kindArt=_isDist||_isChip?'o':'a';
+      const _kindLabel=_isDist?'distintivo':'card';
+      const _kindIco=_isDist?'🏷️':'⚡';
+      const _kindArt=_isDist?'o':'a';
       if(!g.shas[f.name]){
-        _ntfPushLog('➕ Nuov'+_kindArt+' '+_kindLabel, 'È present'+_kindArt+' un'+(_isDist||_isChip?'':'a')+' nuov'+_kindArt+' '+_kindLabel+' «'+nm+'» — premi ✓ per aprire lo store.', _kindIco, 'gh-new:'+_fp);
+        _ntfPushLog('➕ Nuov'+_kindArt+' '+_kindLabel, 'È present'+_kindArt+' un'+(_isDist?'':'a')+' nuov'+_kindArt+' '+_kindLabel+' «'+nm+'» — premi ✓ per aprire lo store.', _kindIco, 'gh-new:'+_fp);
       } else {
         const oldV=_ghFileVersion(g, f.name);
         _ntfPushLog('🔄 '+_kindLabel.charAt(0).toUpperCase()+_kindLabel.slice(1)+' aggiornata', 'Il '+_kindLabel+' «'+nm+'» è stato aggiornato su GitHub (avevi la v'+oldV+') — premi ✓ per aprire lo store e aggiornarlo.', '🔄', 'gh-upd:'+_fp);
@@ -2035,7 +2053,7 @@ function _ghAskInstall(fileName){
 /* router click notifiche centro (campanella).
    Per le card GitHub NON installiamo automaticamente (potrebbero essere centinaia):
    apriamo lo store della dashboard, dove l'utente sceglie cosa installare.
-   Il tab viene scelto in base alla cartella del file (card-js, card-chips, card-distintivi…). */
+   Il tab viene scelto in base alla cartella del file (card-js, card-distintivi…). */
 function _ntfHandleAction(action){
   if(!action) return;
   // aggiornamenti → sempre tab "updates" (qualsiasi tipo)
@@ -2048,8 +2066,7 @@ function _ntfHandleAction(action){
   if(action==='gh' || action.indexOf('gh:')===0 || action.indexOf('gh-new:')===0){
     try{ closeNotifCenter(); }catch(e){}
     const _fp = action.indexOf('gh-new:')===0 ? action.slice(7) : action.slice(3);
-    const _tab=_fp.startsWith('card-chips/')      ? 'chips-non-installate'
-              :_fp.startsWith('card-distintivi/') ? 'distintivi-non-installate'
+    const _tab=_fp.startsWith('card-distintivi/') ? 'distintivi-non-installate'
               :_fp.startsWith('card-yaml/')        ? 'yaml'
               :_fp.startsWith('card-premium/')     ? 'premium'
               :'cards-non-installate'; // card-js/ + fallback legacy
@@ -2121,7 +2138,6 @@ async function _ghImportAll(){
 /* ════════ STORE da GitHub (sfoglia le cartelle del repo, con ricerca per sezione) ════════ */
 const _GHS_FOLDERS={
   js:        {path:'card-js',         ext:/\.js$/i,    ico:'⚡',  kind:'install', exclude:/^frarik[-.]/i},
-  chips:     {path:'card-chips',      ext:/\.js$/i,    ico:'🔹',  kind:'install'},
   distintivi:{path:'card-distintivi', ext:/\.js$/i,    ico:'🏷️', kind:'install', exclude:/^_/},
   premium:   {path:'card-premium',    ext:/\.js$/i,    ico:'💎',  kind:'premium'},
   yaml:      {path:'card-yaml',       ext:/\.ya?ml$/i, ico:'📄',  kind:'copy'},
@@ -2142,8 +2158,6 @@ async function _ghListFolder(path){
 function _ghsReloadTab(){
   if(_GHS_CARDS_TABS.includes(_ghsTab)){
     delete _ghsCache['js'];
-  } else if(_GHS_CHIPS_TABS.includes(_ghsTab)){
-    delete _ghsCache['chips'];
   } else if(_GHS_DISTINTIVI_TABS.includes(_ghsTab)){
     delete _ghsCache['distintivi'];
   } else if(_GHS_PKG_TABS.includes(_ghsTab)){
@@ -2344,13 +2358,12 @@ async function _ghsPreview(enc, nm, cardId){
   note.textContent=isTemp?'Anteprima temporanea — non ancora installata':'';
 }
 const _GHS_CARDS_TABS=['cards-non-installate','cards-installate'];
-const _GHS_CHIPS_TABS=['chips-non-installate','chips-installate'];
 const _GHS_DISTINTIVI_TABS=['distintivi-non-installate','distintivi-installate'];
 const _GHS_PKG_TABS=['pkg-non-installati','pkg-installati'];
 function _isPkgTab(){ return _GHS_PKG_TABS.includes(_ghsTab); }
 async function _ghsLoadAllCardCaches(){
   const p=[];
-  for(const k of ['js','chips','distintivi']){
+  for(const k of ['js','distintivi']){
     if(!_ghsCache[k]){ const f=_GHS_FOLDERS[k]; p.push(_ghListFolder(f.path).then(files=>{ _ghsCache[k]=files.filter(x=>f.ext.test(x.name)&&!(f.exclude&&f.exclude.test(x.name))); }).catch(()=>{ if(!_ghsCache[k]) _ghsCache[k]=[]; })); }
   }
   if(p.length) await Promise.all(p);
@@ -2363,16 +2376,13 @@ function _ghsLoadFolderCache(key){
 function ghStoreTab(tab){
   _ghsTab=tab;
   const isCards=_GHS_CARDS_TABS.includes(tab);
-  const isChips=_GHS_CHIPS_TABS.includes(tab);
   const isDistintivi=_GHS_DISTINTIVI_TABS.includes(tab);
   const isPkg=_GHS_PKG_TABS.includes(tab);
-  [..._GHS_CARDS_TABS,..._GHS_CHIPS_TABS,..._GHS_DISTINTIVI_TABS,..._GHS_PKG_TABS,'updates','premium','local','saved'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
+  [..._GHS_CARDS_TABS,..._GHS_DISTINTIVI_TABS,..._GHS_PKG_TABS,'updates','premium','local','saved'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
   const cardsGrp=document.getElementById('ghs-tab-cards-grp'); if(cardsGrp) cardsGrp.classList.toggle('on',isCards);
-  const chipsGrp=document.getElementById('ghs-tab-chips-grp'); if(chipsGrp) chipsGrp.classList.toggle('on',isChips);
   const distintiviGrp=document.getElementById('ghs-tab-distintivi-grp'); if(distintiviGrp) distintiviGrp.classList.toggle('on',isDistintivi);
   const pkgGrp=document.getElementById('ghs-tab-pkg-grp'); if(pkgGrp) pkgGrp.classList.toggle('on',isPkg);
   const cardsSubBar=document.getElementById('ghs-subtabs-cards'); if(cardsSubBar) cardsSubBar.style.display=isCards?'flex':'none';
-  const chipsSubBar=document.getElementById('ghs-subtabs-chips'); if(chipsSubBar) chipsSubBar.style.display=isChips?'flex':'none';
   const distintiviSubBar=document.getElementById('ghs-subtabs-distintivi'); if(distintiviSubBar) distintiviSubBar.style.display=isDistintivi?'flex':'none';
   const pkgSubBar=document.getElementById('ghs-subtabs-pkg'); if(pkgSubBar) pkgSubBar.style.display=isPkg?'flex':'none';
   const s=document.getElementById('ghs-search'); if(s) s.value='';
@@ -2381,11 +2391,6 @@ function ghStoreTab(tab){
   if(isCards){
     _ghStoreRender();
     _ghsLoadFolderCache('js').then(()=>{ if(_GHS_CARDS_TABS.includes(_ghsTab)){ _ghFetchVerLabels('js'); _ghStoreRender(); } });
-    return;
-  }
-  if(isChips){
-    _ghStoreRender();
-    _ghsLoadFolderCache('chips').then(()=>{ if(_GHS_CHIPS_TABS.includes(_ghsTab)){ _ghFetchVerLabels('chips'); _ghStoreRender(); } });
     return;
   }
   if(isDistintivi){
@@ -2472,7 +2477,7 @@ async function _ghsPreviewCard(enc){
   _ghsShowPreviewModal(nm);
   // Cerca file nei cache
   let f=_ghsFind(name);
-  if(!f){ for(const t of ['js','chips','distintivi','predefinite','elettrodomestici']){ const h=(_ghsCache[t]||[]).find(x=>x.name===name); if(h){f=h;break;} } }
+  if(!f){ for(const t of ['js','distintivi','predefinite','elettrodomestici']){ const h=(_ghsCache[t]||[]).find(x=>x.name===name); if(h){f=h;break;} } }
   // Ottieni codice
   let code=f?_ghCodeCache[f.sha]:null;
   if(!code&&f?.download_url){
@@ -2616,8 +2621,6 @@ function _ghStoreRender(){
   const q=(document.getElementById('ghs-search').value||'').toLowerCase().trim();
   if(tab==='cards-non-installate'){ _ghStoreRenderCardsNonInstallate(q); return; }
   if(tab==='cards-installate'){ _ghStoreRenderCardsInstallate(q); return; }
-  if(tab==='chips-non-installate'){ _ghStoreRenderFolderNonInstallate(q,'chips','Tutte le chips sono installate — vai su "Installate"'); return; }
-  if(tab==='chips-installate'){ _ghStoreRenderFolderInstallate(q,'chips'); return; }
   if(tab==='distintivi-non-installate'){ _ghStoreRenderFolderNonInstallate(q,'distintivi','Tutti i distintivi sono installati — vai su "Installati"'); return; }
   if(tab==='distintivi-installate'){ _ghStoreRenderFolderInstallate(q,'distintivi'); return; }
   if(tab==='pkg-non-installati'){ _ghStoreRenderPkgNonInstallati(q); return; }
@@ -2645,7 +2648,7 @@ function _ghStoreRender(){
     return;
   }
 
-  // ── Cartelle card (JS / Chips / Distintivi): griglia moderna ──
+  // ── Cartelle card (JS / Distintivi): griglia moderna ──
   const idFile=g.idFile||{};
   // Card JS: mostra solo card non installate (installate → tab Installate) e non-appliance (appliance → tab Elettrodomestici)
   if(tab==='js') files=files.filter(f=>!g.shas[f.name]&&_cardEffectiveTab(f,idFile)==='js');
@@ -2749,7 +2752,7 @@ function _ghStoreRenderInstalled(q, originFilter){
   if(!items.length){
     const msg=originFilter==='local'
       ?(q?'Nessun risultato':'Nessuna card locale.<br>Usa la zona qui sotto per caricare un file <code>.js</code> dal PC.')
-      :(q?'Nessun risultato':'Nessuna card installata da GitHub.<br>Installale dalle schede ⚡ Card JS · 🔹 Chips · 🏷️ Distintivi.');
+      :(q?'Nessun risultato':'Nessuna card installata da GitHub.<br>Installale dalle schede ⚡ Card JS · 🏷️ Distintivi.');
     list.innerHTML=`<div class="ghs-empty">${msg}</div>`; return;
   }
   const _lcCards=(curPage()||{cards:[]}).cards||[];
@@ -2994,7 +2997,7 @@ function _ghStoreRenderInstallate(q){
     list.querySelectorAll('[data-prev-sha]').forEach(el=>{ _ghcLivePrevBySha(el, el.dataset.prevSha); });
   });
 }
-/* ── Funzione generica: folder non installate (js / chips / distintivi) ── */
+/* ── Funzione generica: folder non installate (js / distintivi) ── */
 function _ghStoreRenderFolderNonInstallate(q, cacheKey, emptyMsg){
   const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
   const g=_ghCfg();
@@ -3024,14 +3027,15 @@ function _ghStoreRenderFolderNonInstallate(q, cacheKey, emptyMsg){
     list.querySelectorAll('[data-prev-sha]').forEach(el=>{ _ghcLivePrevBySha(el, el.dataset.prevSha); });
   });
 }
-/* ── Funzione generica: folder installate (chips / distintivi) senza raggruppamento ── */
+/* ── Funzione generica: folder installate (distintivi, e in passato chips) senza raggruppamento ── */
 function _ghStoreRenderFolderInstallate(q, cacheKey){
   const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
   const g=_ghCfg(); const idFile=g.idFile||{};
   const _cpCards=(curPage()||{cards:[]}).cards||[];
-  const usedInCurPage=new Set();
-  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)&&!(window.FratechCardRegistry?.[c.jsCardId]?.allowMultiple)) usedInCurPage.add(c.jsCardId); });
-  ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
+  const usedInHeader=new Set();
+  ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInHeader.add(b.jsCardId); });
+  const usedInDash=new Set();
+  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.allowMultiple)) usedInDash.add(c.jsCardId); });
   let files=(_ghsCache[cacheKey]||[]).filter(f=>g.shas[f.name]&&g.shas[f.name]===f.sha);
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
   const sorted=files.slice().sort((a,b)=>a.name.localeCompare(b.name));
@@ -3044,15 +3048,31 @@ function _ghStoreRenderFolderInstallate(q, cacheKey){
     const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
     const cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
     const verGH=_ghVerCache[f.sha]||g.fileVersions[f.name]||(cardId&&_curStoreVersion(cardId))||'';
-    const inCurPage=!!(cardId&&usedInCurPage.has(cardId));
     const reg=cardId?window.FratechCardRegistry?.[cardId]:null;
+    const isDist=!!reg?.isDistintivo;
+    const inHeader=!!(cardId&&usedInHeader.has(cardId));
+    const inDash=!!(cardId&&usedInDash.has(cardId));
+    const inCurPage=isDist?(inHeader||inDash):inDash;
     const icon=(reg?.icon)||(_jsStoreList().find(i=>(i.meta||{}).id===cardId)?.meta?.icon)||'📦';
     const desc=_ghcDesc(cardId,f.sha);
-    const _inLabel=reg?.isDistintivo?'In intestazione':'In vista';
-    const bdg=inCurPage?`<span class="ghc-bdg cur">✓ ${_inLabel}</span>`:`<span class="ghc-bdg ok">● Installata</span>`;
+    const bdgLabel=isDist
+      ?(inHeader&&inDash?'In intestazione + dashboard':inHeader?'In intestazione':inDash?'In dashboard':'')
+      :(inDash?'In vista':'');
+    const bdg=inCurPage?`<span class="ghc-bdg cur">✓ ${bdgLabel}</span>`:`<span class="ghc-bdg ok">● Installata</span>`;
     const prevHtml=cardId&&reg?`<div class="ghc-prev-inner" data-prev-id="${eh(cardId)}"></div>`:`<div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div>`;
     const pkgBdgInst=_pkgBadgeHtml(cardId?_pkgInfoForInstalledCard(cardId):(_ghPkgCache[f.sha]||null));
-    const addBtn=cardId?(inCurPage?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> ${_inLabel}</span>`:`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`):'';
+    let addBtn='';
+    if(cardId&&isDist){
+      const headerPart=inHeader
+        ?`<span class="ghc-indash" style="flex:1"><i class="mdi mdi-check-circle-outline"></i> Header</span>`
+        :`<button class="ghc-btn ghc-btn-add" style="flex:1" data-action="_jsStoreAddToHeaderAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-flag-outline"></i> Header</button>`;
+      const dashPart=inDash
+        ?`<span class="ghc-indash" style="flex:1"><i class="mdi mdi-check-circle-outline"></i> Dashboard</span>`
+        :`<button class="ghc-btn ghc-btn-add" style="flex:1" data-action="_jsStoreAddToDashboardAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-view-dashboard-outline"></i> Dashboard</button>`;
+      addBtn=`<div style="display:flex;gap:6px;flex:1">${headerPart}${dashPart}</div>`;
+    } else if(cardId){
+      addBtn=inDash?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`:`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`;
+    }
     const delBtn=cardId?`<button class="ghc-btn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
     return `<div class="ghc-tile st-ok"><div class="ghc-strip ok"></div>
       <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}${pkgBdgInst}</div>
@@ -3687,7 +3707,6 @@ async function _ghsDeleteFromGithub(enc){
 /* tab virtuali condividono la cache e la cartella di 'js' */
 function _ghsFolderTab(tab){
   if(['cards-non-installate','cards-installate','elettrodomestici','installate','updates'].includes(tab)) return 'js';
-  if(['chips-non-installate','chips-installate'].includes(tab)) return 'chips';
   if(['distintivi-non-installate','distintivi-installate'].includes(tab)) return 'distintivi';
   if(['pkg-non-installati','pkg-installati','pkg'].includes(tab)) return 'pkg';
   return tab;
@@ -3695,7 +3714,7 @@ function _ghsFolderTab(tab){
 function _ghsFind(name){
   name=decodeURIComponent(name);
   /* nel tab "updates" o in qualsiasi tab card si cerca in tutte le cache */
-  if(_ghsTab==='updates'||_GHS_CARDS_TABS.includes(_ghsTab)||_GHS_CHIPS_TABS.includes(_ghsTab)||_GHS_DISTINTIVI_TABS.includes(_ghsTab)){
+  if(_ghsTab==='updates'||_GHS_CARDS_TABS.includes(_ghsTab)||_GHS_DISTINTIVI_TABS.includes(_ghsTab)){
     for(const k of Object.keys(_GHS_FOLDERS)){ const found=(_ghsCache[k]||[]).find(f=>f.name===name); if(found) return found; }
     return null;
   }
@@ -9715,26 +9734,9 @@ function _hbRenderOneChip(item){
   }catch(e){ return _hbChipPreview(item); }
 }
 
-/* ── Store browser nel form: fetcha card-chips e card-distintivi da GitHub ── */
-let _hbStoreTab='chips'; // 'chips' | 'distintivi'
-
+/* ── Store browser nel form: fetcha card-distintivi da GitHub ── */
 function _hbRenderStoreList(){
   const row=document.getElementById('hbf-store-row'); if(!row) return;
-  // Costruisci UI tab se non esiste
-  if(!row.querySelector('.hbstore-tabs')){
-    const tabs=document.createElement('div'); tabs.className='hbstore-tabs';
-    tabs.style.cssText='display:flex;gap:4px;margin-bottom:8px';
-    ['chips','distintivi'].forEach(t=>{
-      const b=document.createElement('button');
-      b.className='sect-size-btn'+(t===_hbStoreTab?' on':'');
-      b.style.cssText='flex:1;font-size:10px;padding:7px';
-      b.textContent=t==='chips'?'🔹 Chip':'🏷️ Distintivi';
-      b.addEventListener('click',()=>{ _hbStoreTab=t; row.querySelectorAll('.hbstore-tabs .sect-size-btn').forEach(x=>x.classList.remove('on')); b.classList.add('on'); _hbFetchStoreTab(); });
-      tabs.appendChild(b);
-    });
-    const list=document.getElementById('hbf-store-list');
-    row.insertBefore(tabs, list);
-  }
   _hbFetchStoreTab();
 }
 
@@ -9745,8 +9747,7 @@ async function _hbFetchStoreTab(){
   list.innerHTML='<div style="font-size:10px;color:var(--muted);padding:8px 0;text-align:center">Carico…</div>';
   if(empty) empty.style.display='none';
   try{
-    const folderKey=_hbStoreTab==='chips'?'chips':'distintivi';
-    const folder=_GHS_FOLDERS[folderKey];
+    const folder=_GHS_FOLDERS['distintivi'];
     const files=await _ghListFolder(folder.path);
     list.innerHTML='';
     if(!files.length){ list.innerHTML='<div style="font-size:10px;color:var(--muted);padding:8px 0;text-align:center">Nessuna card trovata</div>'; return; }
@@ -9758,14 +9759,14 @@ async function _hbFetchStoreTab(){
       const meta=installed.get(name)?.meta||{};
       const row=document.createElement('div');
       row.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--panel2);border:1px solid '+(isInst?'rgba(74,222,128,.3)':'var(--bd)')+';cursor:pointer;transition:border-color .15s;margin-bottom:4px';
-      row.innerHTML=`<span style="font-size:15px">${meta.icon||(_hbStoreTab==='chips'?'🔹':'🏷️')}</span><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(meta.name||name)}</div><div style="font-size:9px;color:var(--muted)">${name}</div></div>${isInst?'<span style="font-size:9px;color:#4ade80;font-weight:700">✓</span>':'<span style="font-size:9px;color:var(--muted)">Non installata</span>'}`;
+      row.innerHTML=`<span style="font-size:15px">${meta.icon||'🏷️'}</span><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(meta.name||name)}</div><div style="font-size:9px;color:var(--muted)">${name}</div></div>${isInst?'<span style="font-size:9px;color:#4ade80;font-weight:700">✓</span>':'<span style="font-size:9px;color:var(--muted)">Non installata</span>'}`;
       row.addEventListener('mouseenter',()=>{ if(!row._sel) row.style.borderColor='rgba(99,102,241,.5)'; });
       row.addEventListener('mouseleave',()=>{ if(!row._sel) row.style.borderColor=isInst?'rgba(74,222,128,.3)':'var(--bd)'; });
       row.addEventListener('click',async ()=>{
         document.querySelectorAll('#hbf-store-list > div').forEach(r=>{ r._sel=false; r.style.background='var(--panel2)'; });
         row._sel=true; row.style.background='rgba(99,102,241,.15)'; row.style.borderColor='rgba(99,102,241,.5)';
         // Se non installata, installa prima
-        let cardId=name; let cardIcon=meta.icon||(_hbStoreTab==='chips'?'🔹':'🏷️'); let cardName=meta.name||name;
+        let cardId=name; let cardIcon=meta.icon||'🏷️'; let cardName=meta.name||name;
         if(!isInst){
           row.lastElementChild.textContent='⬇️…';
           try{
@@ -12464,8 +12465,8 @@ function _jsdAddToHeader(id, def){
   const page = curPage();
   if(!page) return;
   if(!page.headerBadges) page.headerBadges=[];
-  // Rimuovi eventuali entry stale {type:'js-custom', jsCardId:id} rimaste dalla versione precedente
-  if(page.cards) page.cards=page.cards.filter(c=>!(c.type==='js-custom'&&c.jsCardId===id));
+  // Nota: un distintivo può ora vivere sia in intestazione sia in dashboard
+  // contemporaneamente — non rimuoviamo più l'eventuale card js-custom gemella.
   const newBadge = { id: uid(), type: 'jsd', jsCardId: id, cfg: def.defaultCfg ? JSON.parse(JSON.stringify(def.defaultCfg)) : {} };
   page.headerBadges.push(newBadge);
   saveCfg();
@@ -12476,11 +12477,7 @@ function _jsdAddToHeader(id, def){
   if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
 }
 
-function jsStoreAddCard(id){
-  if(!id) return;
-  const regCard = window.FratechCardRegistry[id];
-  if(!regCard){ showToast('⚠️ Card non trovata nel registry. Ricarica la pagina.'); return; }
-  if(regCard.isDistintivo){ _jsdAddToHeader(id, regCard); return; }
+function _jsStoreAddToDashboard(id, regCard){
   const page = curPage();
   const newCard = {
     id: uid(), type: 'js-custom', jsCardId: id,
@@ -12495,6 +12492,28 @@ function jsStoreAddCard(id){
   showToast('✅ Card aggiunta!');
   if(typeof _epRenderJsStore==='function') _epRenderJsStore();
   if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
+}
+
+function jsStoreAddCard(id){
+  if(!id) return;
+  const regCard = window.FratechCardRegistry[id];
+  if(!regCard){ showToast('⚠️ Card non trovata nel registry. Ricarica la pagina.'); return; }
+  if(regCard.isDistintivo){ _jsdAddToHeader(id, regCard); return; }
+  _jsStoreAddToDashboard(id, regCard);
+}
+
+/* ── Distintivi: due destinazioni indipendenti (intestazione / dashboard) ── */
+function _jsStoreAddToHeaderAndRefresh(id){
+  const regCard = window.FratechCardRegistry[id];
+  if(!regCard){ showToast('⚠️ Card non trovata nel registry. Ricarica la pagina.'); return; }
+  _jsdAddToHeader(id, regCard);
+  setTimeout(_ghStoreRender,50);
+}
+function _jsStoreAddToDashboardAndRefresh(id){
+  const regCard = window.FratechCardRegistry[id];
+  if(!regCard){ showToast('⚠️ Card non trovata nel registry. Ricarica la pagina.'); return; }
+  _jsStoreAddToDashboard(id, regCard);
+  setTimeout(_ghStoreRender,50);
 }
 
 function jsStoreDeleteCard(id){
@@ -19103,7 +19122,7 @@ Object.assign(window, {
   moveViewUp, moveViewDown,
   _acpOpenInstalled, _acpOpenYaml, _acpAddSaved, _acpDeleteSaved, _ghsDeleteSaved,
   _openGhStoreClean, _pasteCardToClean, _closeViewsAndOpenTM, _closeViewsAndSetPage,
-  _jsStoreAddAndRefresh, _jsRename, _jsRenameDo, _jsRenameInline, openRenameStore, closeRenameStore,
+  _jsStoreAddAndRefresh, _jsStoreAddToHeaderAndRefresh, _jsStoreAddToDashboardAndRefresh, _jsRename, _jsRenameDo, _jsRenameInline, openRenameStore, closeRenameStore,
   _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,
   _pgWarnClose, _sendCallSvc,
   _appItemPickIcon, _appItemPickColor, _appGroupPickColor,

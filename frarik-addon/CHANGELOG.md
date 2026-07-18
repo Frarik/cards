@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.0.92 — 2026-07-18
+
+### feat: rimossa la categoria "Chips" dallo store + distintivi in header O dashboard
+
+- Rimossa del tutto la categoria "Chips" (cartella `card-chips/`, mai popolata):
+  tab e sotto-tab nello store GitHub, opzione nel picker "aggiungi all'header"
+  del form `header-bar`, opzione nel selettore cartella di pubblicazione.
+- **Novità**: un distintivo installato ora si può aggiungere sia all'**intestazione**
+  sia alla **dashboard** (come card normale), in modo indipendente — nello store
+  (tab Distintivi → Installati) e nella lista rapida del pannello di modifica
+  compaiono due pulsanti distinti "Header" / "Dashboard" invece del singolo
+  "Aggiungi" che forzava sempre l'intestazione. Rimossa la pulizia automatica
+  che cancellava la card gemella in dashboard quando si aggiungeva all'header
+  (ora le due collocazioni convivono).
+
 ## 2.0.91 — 2026-07-18
 
 ### feat: riquadro unico per i campi extra + contorno bianco sui riquadri
