@@ -1,4 +1,4 @@
-/* frarik-version: 5.18 */
+/* frarik-version: 5.19 */
 /* v5.15: aggiunta anteprima live + slider dimensione card (altezza/larghezza)
    nel popup Impostazioni, stesso meccanismo di Meteo.js/posta-card
    (localStorage _frk_layout_ + evento frarik-card-layout); aggiunto
@@ -26,6 +26,11 @@
    tutto lo spazio verticale disponibile (era forzata a 160×220px, minuscola
    anche con colonna vuota). Testo maiuscolo/grassetto ovunque nella card
    e nei popup: pill rifiuto, etichette colore, titoli toggle, "orario". */
+/* v5.19: corretta l'anteprima live diventata enorme (era flex:1 su tutta
+   l'altezza della colonna, ora dimensionata come quella di posta-card:
+   riquadro centrato che segue la dimensione naturale della card, non
+   forzata a riempire lo spazio). Rimossa la linea verticale che divideva
+   l'illustrazione dei bidoni dal testo "Questa sera/Domani" nella card. */
 ;(function () {
   'use strict';
 
@@ -237,7 +242,7 @@
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
       + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;max-height:160px}'
-      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:5px;justify-content:flex-start;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
+      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:5px;justify-content:flex-start;min-width:0;padding-left:10px;overflow:hidden}'
       + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:space-between;gap:6px}'
       + '#' + rid + ' .fc-met-lbl{font-size:12px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px;flex-shrink:0}'
       + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:10px 14px 12px;margin-top:14px;border-top:1px solid rgba(255,255,255,.07)}'
@@ -448,7 +453,7 @@
       + saveBtn;
 
     const previewHtml = '<div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:#fff;opacity:.6">Anteprima live</div>'
-      + '<div id="dd-prev-wrap" style="border-radius:14px;overflow:hidden;background:rgba(255,255,255,.02);margin-top:8px;flex:1;min-height:420px;display:flex"></div>'
+      + '<div id="dd-prev-wrap" style="border-radius:14px;overflow:hidden;background:rgba(255,255,255,.02);margin-top:8px;padding:10px;display:flex;justify-content:center"></div>'
       + '<div style="margin-top:14px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)">'
       + '<div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:#fff;opacity:.6">Dimensione card</div>'
       + layoutRow('Altezza', 'dd-scale', tScale)
@@ -468,7 +473,7 @@
       try { wrap.innerHTML = render({ id: '__diffprev__' }); } catch(e) {}
       var el = wrap.querySelector('#frd__diffprev__');
       if (el) {
-        el.style.width = '100%';
+        el.style.width = tW < 100 ? tW + '%' : '';
         el.style.zoom = tScale < 100 ? tScale + '%' : '';
       }
     }
@@ -1056,7 +1061,7 @@ automation:
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.18',
+    version: '5.19',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',
