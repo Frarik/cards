@@ -1,6 +1,9 @@
-/* frarik-version: 2.1 */
+/* frarik-version: 2.2 */
 /**
- * GruppoScadenze.js — Distintivo FratechStore v2.1
+ * GruppoScadenze.js — Distintivo FratechStore v2.2
+ * v2.2: popup config — riquadro unico (Chip+Soglie/Scadenze/Aggiungi) con
+ *       contorno bianco; righe scadenza a stile "glass" (badge icona
+ *       rotondo colorato per stato, come le altre card)
  * Soglie: ≤0gg=scaduto(rosso), 1-10gg=urgente(rosso/arancio), 11-30gg=in arrivo(arancio), >30gg=ok(verde)
  * Supporta: attributo giorni_mancanti (intero diretto), date ISO/IT in state, attributo costo_previsto
  * Chip: mostra giorni della scadenza più urgente ("SCADUTO", "OGGI", "DOMANI", "3gg")
@@ -386,15 +389,16 @@
         const st   = _status(days, rd, od);
         const col  = _statusColor(st);
         const nm   = _entName(h, e);
-        return `<div style="padding:8px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);margin-bottom:6px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:8px;color:${col}">⬤</span>
+        return `<div style="position:relative;overflow:hidden;padding:12px;border-radius:14px;background:linear-gradient(155deg,${hex2rgba(col,.16)},${hex2rgba(col,.03)});border:1px solid ${hex2rgba(col,.35)};margin-bottom:10px">
+          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(col,.16)},transparent 62%);pointer-events:none"></div>
+          <div style="position:relative;display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;background:${hex2rgba(col,.22)};border:1px solid ${hex2rgba(col,.4)};color:${col}">⏳</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(nm)}</div>
-              <div style="font-size:9px;color:rgba(255,255,255,.5)">${eh(e.entity)}${e.date_attr?` · attr:${e.date_attr}`:''}</div>
+              <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(nm)}</div>
+              <div style="font-size:10px;font-weight:700;color:#fff;opacity:.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">${eh(e.entity)}${e.date_attr?` · attr:${e.date_attr}`:''}</div>
             </div>
-            <div style="font-size:10px;color:${col};font-weight:700;flex-shrink:0">${days!==null?_daysLabel(days):'—'}</div>
-            <button data-del="${i}" style="width:22px;height:22px;border:none;border-radius:5px;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:11px;margin-left:4px">✕</button>
+            <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:${col};flex-shrink:0">${days!==null?_daysLabel(days):'—'}</div>
+            <button data-del="${i}" style="width:26px;height:26px;flex-shrink:0;border:none;border-radius:50%;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:12px;margin-left:2px">✕</button>
           </div>
         </div>`;
       }).join('');
@@ -413,18 +417,27 @@
           <button id="gsccfg-close" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:14px">✕</button>
         </div>
         <div id="gsccfg-body" style="flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:14px 14px 4px">
-          <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap">
-            <div style="flex:1;min-width:110px"><div style="font-size:9px;color:rgba(255,255,255,.55);margin-bottom:3px">Nome chip</div><input id="gsccfg-label" class="gscinp" placeholder="Scadenze" value="${eh(c.label||'Scadenze')}"></div>
-            <div style="flex:0 0 50px"><div style="font-size:9px;color:rgba(255,255,255,.55);margin-bottom:3px">Colore</div><input type="color" id="gsccfg-color" value="${(c.color||'#f59e0b').match(/^#[0-9a-f]{6}$/i)?c.color:'#f59e0b'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
-            <div style="flex:0 0 58px"><div style="font-size:9px;color:rgba(255,255,255,.55);margin-bottom:3px">🔴 Rosso (gg)</div><input type="number" id="gsccfg-red" class="gscinp" style="padding:8px 6px;text-align:center" value="${rd}" min="1" max="365"></div>
-            <div style="flex:0 0 66px"><div style="font-size:9px;color:rgba(255,255,255,.55);margin-bottom:3px">🟠 Arancio (gg)</div><input type="number" id="gsccfg-orange" class="gscinp" style="padding:8px 6px;text-align:center" value="${od}" min="1" max="365"></div>
+
+          <div style="margin:0 0 14px;padding:14px;background:rgba(255,255,255,.05);border-radius:12px;border:1px solid #fff">
+
+            <div style="display:flex;gap:7px;flex-wrap:wrap">
+              <div style="flex:1;min-width:110px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Nome chip</div><input id="gsccfg-label" class="gscinp" placeholder="Scadenze" value="${eh(c.label||'Scadenze')}"></div>
+              <div style="flex:0 0 50px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Colore</div><input type="color" id="gsccfg-color" value="${(c.color||'#f59e0b').match(/^#[0-9a-f]{6}$/i)?c.color:'#f59e0b'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
+              <div style="flex:0 0 58px"><div style="font-size:9px;color:#fff;margin-bottom:3px">🔴 Rosso (gg)</div><input type="number" id="gsccfg-red" class="gscinp" style="padding:8px 6px;text-align:center" value="${rd}" min="1" max="365"></div>
+              <div style="flex:0 0 66px"><div style="font-size:9px;color:#fff;margin-bottom:3px">🟠 Arancio (gg)</div><input type="number" id="gsccfg-orange" class="gscinp" style="padding:8px 6px;text-align:center" value="${od}" min="1" max="365"></div>
+            </div>
+
+            <div style="height:1px;background:rgba(255,255,255,.1);margin:12px 0"></div>
+
+            ${ents.length ? `<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Scadenze (${ents.length})</div><div>${selRows}</div>` : ''}
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Aggiungi sensore</div>
+            <input id="gsccfg-add" class="gscinp" placeholder="🔍 Cerca sensor.* o input_datetime.*…" autocomplete="off">
+            <div style="margin-top:5px;padding:7px 10px;border-radius:8px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);font-size:10px;color:#fff">
+              💡 Supporta <strong style="color:#f59e0b">sensor.*</strong> con attributo <code>giorni_mancanti</code> (intero), oppure state/attributo con data (<code>2026-09-15</code>). Il costo appare se l'entità ha attributo <code>costo_previsto</code>.
+            </div>
+
           </div>
-          ${ents.length ? `<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);margin-bottom:6px">Scadenze (${ents.length})</div><div style="margin-bottom:12px">${selRows}</div>` : ''}
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);margin-bottom:6px">Aggiungi sensore</div>
-          <input id="gsccfg-add" class="gscinp" placeholder="🔍 Cerca sensor.* o input_datetime.*…" autocomplete="off">
-          <div style="margin-top:5px;padding:7px 10px;border-radius:8px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);font-size:10px;color:rgba(255,255,255,.7)">
-            💡 Supporta <strong style="color:#f59e0b">sensor.*</strong> con attributo <code>giorni_mancanti</code> (intero), oppure state/attributo con data (<code>2026-09-15</code>). Il costo appare se l'entità ha attributo <code>costo_previsto</code>.
-          </div>
+
           ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
           <div style="height:18px"></div>
         </div>
@@ -482,7 +495,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Scadenze', icon: 'mdi:timer-sand',
     desc: 'Chip scadenze: giorni della più urgente + colore (rosso≤10gg, arancio≤30gg, verde). Clessidra animata. Supporta giorni_mancanti e costo_previsto.',
-    version: '2.1', isDistintivo: true,
+    version: '2.2', isDistintivo: true,
     defaultCfg: { label:'Scadenze', icon:'mdi:timer-sand', color:'#f59e0b', urgent_days:10, warning_days:30, entities:[], colorMode:'auto', colorRules:[] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -491,5 +504,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-scadenze v2.1'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-scadenze v2.2'); } catch(e) {}
 })();
