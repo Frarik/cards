@@ -1,4 +1,4 @@
-/* frarik-version: 4.8 */
+/* frarik-version: 4.9 */
 /* Centro Controllo Posta — Frarik card standalone */
 /* v4.4: aggiunta icona ingranaggio interna (la card non ne aveva una) e
    frarik_no_edit per nascondere la matita esterna in modifica; eliminato
@@ -26,6 +26,12 @@
    larghezza con numero consegne in overlay (al posto di immagine+numero
    affiancati), orari di oggi come chip in fila (al posto della timeline
    verticale a puntini), statistiche settimana/mese come tile con icona. */
+/* v4.9: cassetta rurale ridisegnata in vista 3/4 realistica — palo in legno
+   con venatura, corpo in metallo scuro con sportello sagomato che si apre
+   ruotando quando la cassetta è aperta, bandierina rossa fuori dal corpo,
+   spia LED montata sullo sportello. Layout tornato a 2 colonne: immagine
+   a sinistra (tutta l'altezza), numero/pill/orari/statistiche impilati
+   a destra, al posto del banner a tutta larghezza. */
 (function(){
 'use strict';
 
@@ -579,67 +585,65 @@ function _acShow(inputEl,hass,domain){
 function _acHide(){ document.getElementById('__frk_posta_ac__')?.remove(); }
 
 /* ══════════════════════════════════════════════════════════════
-   PostaCard v4.8 — cassetta postale realistica (nessuna faccia)
+   PostaCard v4.9 — cassetta postale rurale realistica (legno + metallo)
    ══════════════════════════════════════════════════════════════ */
 
 function _svgMailbox(count, isOpen){
   const active=isOpen||count>0;
   const led=isOpen?'#34d399':count>0?'#38bdf8':'rgba(255,255,255,.15)';
 
-  const envelope=count>0?`<g class="mbx-env" style="transform-origin:147px 14px">
-      <rect x="139" y="2" width="16" height="13" rx="1" fill="#f8fafc" stroke="#cbd5e1" stroke-width=".8" transform="rotate(-6 147 8)"/>
-      <path d="M139 3 L147 9 L155 3" stroke="#cbd5e1" stroke-width=".8" fill="none" transform="rotate(-6 147 8)"/>
+  const envelope=count>0?`<g class="mbx-env" style="transform-origin:103px 27px">
+      <rect x="95" y="15" width="16" height="13" rx="1" fill="#f8fafc" stroke="#cbd5e1" stroke-width=".8" transform="rotate(-8 103 21)"/>
+      <path d="M95 16 L103 22 L111 16" stroke="#cbd5e1" stroke-width=".8" fill="none" transform="rotate(-8 103 21)"/>
     </g>`:'';
 
-  const ajarGap=isOpen?`<rect x="134" y="17" width="1.6" height="48" fill="#0f172a" opacity=".55"/>`:'';
-
-  return `<svg viewBox="0 0 200 110" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible">
+  return `<svg viewBox="0 0 140 190" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible">
     <defs>
       <linearGradient id="mbxBody" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#94a3b8"/>
-        <stop offset="45%" stop-color="#64748b"/>
-        <stop offset="100%" stop-color="#334155"/>
+        <stop offset="0%" stop-color="#5b6572"/>
+        <stop offset="45%" stop-color="#333c47"/>
+        <stop offset="100%" stop-color="#12161c"/>
       </linearGradient>
-      <linearGradient id="mbxPost" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stop-color="#3f4a5c"/>
-        <stop offset="50%" stop-color="#5b6b82"/>
-        <stop offset="100%" stop-color="#2b3444"/>
+      <linearGradient id="mbxDoor" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#3a4350"/>
+        <stop offset="100%" stop-color="#181e26"/>
       </linearGradient>
-      <path id="mbxTextPath" d="M 58 38 A 55 55 0 0 1 142 38" fill="none"/>
-      <filter id="mbx-ledblur" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="2.4"/></filter>
+      <linearGradient id="mbxWood" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#8b5e34"/>
+        <stop offset="50%" stop-color="#7a4f2a"/>
+        <stop offset="100%" stop-color="#5c3a1c"/>
+      </linearGradient>
+      <filter id="mbx-ledblur" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="2.2"/></filter>
     </defs>
 
-    <ellipse cx="100" cy="100" rx="52" ry="6" fill="#000" opacity=".32"/>
+    <ellipse cx="70" cy="178" rx="46" ry="7" fill="#000" opacity=".35"/>
 
-    <rect x="93" y="64" width="14" height="32" rx="3" fill="url(#mbxPost)"/>
-    <rect x="64" y="60" width="72" height="7" rx="2.5" fill="#2b3444"/>
+    <rect x="60" y="110" width="20" height="62" rx="2" fill="url(#mbxWood)"/>
+    <rect x="64" y="118" width="1.4" height="48" fill="#4a2e14" opacity=".4"/>
+    <rect x="74" y="122" width="1.2" height="40" fill="#4a2e14" opacity=".3"/>
+    <rect x="44" y="104" width="52" height="9" rx="3" fill="#1f2937"/>
 
-    <rect x="42" y="16" width="116" height="50" rx="25" fill="url(#mbxBody)" stroke="#1e2634" stroke-width="1.4"/>
-    <rect x="54" y="20" width="92" height="5" rx="2.5" fill="#fff" opacity=".16"/>
+    <rect x="18" y="30" width="104" height="58" rx="29" fill="url(#mbxBody)" stroke="#0b0f14" stroke-width="1.6"/>
+    <rect x="30" y="35" width="80" height="6" rx="3" fill="#fff" opacity=".14"/>
+    <circle cx="24" cy="36" r="1.4" fill="#0b0f14" opacity=".5"/>
+    <circle cx="24" cy="82" r="1.4" fill="#0b0f14" opacity=".5"/>
 
-    <text font-family="Georgia,serif" font-size="9" font-weight="700" fill="#1e2634" opacity=".5" letter-spacing="2">
-      <textPath href="#mbxTextPath" startOffset="50%" text-anchor="middle">POSTA</textPath>
-    </text>
-
-    <path d="M136 18 A 24 24 0 0 1 136 64" stroke="#1e2634" stroke-width="1.2" opacity=".35" fill="none"/>
-    ${ajarGap}
-
-    <circle cx="46" cy="20" r="1.3" fill="#1e2634" opacity=".5"/>
-    <circle cx="46" cy="62" r="1.3" fill="#1e2634" opacity=".5"/>
-    <circle cx="154" cy="20" r="1.3" fill="#1e2634" opacity=".5"/>
-    <circle cx="154" cy="62" r="1.3" fill="#1e2634" opacity=".5"/>
-
-    <g class="mbx-flag${count>0?' up':' down'}" style="transform-origin:96.6px 64px">
-      <rect x="95.4" y="38" width="2.4" height="26" rx="1.2" fill="#1e2634"/>
-      <path d="M97.8 36 L114 42 L97.8 48 Z" fill="#dc2626"/>
-      <path d="M97.8 36 L114 42 L97.8 42 Z" fill="#dc2626" opacity=".35"/>
-    </g>
-
-    <rect x="140" y="14" width="14" height="3" rx="1" fill="#1e2634" opacity=".6"/>
+    <ellipse cx="104" cy="59" rx="15" ry="27" fill="#05070a"/>
+    <rect x="96" y="26" width="14" height="3" rx="1" fill="#05070a" opacity=".8"/>
     ${envelope}
 
-    <circle cx="150" cy="41" r="5" fill="${led}" opacity=".22" filter="url(#mbx-ledblur)"/>
-    <circle class="mbx-led${active?' active':''}" cx="150" cy="41" r="2.6" fill="${led}"/>
+    <g class="mbx-door${isOpen?' open':''}" style="transform-origin:104px 32px">
+      <ellipse cx="104" cy="59" rx="15" ry="29" fill="url(#mbxDoor)" stroke="#0b0f14" stroke-width="1.4"/>
+      <circle cx="99" cy="59" r="3" fill="#cbd5e1" stroke="#475569" stroke-width=".6"/>
+      <circle cx="100.5" cy="52" r="5" fill="${led}" opacity=".25" filter="url(#mbx-ledblur)"/>
+      <circle class="mbx-led${active?' active':''}" cx="100.5" cy="52" r="2.2" fill="${led}"/>
+    </g>
+
+    <g class="mbx-flag${count>0?' up':' down'}" style="transform-origin:124px 86px">
+      <rect x="122.8" y="60" width="2.4" height="26" rx="1.2" fill="#1e2634"/>
+      <path d="M125.2 58 L138 64 L125.2 70 Z" fill="#dc2626"/>
+      <path d="M125.2 58 L138 64 L125.2 64 Z" fill="#dc2626" opacity=".35"/>
+    </g>
   </svg>`;
 }
 
@@ -780,23 +784,23 @@ if(!customElements.get('posta-card')){
 
         <div class="bscroll">
 
-          <div class="banner">
-            <div class="banner-scene">${_svgMailbox(today,isOpen)}</div>
-            <div class="banner-badge">
-              <span class="banner-badge-n${today>0?' act':''}${isOpen?' open':''}">${today}</span>
-              <span class="banner-badge-lbl">consegn${today===1?'a':'e'} oggi</span>
+          <div class="body2col">
+            <div class="img-col">${_svgMailbox(today,isOpen)}</div>
+            <div class="info-col">
+              <div class="info-n${today>0?' act':''}${isOpen?' open':''}">${today}</div>
+              <div class="info-lbl">consegn${today===1?'a':'e'} oggi</div>
+              ${isOpen?`<div class="info-pill open">Cassetta aperta</div>`:last?`<div class="info-pill"><svg viewBox="0 0 16 16" fill="none" style="width:10px;height:10px;flex-shrink:0"><circle cx="8" cy="8" r="6.5" stroke="rgba(255,255,255,.35)" stroke-width="1.3"/><path d="M8 5v3.2l2 1.3" stroke="rgba(255,255,255,.45)" stroke-width="1.3" stroke-linecap="round"/></svg><span>${last}</span></div>`:''}
+
+              <div class="sec-mini">
+                <span class="sec-lb">Consegne di oggi</span>
+                ${orariHtml}
+              </div>
+
+              <div class="stat-row">
+                <div class="stat-mini"><span class="stat-mini-n">${week}</span><span class="stat-mini-l">Settimana</span></div>
+                <div class="stat-mini"><span class="stat-mini-n">${month}</span><span class="stat-mini-l">Mese</span></div>
+              </div>
             </div>
-            ${isOpen?`<div class="banner-open">Cassetta aperta</div>`:last?`<div class="banner-last"><svg viewBox="0 0 16 16" fill="none" style="width:10px;height:10px;flex-shrink:0"><circle cx="8" cy="8" r="6.5" stroke="rgba(255,255,255,.35)" stroke-width="1.3"/><path d="M8 5v3.2l2 1.3" stroke="rgba(255,255,255,.45)" stroke-width="1.3" stroke-linecap="round"/></svg><span>${last}</span></div>`:''}
-          </div>
-
-          <div class="sec">
-            <div class="sec-hdr"><div class="sec-ln"></div><span class="sec-lb">Consegne di oggi</span><div class="sec-ln"></div></div>
-            ${orariHtml}
-          </div>
-
-          <div class="stat-grid">
-            <div class="stat-tile"><div class="stat-ic">📅</div><div class="stat-tx"><span class="stat-n">${week}</span><span class="stat-l">Settimana</span></div></div>
-            <div class="stat-tile"><div class="stat-ic">🗓️</div><div class="stat-tx"><span class="stat-n">${month}</span><span class="stat-l">Mese</span></div></div>
           </div>
 
         </div>
@@ -1090,16 +1094,16 @@ if(!customElements.get('posta-card')){
 .bscroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}
 .bscroll::-webkit-scrollbar{display:none}
 
-/* banner (illustrazione a tutta larghezza) */
-.banner{position:relative;margin:14px 15px 4px;border-radius:16px;overflow:hidden;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06)}
-.banner-scene{width:100%;aspect-ratio:200/110;display:block}
-.banner-badge{position:absolute;left:10px;bottom:10px;display:flex;align-items:baseline;gap:6px;padding:6px 12px;border-radius:12px;background:rgba(6,13,20,.72);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1)}
-.banner-badge-n{font-size:26px;font-weight:900;color:#fff;line-height:1}
-.banner-badge-n.act{color:#38bdf8}
-.banner-badge-n.open{color:#34d399}
-.banner-badge-lbl{font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.5px;opacity:.7}
-.banner-last{position:absolute;right:10px;top:10px;display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:8px;background:rgba(6,13,20,.72);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);font-size:10px;color:#fff;font-weight:600}
-.banner-open{position:absolute;right:10px;top:10px;display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:18px;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.35);font-size:10px;color:#34d399;font-weight:800;letter-spacing:.2px;animation:pulse 2.5s ease infinite}
+/* corpo a 2 colonne: immagine a sinistra, resto a destra */
+.body2col{display:flex;gap:14px;padding:14px 15px 16px;align-items:stretch}
+.img-col{flex:0 0 40%;max-width:132px;aspect-ratio:140/190}
+.info-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.info-n{font-size:40px;font-weight:900;color:rgba(255,255,255,.16);line-height:1;letter-spacing:-2px}
+.info-n.act{color:#38bdf8;text-shadow:0 0 24px rgba(56,189,248,.3)}
+.info-n.open{color:#34d399;text-shadow:0 0 24px rgba(52,211,153,.3)}
+.info-lbl{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.6px;margin-top:-4px}
+.info-pill{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-size:10px;color:#fff;font-weight:600;width:fit-content}
+.info-pill.open{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3);color:#34d399;font-weight:800;animation:pulse 2.5s ease infinite}
 
 /* cassetta postale realistica */
 @keyframes mbx-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.6px)}}
@@ -1109,32 +1113,28 @@ if(!customElements.get('posta-card')){
 .mbx-flag.down{transform:rotate(75deg)}
 .mbx-flag.up{transform:rotate(0deg);animation:mbx-flag-sway 3.2s ease-in-out infinite}
 .mbx-led.active{animation:mbx-led-pulse 2.2s ease-in-out infinite}
-
-/* section */
-.sec{padding:12px 15px 10px}
-.sec-hdr{display:flex;align-items:center;gap:7px;margin-bottom:10px}
-.sec-ln{flex:1;height:1px;background:rgba(255,255,255,.05)}
-.sec-lb{font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
+.mbx-door{transform:rotate(0deg)}
+.mbx-door.open{transform:rotate(-24deg)}
 
 /* consegne di oggi — chip strip */
-.chip-row{display:flex;flex-wrap:wrap;gap:7px}
-.chip{display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);font-size:13px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;animation:fade-up .18s ease both}
+.sec-mini{display:flex;flex-direction:column;gap:6px;margin-top:2px}
+.sec-lb{font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px;opacity:.6}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:9px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);font-size:12px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;animation:fade-up .18s ease both}
 .chip.last{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.3);color:#38bdf8}
 .chip-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.3);flex-shrink:0}
 .chip.last .chip-dot{background:#38bdf8;box-shadow:0 0 6px rgba(56,189,248,.6)}
-.tl-empty{padding:13px;text-align:center;font-size:11px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.06);border-radius:10px}
+.tl-empty{padding:10px;text-align:center;font-size:10px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.06);border-radius:10px}
 
-/* statistiche — tile con icona */
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 15px 12px}
-.stat-tile{display:flex;align-items:center;gap:10px;padding:11px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px}
-.stat-ic{width:30px;height:30px;border-radius:9px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.22);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-.stat-tx{display:flex;flex-direction:column;gap:1px}
-.stat-n{font-size:19px;font-weight:900;color:#fff;line-height:1}
-.stat-l{font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px;opacity:.6}
+/* statistiche */
+.stat-row{display:flex;gap:8px;margin-top:auto;padding-top:8px}
+.stat-mini{flex:1;display:flex;flex-direction:column;gap:1px;padding:8px 9px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px}
+.stat-mini-n{font-size:16px;font-weight:900;color:#fff;line-height:1}
+.stat-mini-l{font-size:8px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.4px;opacity:.6}
 
 /* not installed */
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:26px 18px}
-.ni-env{width:110px;height:60px;opacity:.4}
+.ni-env{width:74px;height:100px;opacity:.4}
 .ni-title{font-size:16px;font-weight:900;color:#fff}
 .ni-sub{font-size:12px;color:rgba(255,255,255,.4);line-height:1.8;max-width:240px}
 .ni-sub strong{color:#38bdf8;opacity:1}
