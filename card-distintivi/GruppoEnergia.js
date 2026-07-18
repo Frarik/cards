@@ -1,7 +1,17 @@
-/* frarik-version: 4.0 */
+/* frarik-version: 5.0 */
 /**
- * GruppoEnergia.js — Distintivo FratechStore v4.0
+ * GruppoEnergia.js — Distintivo FratechStore v5.0
  * Flow shimmer · tralicio img data-URI · nodi uguali · speed reattiva
+ * v5.0: chip allineato al pattern degli altri distintivi (unico value maiuscolo/
+ *       grassetto invece di label separata a peso inferiore); testo del popup
+ *       (banner alert, stat box, delta, label sezioni) uniformato a 12px/900/
+ *       maiuscolo. Aggiunto supporto batteria opzionale (potenza carica/scarica +
+ *       % livello) come quarto nodo nel flow. Gestita l'esportazione in rete
+ *       (sensore che va negativo = vendita, non consumo): la pipe rete si inverte,
+ *       diventa verde, l'allarme soglia viene disattivato e il chip mostra il
+ *       valore assoluto invece di un brutto "-350 W". I cambi di verso delle pipe
+ *       (import↔export, carica↔scarica) ora fanno un re-render completo invece di
+ *       un patch DOM incompleto che lasciava le frecce nella direzione sbagliata.
  */
 (function () {
   'use strict';
@@ -46,12 +56,18 @@
 
   function _info(cfg, h) {
     const c = loadCfg(cfg);
-    if (!c.entity || !h) return { w: null, pct: 0, col: '#4ade80', label: '—', emo: '⚡', maxW: 3000 };
+    if (!c.entity || !h) return { w: null, pct: 0, col: '#4ade80', label: '—', emo: '⚡', maxW: 3000, isExporting: false };
     const unit = attrOf(h, c.entity, 'unit_of_measurement') || 'W';
     const w    = _parseW(stateOf(h, c.entity), unit);
     const maxW = (parseFloat(c.maxKw) || 3) * 1000;
-    const p    = _pct(w, maxW);
-    return { w, pct: p, col: _col(p), label: _fmtPower(w), emo: _emo(p), maxW };
+    // sensori rete che vanno negativi = si sta esportando (vendendo) in rete, non importando:
+    // in quel caso la % di soglia contrattuale e l'allarme non hanno senso (non è un consumo)
+    const isExporting = w !== null && w < 0;
+    const importW = isExporting ? 0 : w;
+    const p    = _pct(importW, maxW);
+    const col  = isExporting ? '#4ade80' : _col(p);
+    const emo  = isExporting ? '🟢' : _emo(p);
+    return { w, pct: p, col, label: w !== null ? _fmtPower(Math.abs(w)) : '—', emo, maxW, isExporting };
   }
 
   /* ── history via HA callApi ── */
@@ -121,12 +137,12 @@
   /* ── delta html (confronto vs ieri) ── */
   function _deltaHtml(today, yest) {
     if (today === null || yest === null || yest < 0.001)
-      return '<span style="font-size:11px;color:#fff">— vs ieri</span>';
+      return '<span style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff">— vs ieri</span>';
     const diff = today - yest;
     const pct  = Math.round(Math.abs(diff / yest) * 100);
     const up   = diff > 0;
     const col  = up ? '#ef4444' : '#4ade80';
-    return `<span style="font-size:11px;color:${col}">${up ? '▲' : '▼'} ${up ? '+' : '-'}${pct}% vs ieri</span>`;
+    return `<span style="font-size:12px;font-weight:900;text-transform:uppercase;color:${col}">${up ? '▲' : '▼'} ${up ? '+' : '-'}${pct}% vs ieri</span>`;
   }
 
   /* ── grafico SVG ── */
@@ -135,7 +151,7 @@
     const _wrap = inner =>
       `<div style="position:relative;width:100%;padding-bottom:42%;min-height:200px">${inner}</div>`;
     const noData = _wrap(
-      `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">Nessun dato storico disponibile</div>`
+      `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff">Nessun dato storico disponibile</div>`
     );
     if (!pts || pts.length < 2) return noData;
     try {
@@ -249,8 +265,8 @@
       <div class="e-node-box${nc}" style="width:${sz}px;height:${sz}px;border-radius:${rr}px;background:rgba(255,255,255,.05);border:1.5px solid ${borderCol};display:flex;align-items:center;justify-content:center${glow}">
         ${icoHtml}
       </div>
-      <div class="${valCls}" style="font-size:13px;font-weight:900;color:${borderCol};line-height:1;text-align:center">${valHtml}</div>
-      <div style="font-size:9px;color:#fff;text-align:center;white-space:nowrap">${sublabel}</div>
+      <div class="${valCls}" style="font-size:12px;font-weight:900;color:${borderCol};line-height:1.3;text-align:center">${valHtml}</div>
+      <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;text-align:center;white-space:nowrap">${sublabel}</div>
     </div>`;
   }
 
@@ -275,7 +291,7 @@
     return `<div style="padding:14px 8px 12px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);text-align:center">
       <div style="font-size:22px;margin-bottom:6px">${ico}</div>
       <div class="${valCls}" style="font-size:20px;font-weight:800;color:#fff;line-height:1.15">${val}</div>
-      <div style="font-size:11px;color:#fff;margin-top:4px;text-transform:uppercase;letter-spacing:.5px">${label}</div>
+      <div style="font-size:12px;font-weight:900;color:#fff;margin-top:4px;text-transform:uppercase;letter-spacing:.5px">${label}</div>
       <div class="${subCls}" style="margin-top:6px;min-height:15px;line-height:1.2">${sub}</div>
     </div>`;
   }
@@ -285,12 +301,16 @@
     const c = loadCfg(cfg); const h = liveH(rawHass); const i = _info(cfg, h);
     const _fcr = window.FratechColorRules;
     const _cond = { watts_gt: v => i.w !== null && i.w > parseFloat(v||0), watts_lte: v => i.w !== null && i.w <= parseFloat(v||0) };
-    return { label: c.label || 'Energia', value: `${i.emo} ${i.label}`, color: (_fcr && _fcr.evalColor(cfg, _cond)) || i.col, borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond) };
+    return {
+      value: `${(c.label || 'Energia').toUpperCase()}: ${i.emo} ${i.label}`,
+      color: (_fcr && _fcr.evalColor(cfg, _cond)) || i.col,
+      borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
+    };
   }
 
   function watchEntities(cfg) {
     const c = loadCfg(cfg);
-    return [c.entity, c.solarEntity, c.kwhEntity].filter(Boolean);
+    return [c.entity, c.solarEntity, c.kwhEntity, c.batteryEntity, c.batterySocEntity].filter(Boolean);
   }
 
   /* ════════════════════════════════════════ RENDER ══ */
@@ -299,13 +319,13 @@
     const h = liveH(rawHass);
 
     if (!c.entity) {
-      return `<div style="padding:40px 20px;text-align:center;color:#fff;font-size:12px;font-family:system-ui,sans-serif">
-        Nessun sensore configurato.<br><span style="font-size:10px;">Clicca ✏️ sulla chip per configurare.</span>
+      return `<div style="padding:40px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase;font-family:system-ui,sans-serif">
+        Nessun sensore configurato<br><span style="font-size:12px;font-weight:900;text-transform:uppercase;opacity:.7">Clicca ✏️ sulla chip per configurare</span>
       </div>`;
     }
 
     const info = _info(cfg, h);
-    const { col, pct, label, maxW } = info;
+    const { col, pct, label, maxW, isExporting } = info;
 
     /* solare */
     let solarW = null, solarLabel = 'Solare';
@@ -317,37 +337,62 @@
     }
     const totalW = hasSolar && solarW !== null && info.w !== null ? (info.w || 0) + (solarW || 0) : info.w;
 
-    /* alert */
+    /* batteria (opzionale): potenza positiva = in carica, negativa = in scarica */
+    const hasBattery = !!(c.batteryEntity && h);
+    let battW = null, isCharging = false, battSoc = null;
+    if (hasBattery) {
+      const bu = attrOf(h, c.batteryEntity, 'unit_of_measurement') || 'W';
+      battW = _parseW(stateOf(h, c.batteryEntity), bu);
+      isCharging = battW !== null && battW > 0;
+      if (c.batterySocEntity) {
+        const sv = parseFloat(stateOf(h, c.batterySocEntity));
+        battSoc = isNaN(sv) ? null : Math.round(sv);
+      }
+    }
+
+    /* alert — non ha senso se si sta esportando in rete */
     const alertKw  = parseFloat(c.alertKw) || 0;
-    const isAlert  = alertKw > 0 && info.w !== null && info.w >= alertKw * 1000;
+    const isAlert  = !isExporting && alertKw > 0 && info.w !== null && info.w >= alertKw * 1000;
     const houseCol = isAlert ? '#ef4444' : col;
     const priceOk  = parseFloat(c.priceKwh) > 0;
 
     /* nodi */
-    const gridCol  = '#60a5fa';
-    const solarCol = '#facc15';
-    const pylonHtml = _pylonIcon(isAlert ? '#ef4444' : gridCol);
-    const houseHtml = `<span style="font-size:${hasSolar ? 26 : 28}px">🏠</span>`;
-    const sunHtml   = `<span style="font-size:26px">☀️</span>`;
+    const gridColBase = '#60a5fa';
+    const solarCol     = '#facc15';
+    const battChargeCol    = '#38bdf8';
+    const battDischargeCol = '#fb923c';
+    const battCol = isCharging ? battChargeCol : battDischargeCol;
 
-    let flowRow = '';
+    const gridLabel   = isExporting ? 'Vendita' : 'Rete';
+    const gridDir     = isExporting ? 'left' : 'right';
+    const gridDispCol = isAlert ? '#ef4444' : (isExporting ? '#4ade80' : gridColBase);
+    const pylonHtml = _pylonIcon(gridDispCol);
+    const houseHtml = `<span style="font-size:${hasSolar || hasBattery ? 26 : 28}px">🏠</span>`;
+    const sunHtml   = `<span style="font-size:26px">☀️</span>`;
+    const battValHtml = battSoc !== null ? `${battSoc}%` : (battW !== null ? _fmtPower(Math.abs(battW)) : '—');
+
+    const rightNodes = [];
     if (hasSolar) {
-      flowRow = `<div style="display:flex;align-items:center;justify-content:center">
-        ${_node(pylonHtml, `<span class="e-grid-val">${eh(label)}</span>`, 'Rete', 'e-grid-wrap', isAlert ? '#ef4444' : gridCol, false)}
-        ${_pipe(isAlert ? '#ef4444' : gridCol, 'right', pct)}
-        ${_node(houseHtml, `<span class="e-val">${eh(_fmtPower(totalW))}</span>`, 'Casa', 'e-casa-wrap', houseCol, true, 'e-house-node')}
-        ${_pipe(isAlert ? '#ef4444' : solarCol, 'left', pct)}
-        ${_node(sunHtml, `<span class="e-solar-val">${_fmtPower(solarW)}</span>`, solarLabel, 'e-solar-wrap', solarCol, false)}
-      </div>`;
-    } else {
-      flowRow = `<div style="display:flex;align-items:center;justify-content:center">
-        ${_node(pylonHtml, `<span class="e-grid-val">${eh(label)}</span>`, 'Rete', 'e-grid-wrap', isAlert ? '#ef4444' : gridCol, false)}
-        ${_pipe(isAlert ? '#ef4444' : col, 'right', pct)}
-        ${_node(houseHtml, `<span class="e-val">${eh(label)}</span>`, 'Consumo', 'e-casa-wrap', houseCol, true, 'e-house-node')}
-      </div>`;
+      rightNodes.push(
+        _pipe(isAlert ? '#ef4444' : solarCol, 'left', pct) +
+        _node(sunHtml, `<span class="e-solar-val">${_fmtPower(solarW)}</span>`, eh(solarLabel), 'e-solar-wrap', solarCol, false)
+      );
+    }
+    if (hasBattery) {
+      rightNodes.push(
+        _pipe(battCol, isCharging ? 'right' : 'left', 55) +
+        _node(`<span style="font-size:24px">${isCharging ? '🔋' : '🪫'}</span>`, `<span class="e-batt-val">${battValHtml}</span>`, isCharging ? 'In carica' : 'In scarica', 'e-batt-wrap', battCol, false)
+      );
     }
 
-    const noSub = '<span style="font-size:9px;color:#fff">— vs ieri</span>';
+    const flowRow = `<div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px">
+      ${_node(pylonHtml, `<span class="e-grid-val">${eh(label)}</span>`, gridLabel, 'e-grid-wrap', gridDispCol, false)}
+      ${_pipe(gridDispCol, gridDir, pct)}
+      ${_node(houseHtml, `<span class="e-val">${eh(_fmtPower(totalW))}</span>`, hasSolar || hasBattery ? 'Casa' : 'Consumo', 'e-casa-wrap', houseCol, true, 'e-house-node')}
+      ${rightNodes.join('')}
+    </div>`;
+
+    const noSub = '<span style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff">— vs ieri</span>';
 
     return `<div style="font-family:system-ui,sans-serif;padding:10px 14px 4px">
       <style>
@@ -357,7 +402,7 @@
       </style>
 
       <!-- ALERT BANNER -->
-      <div class="e-alert" style="display:${isAlert ? 'flex' : 'none'};align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);margin-bottom:10px;font-size:11px;font-weight:700;color:#ef4444">
+      <div class="e-alert" style="display:${isAlert ? 'flex' : 'none'};align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);margin-bottom:10px;font-size:12px;font-weight:900;text-transform:uppercase;color:#ef4444">
         ⚠️ Soglia superata: <span class="e-alert-val">${eh(label)}</span> / ${eh(_fmtPower(alertKw * 1000))}
       </div>
 
@@ -368,14 +413,14 @@
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:14px">
         ${_box('⚡', '—', 'kWh oggi', 'e-kwh', noSub, 'e-kwh-delta')}
         ${_box('💶', priceOk ? '—' : 'n/d', 'Costo oggi', 'e-cost', noSub, 'e-cost-delta')}
-        ${_box('⬆️', '—', 'Picco oggi', 'e-peak', '<span style="font-size:9px;color:#fff">〰️ —</span>', 'e-avg-box')}
+        ${_box('⬆️', '—', 'Picco oggi', 'e-peak', '<span style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff">〰️ —</span>', 'e-avg-box')}
       </div>
 
       <!-- GRAFICO -->
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#fff;margin-bottom:8px">Ultime 24 ore</div>
+      <div style="font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.7px;color:#fff;margin-bottom:8px">Ultime 24 ore</div>
       <div class="e-chart" style="margin:0 -14px;padding-bottom:4px">
         <div style="position:relative;width:100%;padding-bottom:42%;min-height:200px">
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">⏳ Caricamento…</div>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff">⏳ Caricamento…</div>
         </div>
       </div>
     </div>`;
@@ -390,7 +435,26 @@
       if (info.w === null) return;
 
       const c = loadCfg(cfg);
-      const { col, pct, label } = info;
+
+      /* se cambia import↔export o carica↔scarica batteria, le pipe cambiano verso:
+         non si può "girare" una freccia con un patch DOM, serve un re-render completo */
+      let isCharging = null;
+      if (c.batteryEntity) {
+        const bu = attrOf(h, c.batteryEntity, 'unit_of_measurement') || 'W';
+        const bw = _parseW(stateOf(h, c.batteryEntity), bu);
+        isCharging = bw !== null && bw > 0;
+      }
+      if (el._eLastExporting === undefined) el._eLastExporting = info.isExporting;
+      if (el._eLastCharging === undefined) el._eLastCharging = isCharging;
+      if (info.isExporting !== el._eLastExporting || isCharging !== el._eLastCharging) {
+        el._eLastExporting = info.isExporting;
+        el._eLastCharging = isCharging;
+        el.innerHTML = render(cfg, h);
+        _loadData(cfg, el);
+        return;
+      }
+
+      const { col, pct, label, isExporting } = info;
       const hasSolar = !!(c.solarEntity && h);
       let solarW = null;
       if (hasSolar) {
@@ -399,19 +463,33 @@
       }
       const totalW = hasSolar && solarW !== null ? (info.w || 0) + (solarW || 0) : info.w;
 
+      /* batteria */
+      const hasBattery = !!(c.batteryEntity && h);
+      if (hasBattery) {
+        const bu = attrOf(h, c.batteryEntity, 'unit_of_measurement') || 'W';
+        const bw = _parseW(stateOf(h, c.batteryEntity), bu);
+        let bSoc = null;
+        if (c.batterySocEntity) {
+          const sv = parseFloat(stateOf(h, c.batterySocEntity));
+          bSoc = isNaN(sv) ? null : Math.round(sv);
+        }
+        const bEl = el.querySelector('.e-batt-val');
+        if (bEl) bEl.textContent = bSoc !== null ? bSoc + '%' : (bw !== null ? _fmtPower(Math.abs(bw)) : '—');
+      }
+
       /* valori nodi */
       const vEl = el.querySelector('.e-val');
-      if (vEl) { vEl.textContent = hasSolar ? _fmtPower(totalW) : label; vEl.style.color = col; }
+      if (vEl) { vEl.textContent = (hasSolar || hasBattery) ? _fmtPower(totalW) : label; vEl.style.color = col; }
       const gEl = el.querySelector('.e-grid-val');
       if (gEl) gEl.textContent = label;
       const sEl = el.querySelector('.e-solar-val');
       if (sEl && solarW !== null) sEl.textContent = _fmtPower(solarW);
 
-      /* alert */
+      /* alert — non ha senso in esportazione */
       const alertKw = parseFloat(c.alertKw) || 0;
-      const isAlert = alertKw > 0 && info.w >= alertKw * 1000;
+      const isAlert = !isExporting && alertKw > 0 && info.w >= alertKw * 1000;
       const houseCol = isAlert ? '#ef4444' : col;
-      const gridCol  = isAlert ? '#ef4444' : '#60a5fa';
+      const gridCol  = isAlert ? '#ef4444' : (isExporting ? '#4ade80' : '#60a5fa');
 
       /* banner */
       const alertEl = el.querySelector('.e-alert');
@@ -431,13 +509,15 @@
         hb.style.animation    = isAlert ? 'gePulse .8s ease-in-out infinite' : '';
       }
 
-      /* shimmer: aggiorna colore se alert cambia */
-      el.querySelectorAll('.e-pipe-shimmer').forEach(s => {
-        const dir = s.dataset.dir || 'right';
+      /* shimmer: aggiorna colore della pipe rete se l'allarme cambia — è sempre la prima
+         (le altre pipe, solare/batteria, non cambiano verso/colore su un tick normale:
+         quando cambiano lo fanno tramite il re-render completo sopra) */
+      const gridPipeEl = el.querySelector('.e-pipe-shimmer');
+      if (gridPipeEl) {
+        const dir = gridPipeEl.dataset.dir || 'right';
         const deg = dir === 'right' ? '90deg' : '270deg';
-        const c2  = (dir === 'left' && hasSolar && !isAlert) ? '#facc15' : gridCol;
-        s.style.background = `linear-gradient(${deg},transparent 0%,${c2}55 40%,#ffffff99 50%,${c2}55 60%,transparent 100%)`;
-      });
+        gridPipeEl.style.background = `linear-gradient(${deg},transparent 0%,${gridCol}55 40%,#ffffff99 50%,${gridCol}55 60%,transparent 100%)`;
+      }
 
       /* velocità shimmer */
       const newSpd = _flowSpeed(pct);
@@ -538,7 +618,7 @@
 
     } catch (e) {
       const chartEl = el.querySelector('.e-chart');
-      if (chartEl) chartEl.innerHTML = `<div style="height:88px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">Nessun dato storico</div>`;
+      if (chartEl) chartEl.innerHTML = `<div style="height:88px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff">Nessun dato storico</div>`;
     }
   }
 
@@ -653,6 +733,14 @@
         <div style="${secL}">Produzione solare (opzionale)</div>
         <input id="ecfg-solar" style="${sinp};margin-bottom:14px" value="${eh(c.solarEntity || '')}" placeholder="🔍 sensor.fotovoltaico…" autocomplete="off">
 
+        <div style="${secL}">Potenza batteria (opzionale)</div>
+        <input id="ecfg-batt" style="${sinp};margin-bottom:4px" value="${eh(c.batteryEntity || '')}" placeholder="🔍 sensor.batteria_potenza…" autocomplete="off">
+        <div style="font-size:9px;color:#fff;margin-bottom:14px">Positiva = in carica, negativa = in scarica (convenzione standard integrazioni batteria)</div>
+
+        <div style="${secL}">Livello carica batteria % (opzionale)</div>
+        <input id="ecfg-battsoc" style="${sinp};margin-bottom:4px" value="${eh(c.batterySocEntity || '')}" placeholder="🔍 sensor.batteria_percentuale…" autocomplete="off">
+        <div style="font-size:9px;color:#fff;margin-bottom:14px">Se configurato mostra la % di carica invece della potenza istantanea</div>
+
         <div style="${secL}">Sensore kWh oggi diretto (opzionale)</div>
         <input id="ecfg-kwh" style="${sinp};margin-bottom:4px" value="${eh(c.kwhEntity || '')}" placeholder="🔍 sensor.energia_oggi…" autocomplete="off">
         <div style="font-size:9px;color:#fff;margin-bottom:14px">Se configurato usa il dato reale del contatore; altrimenti stima (~) dall'integrazione della potenza</div>
@@ -675,21 +763,25 @@
     ov.querySelector('#ecfg-close').onclick  = closeOv;
     ov.querySelector('#ecfg-cancel').onclick = closeOv;
     ov.onclick = ev => { if (ev.target === ov) closeOv(); };
-    _setupAc(ov.querySelector('#ecfg-entity'), id => { ov.querySelector('#ecfg-entity').value = id; });
-    _setupAc(ov.querySelector('#ecfg-solar'),  id => { ov.querySelector('#ecfg-solar').value  = id; });
-    _setupAc(ov.querySelector('#ecfg-kwh'),    id => { ov.querySelector('#ecfg-kwh').value    = id; });
+    _setupAc(ov.querySelector('#ecfg-entity'),  id => { ov.querySelector('#ecfg-entity').value  = id; });
+    _setupAc(ov.querySelector('#ecfg-solar'),   id => { ov.querySelector('#ecfg-solar').value   = id; });
+    _setupAc(ov.querySelector('#ecfg-batt'),    id => { ov.querySelector('#ecfg-batt').value    = id; });
+    _setupAc(ov.querySelector('#ecfg-battsoc'), id => { ov.querySelector('#ecfg-battsoc').value = id; });
+    _setupAc(ov.querySelector('#ecfg-kwh'),     id => { ov.querySelector('#ecfg-kwh').value     = id; });
 
     ov.querySelector('#ecfg-save').addEventListener('click', () => {
       const _fcrData = _fcr ? (_fcr.read(ov.querySelector('#fcr-section')) || {}) : {};
       const newCfg = {
         ..._fcrData,
-        label:       (ov.querySelector('#ecfg-label')?.value  || 'Energia').trim(),
-        entity:      (ov.querySelector('#ecfg-entity')?.value || '').trim(),
-        maxKw:       parseFloat(ov.querySelector('#ecfg-maxkw')?.value)  || 3,
-        priceKwh:    parseFloat(ov.querySelector('#ecfg-price')?.value)  || 0,
-        alertKw:     parseFloat(ov.querySelector('#ecfg-alert')?.value)  || 0,
-        solarEntity: (ov.querySelector('#ecfg-solar')?.value  || '').trim(),
-        kwhEntity:   (ov.querySelector('#ecfg-kwh')?.value    || '').trim(),
+        label:          (ov.querySelector('#ecfg-label')?.value    || 'Energia').trim(),
+        entity:         (ov.querySelector('#ecfg-entity')?.value   || '').trim(),
+        maxKw:          parseFloat(ov.querySelector('#ecfg-maxkw')?.value) || 3,
+        priceKwh:       parseFloat(ov.querySelector('#ecfg-price')?.value) || 0,
+        alertKw:        parseFloat(ov.querySelector('#ecfg-alert')?.value) || 0,
+        solarEntity:    (ov.querySelector('#ecfg-solar')?.value    || '').trim(),
+        batteryEntity:  (ov.querySelector('#ecfg-batt')?.value     || '').trim(),
+        batterySocEntity: (ov.querySelector('#ecfg-battsoc')?.value || '').trim(),
+        kwhEntity:      (ov.querySelector('#ecfg-kwh')?.value      || '').trim(),
       };
       closeOv();
       if (typeof onSave === 'function') onSave(newCfg);
@@ -706,12 +798,14 @@
         states: {
           'sensor.prev_grid': { state: '1840', attributes: { friendly_name: 'Rete', unit_of_measurement: 'W' } },
           'sensor.prev_solar': { state: '620', attributes: { friendly_name: 'Fotovoltaico', unit_of_measurement: 'W' } },
+          'sensor.prev_batt': { state: '180', attributes: { friendly_name: 'Batteria', unit_of_measurement: 'W' } },
+          'sensor.prev_batt_soc': { state: '68', attributes: { friendly_name: 'Batteria %', unit_of_measurement: '%' } },
         },
       };
       const mockCfg = {
         label: 'Energia', entity: 'sensor.prev_grid',
         maxKw: 3, priceKwh: 0.25, alertKw: 0,
-        solarEntity: 'sensor.prev_solar', kwhEntity: '',
+        solarEntity: 'sensor.prev_solar', batteryEntity: 'sensor.prev_batt', batterySocEntity: 'sensor.prev_batt_soc', kwhEntity: '',
       };
       return render(mockCfg, mockH);
     } finally {
@@ -722,13 +816,13 @@
   /* ════════════════════════════════════════ REGISTRAZIONE ══ */
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
-    version: '4.0', isDistintivo: true,
-    defaultCfg: { label: 'Energia', entity: '', maxKw: 3, priceKwh: 0, alertKw: 0, solarEntity: '', kwhEntity: '', colorMode: 'auto', colorRules: [] },
+    version: '5.0', isDistintivo: true,
+    defaultCfg: { label: 'Energia', entity: '', maxKw: 3, priceKwh: 0, alertKw: 0, solarEntity: '', batteryEntity: '', batterySocEntity: '', kwhEntity: '', colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure, preview,
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v4.0'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v5.0'); } catch (e) {}
 })();
