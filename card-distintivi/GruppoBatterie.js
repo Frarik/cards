@@ -1,6 +1,8 @@
-/* frarik-version: 2.0 */
+/* frarik-version: 2.1 */
 /**
- * GruppoBatterie.js — Distintivo FratechStore v2.0
+ * GruppoBatterie.js — Distintivo FratechStore v2.1
+ * v2.1: popup config — Nome chip/Rilevamento automatico/Soglie di allerta
+ *       raggruppati in un unico riquadro con contorno bianco
  * Rileva automaticamente TUTTE le entità con device_class: battery
  * Critica <threshold_critical% · Bassa <threshold_low% · OK
  * v2.0: stesso trattamento degli altri distintivi — chip con unico value
@@ -340,23 +342,30 @@
 
       <div style="flex:1;overflow-y:auto;scrollbar-width:none;padding:14px 14px 4px">
 
-        <div style="${secL}">Nome chip</div>
-        <input id="bcfg-label" style="${sinp};margin-bottom:14px" value="${eh(c.label || 'Batterie')}" placeholder="Nome chip">
+        <div style="margin:0 0 14px;padding:14px;background:rgba(255,255,255,.05);border-radius:12px;border:1px solid #fff">
 
-        ${previewNote}
+          <div style="${secL}">Nome chip</div>
+          <input id="bcfg-label" style="${sinp}" value="${eh(c.label || 'Batterie')}" placeholder="Nome chip">
 
-        <div style="${secL}">Soglie di allerta</div>
-        <div style="display:flex;gap:12px;margin-bottom:4px">
-          <div style="flex:1">
-            <div style="font-size:10px;color:#fff;margin-bottom:6px">🟡 Bassa (sotto %)</div>
-            <input id="bcfg-thrL" type="number" min="1" max="99" style="${sninp}" value="${eh(String(c.threshLow ?? 20))}">
+          <div style="height:1px;background:rgba(255,255,255,.1);margin:12px 0"></div>
+
+          <div style="${secL}">Rilevamento automatico</div>
+          ${previewNote}
+
+          <div style="${secL}">Soglie di allerta</div>
+          <div style="display:flex;gap:12px;margin-bottom:4px">
+            <div style="flex:1">
+              <div style="font-size:10px;color:#fff;margin-bottom:6px">🟡 Bassa (sotto %)</div>
+              <input id="bcfg-thrL" type="number" min="1" max="99" style="${sninp}" value="${eh(String(c.threshLow ?? 20))}">
+            </div>
+            <div style="flex:1">
+              <div style="font-size:10px;color:#fff;margin-bottom:6px">🔴 Critica (sotto %)</div>
+              <input id="bcfg-thrC" type="number" min="1" max="99" style="${sninp}" value="${eh(String(c.threshCrit ?? 10))}">
+            </div>
           </div>
-          <div style="flex:1">
-            <div style="font-size:10px;color:#fff;margin-bottom:6px">🔴 Critica (sotto %)</div>
-            <input id="bcfg-thrC" type="number" min="1" max="99" style="${sninp}" value="${eh(String(c.threshCrit ?? 10))}">
-          </div>
+          <div style="font-size:9px;color:#fff">Le entità <b>unavailable</b> o <b>unknown</b> vengono sempre segnalate come offline</div>
+
         </div>
-        <div style="font-size:9px;color:#fff;margin-bottom:14px">Le entità <b>unavailable</b> o <b>unknown</b> vengono sempre segnalate come offline</div>
 
         ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
         <div style="height:6px"></div>
@@ -393,7 +402,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Batterie', icon: '🔋',
     desc: '',
-    version: '2.0', isDistintivo: true,
+    version: '2.1', isDistintivo: true,
     defaultCfg: { label: 'Batterie', threshLow: 20, threshCrit: 10, colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -402,5 +411,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-batterie v2.0'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-batterie v2.1'); } catch (e) {}
 })();
