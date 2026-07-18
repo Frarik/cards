@@ -1,8 +1,8 @@
-/* frarik-version: 3.0 */
+/* frarik-version: 3.1 */
 /**
- * GruppoTapparelle.js — Distintivo FratechStore v3.0
+ * GruppoTapparelle.js — Distintivo FratechStore v3.1
  * Chip: contatore tapparelle aperte
- * Popup: Apri/Stop/Chiudi + preset globali 25/50/75% + slider posizione per entità
+ * Popup: Apri/Stop/Chiudi + preset 25/50/75/100% (globali e per singola tapparella)
  * v3.0: stesso trattamento di GruppoAllarme/GruppoLuci/GruppoFinestre/GruppoPorte —
  *       chip "TAPPARELLE: N" (solo numero aperte, maiuscolo/grassetto, colore
  *       rosso/verde canonico, niente più posizione media); popup rifatto a stile
@@ -12,6 +12,11 @@
  *       Apri/Chiudi tutte come medaglioni circolari, preset 25/50/75% sotto; titolo
  *       popup bianco/maiuscolo/grassetto; tutto il testo a dimensione unica (12px);
  *       fix update() che scartava lo stato hass live
+ * v3.1: le frecce apri/chiudi/stop della singola tapparella sono sempre bianche/neutre
+ *       (prima "apri" era verde); rimosso lo slider di posizione, sostituito con 4
+ *       pulsanti percentuale (25/50/75/100%) per ogni singola tapparella, non solo
+ *       globali; pulsanti apri/stop/chiudi spostati su una riga propria a tutta
+ *       larghezza per lasciare più spazio al nome/stato
  */
 (function () {
   'use strict';
@@ -174,18 +179,18 @@
         autoDot = `<button data-gt-auto="${i}" style="position:absolute;top:8px;right:8px;z-index:1;width:26px;height:26px;border-radius:50%;border:1.5px solid ${hex2rgba(aCol,.55)};background:linear-gradient(155deg,${hex2rgba(aCol,.4)},${hex2rgba(aCol,.12)});box-shadow:0 0 8px ${hex2rgba(aCol,.35)};display:flex;align-items:center;justify-content:center;cursor:pointer;outline:none;color:${aCol}">${iconHtml('mdi:robot', 13)}</button>`;
       }
 
-      const btnBase = 'width:34px;height:34px;border-radius:10px;cursor:pointer;outline:none;flex-shrink:0;display:flex;align-items:center;justify-content:center';
+      // le frecce apri/chiudi restano sempre bianche/neutre (non colorate come lo stato)
+      const btnBase = 'flex:1;height:36px;border-radius:10px;cursor:pointer;outline:none;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.15)';
       const ctrlBtns = `
-        <button data-gt-open="${i}"  title="Apri"  style="${btnBase};background:${hex2rgba('#4ade80',.15)};color:#4ade80;border:1px solid ${hex2rgba('#4ade80',.35)}">${iconHtml('mdi:chevron-up', 18)}</button>
-        <button data-gt-stop="${i}"  title="Stop"  style="${btnBase};background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.15)">${iconHtml('mdi:stop', 15)}</button>
-        <button data-gt-close="${i}" title="Chiudi" style="${btnBase};background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.15)">${iconHtml('mdi:chevron-down', 18)}</button>`;
+        <button data-gt-open="${i}"  title="Apri"  style="${btnBase}">${iconHtml('mdi:chevron-up', 18)}</button>
+        <button data-gt-stop="${i}"  title="Stop"  style="${btnBase}">${iconHtml('mdi:stop', 15)}</button>
+        <button data-gt-close="${i}" title="Chiudi" style="${btnBase}">${iconHtml('mdi:chevron-down', 18)}</button>`;
 
-      const slider = pos !== null ? `
-        <div style="position:relative;display:flex;align-items:center;gap:10px;margin-top:12px">
-          <input type="range" data-gt-pos="${i}" data-entity="${eh(e.entity)}" min="0" max="100" value="${pos}"
-            style="flex:1;accent-color:${rCol};cursor:pointer;outline:none;border:none;background:transparent">
-          <span data-gt-poslbl="${i}" style="font-size:12px;color:#fff;flex-shrink:0;width:36px;text-align:right;font-weight:900">${pos}%</span>
-        </div>` : '';
+      // percentuali per la singola tapparella (non solo globali)
+      const presetBtns = pos !== null ? [25, 50, 75, 100].map(p => {
+        const cur = pos === p;
+        return `<button data-gt-epos="${i}" data-pct="${p}" style="flex:1;padding:8px 4px;border-radius:10px;border:1px solid ${cur ? hex2rgba(rCol,.5) : 'rgba(255,255,255,.18)'};background:${cur ? hex2rgba(rCol,.22) : 'rgba(255,255,255,.06)'};color:${cur ? rCol : '#fff'};font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;outline:none">${p}%</button>`;
+      }).join('') : '';
 
       return `<div style="position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(155deg,${hex2rgba(rCol,.18)},${hex2rgba(rCol,.03)});border:1px solid ${hex2rgba(rCol,.4)};padding:16px;margin:0 14px 8px">
         <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(rCol,.2)},transparent 62%);pointer-events:none"></div>
@@ -196,9 +201,9 @@
             <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</span>
             <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:${rCol};letter-spacing:.3px;margin-top:2px">${stLbl}</span>
           </span>
-          <span style="display:flex;gap:6px;flex-shrink:0">${ctrlBtns}</span>
         </div>
-        ${slider}
+        <div style="position:relative;display:flex;gap:8px;margin-top:12px">${ctrlBtns}</div>
+        ${presetBtns ? `<div style="position:relative;display:flex;gap:6px;margin-top:8px">${presetBtns}</div>` : ''}
       </div>`;
     }).join('');
 
@@ -214,9 +219,7 @@
     const c = loadCfg(cfg);
     const ents = Array.isArray(c.entities) ? c.entities : [];
 
-    if (el._gtHandler)       el.removeEventListener('click',  el._gtHandler);
-    if (el._gtInputHandler)  el.removeEventListener('input',  el._gtInputHandler);
-    if (el._gtChangeHandler) el.removeEventListener('change', el._gtChangeHandler);
+    if (el._gtHandler) el.removeEventListener('click', el._gtHandler);
 
     function handler(ev) {
       const openBtn = ev.target.closest('[data-gt-open]');
@@ -250,30 +253,16 @@
         ents.forEach(e => { if (e.entity) callSvcEx('cover', 'set_cover_position', { entity_id: e.entity, position: pos }); });
         ev.stopPropagation(); return;
       }
+      const ePosBtn = ev.target.closest('[data-gt-epos]');
+      if (ePosBtn) {
+        const e = ents[parseInt(ePosBtn.dataset.gtEpos)]; if (!e) return;
+        callSvcEx('cover', 'set_cover_position', { entity_id: e.entity, position: parseInt(ePosBtn.dataset.pct) });
+        ev.stopPropagation(); return;
+      }
     }
 
-    function inputHandler(ev) {
-      const rangeEl = ev.target.closest('[data-gt-pos]');
-      if (!rangeEl) return;
-      const lbl = el.querySelector(`[data-gt-poslbl="${rangeEl.dataset.gtPos}"]`);
-      if (lbl) lbl.textContent = rangeEl.value + '%';
-      ev.stopPropagation();
-    }
-
-    function changeHandler(ev) {
-      const rangeEl = ev.target.closest('[data-gt-pos]');
-      if (!rangeEl) return;
-      const e = ents[parseInt(rangeEl.dataset.gtPos)]; if (!e) return;
-      callSvcEx('cover', 'set_cover_position', { entity_id: e.entity, position: parseInt(rangeEl.value) });
-      ev.stopPropagation();
-    }
-
-    el._gtHandler       = handler;
-    el._gtInputHandler  = inputHandler;
-    el._gtChangeHandler = changeHandler;
-    el.addEventListener('click',  handler);
-    el.addEventListener('input',  inputHandler);
-    el.addEventListener('change', changeHandler);
+    el._gtHandler = handler;
+    el.addEventListener('click', handler);
   }
 
   function mount(cfg, rawHass, el) {
@@ -590,7 +579,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Tapparelle', icon: '🪟',
     desc: 'Chip con contatore + posizione media. Popup: Apri/Stop/Chiudi, preset 25/50/75%, slider posizione per entità.',
-    version: '3.0', isDistintivo: true,
+    version: '3.1', isDistintivo: true,
     defaultCfg: { label: 'Tapparelle', icon: 'mdi:blinds', color: '#38bdf8', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -599,5 +588,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-tapparelle v3.0'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-tapparelle v3.1'); } catch(e){}
 })();
