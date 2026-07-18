@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.91 — 2026-07-18
+
+### feat: riquadro unico per i campi extra + contorno bianco sui riquadri
+
+- `GruppoAllarme.js` (v4.2): tutti i campi extra del popup di configurazione
+  (Chip, Entità allarme, PIN, Modalità, Sensori, Sirena) sono ora raggruppati
+  in un unico riquadro con contorno bianco, suddiviso al suo interno per
+  tipologia con sottili separatori — non più box annidati/separati.
+- `main.js` (`FratechColorRules`): il riquadro "Colore chip" (condiviso da
+  tutti i distintivi) ha ora anch'esso il contorno bianco, mantenendosi
+  visivamente separato dal riquadro dei campi extra.
+
 ## 2.0.90 — 2026-07-18
 
 ### fix: rimossa del tutto la sezione "Bordo" dal colore chip + riquadro Sensori

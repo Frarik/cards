@@ -19201,7 +19201,7 @@ if (!window.FratechColorRules) {
       var fixed       = (colorCfg && colorCfg.fixed)       || '#60a5fa';
       var rules       = (colorCfg && Array.isArray(colorCfg.rules))       ? colorCfg.rules       : [];
       var ps = Array.isArray(presets) ? presets : [];
-      return '<div id="fcr-section" style="margin:8px 0;padding:12px;background:rgba(255,255,255,.05);border-radius:10px;border:1px solid rgba(255,255,255,.1)">'
+      return '<div id="fcr-section" style="margin:8px 0;padding:12px;background:rgba(255,255,255,.05);border-radius:10px;border:1px solid #fff">'
         + '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.8px;margin-bottom:10px">🎨 COLORE CHIP</div>'
         + _secHtml('Contenuto (testo, icona, numeri)', 'fcr', mode, fixed, rules, ps, false, false)
         + '</div>';
