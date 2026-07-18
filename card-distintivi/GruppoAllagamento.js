@@ -1,7 +1,13 @@
-/* frarik-version: 1.2 */
+/* frarik-version: 2.0 */
 /**
- * GruppoAllagamento.js — Distintivo FratechStore v1.1
+ * GruppoAllagamento.js — Distintivo FratechStore v2.0
  * Chip sensori allagamento/umidità — verde/blu se asciutto, rosso animato se allagamento
+ * v2.0: stesso trattamento degli altri distintivi — chip con unico value maiuscolo/
+ *       grassetto invece di label separata a peso inferiore; righe sensore rifatte a
+ *       stile "glass" (gradiente + alone) mantenendo le illustrazioni SVG animate
+ *       originali; tutto il testo del popup a dimensione unica (12px/900/maiuscolo);
+ *       aggiunto il titolo dell'header del popup bianco/maiuscolo/grassetto (prima
+ *       nascondeva solo il sottotitolo senza mai impostare il titolo)
  */
 (function () {
   'use strict';
@@ -22,6 +28,12 @@
   function isOn(h, id) { return ON_STATES.includes(stateOf(h, id).toLowerCase()); }
   function eh(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function liveH(rawHass) { return H() || (rawHass && rawHass.states ? rawHass : null); }
+  function hex2rgba(hex, a) {
+    let h = (hex||'').replace('#','');
+    if (h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    if (h.length!==6) return `rgba(255,255,255,${a})`;
+    return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`;
+  }
 
   function _timeAgo(isoStr) {
     if (!isoStr) return '';
@@ -81,8 +93,7 @@
     const _cond = { alert: isAlert, ok: !isAlert };
     return {
       icon: _chipSvg(isAlert),
-      label: c.label || 'Allagamento',
-      value,
+      value: `${(c.label || 'Allagamento').toUpperCase()}: ${value}`,
       color: (_fcr && _fcr.evalColor(cfg, _cond)) || (isAlert ? '#f87171' : '#4ade80'),
       borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
     };
@@ -253,10 +264,10 @@
         ${_groupHeroSvg(wet)}
         <div style="display:flex;align-items:center;gap:10px;margin-top:9px;padding:0 2px">
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(name)}</div>
-            ${timeLabel ? `<div style="font-size:10px;color:${wet?'#f87171':'rgba(255,255,255,.4)'};font-weight:${wet?'700':'400'};margin-top:2px">${eh(timeLabel)}</div>` : ''}
+            <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(name)}</div>
+            ${timeLabel ? `<div style="font-size:12px;font-weight:900;text-transform:uppercase;color:${wet?'#f87171':'#fff'};margin-top:2px">${eh(timeLabel)}</div>` : ''}
           </div>
-          <div style="padding:5px 13px;border-radius:20px;background:${wet?'rgba(248,113,113,.18)':'rgba(74,222,128,.12)'};border:1px solid ${wet?'rgba(248,113,113,.55)':'rgba(74,222,128,.35)'};font-size:12px;font-weight:800;color:${wet?'#f87171':'#4ade80'};white-space:nowrap;flex-shrink:0">
+          <div style="padding:5px 13px;border-radius:20px;background:${wet?'rgba(248,113,113,.18)':'rgba(74,222,128,.12)'};border:1px solid ${wet?'rgba(248,113,113,.55)':'rgba(74,222,128,.35)'};font-size:12px;font-weight:900;text-transform:uppercase;color:${wet?'#f87171':'#4ade80'};white-space:nowrap;flex-shrink:0">
             ${wet ? '🚨 Allagato!' : '✓ Asciutto'}
           </div>
         </div>
@@ -264,7 +275,7 @@
       ${ents.length ? `<div style="height:1px;background:rgba(255,255,255,.07);margin:0 14px 4px"></div>` : ''}`;
     }
 
-    /* righe sensori individuali */
+    /* righe sensori individuali — stesso stile "glass" degli altri distintivi */
     const rows = ents.map((e, i) => {
       if (!e.entity) return '';
       const wet = h ? isOn(h, e.entity) : false;
@@ -274,15 +285,17 @@
       const timeLabel = wet
         ? (timeStr === 'adesso' ? 'Rilevato adesso!' : `Allagato da ${timeStr}`)
         : (timeStr ? `Asciutto da ${timeStr}` : '');
+      const rc = wet ? '#f87171' : '#4ade80';
 
-      return `<div style="border-bottom:1px solid rgba(255,255,255,.04);${wet ? 'background:rgba(248,113,113,.04)' : ''}">
-        <div style="display:flex;align-items:center;gap:12px;padding:10px 16px">
+      return `<div style="position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(155deg,${hex2rgba(rc,.16)},${hex2rgba(rc,.03)});border:1px solid ${hex2rgba(rc,.35)};padding:10px 16px;margin:0 14px 8px">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(rc,.18)},transparent 62%);pointer-events:none"></div>
+        <div style="position:relative;display:flex;align-items:center;gap:12px">
           <div style="flex-shrink:0">${_sensorSvg(wet, i)}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-            ${timeLabel ? `<div style="font-size:10px;color:${wet?'#f87171':'rgba(255,255,255,.4)'};margin-top:2px;font-weight:${wet?'700':'400'}">${eh(timeLabel)}</div>` : ''}
+            <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
+            ${timeLabel ? `<div style="font-size:12px;font-weight:900;text-transform:uppercase;color:${wet?'#f87171':'#fff'};margin-top:2px">${eh(timeLabel)}</div>` : ''}
           </div>
-          <div style="padding:4px 12px;border-radius:20px;background:${wet?'rgba(248,113,113,.15)':'rgba(74,222,128,.12)'};border:1px solid ${wet?'rgba(248,113,113,.4)':'rgba(74,222,128,.28)'};font-size:11px;font-weight:700;color:${wet?'#f87171':'#4ade80'};white-space:nowrap;flex-shrink:0">
+          <div style="padding:4px 12px;border-radius:20px;background:${wet?'rgba(248,113,113,.15)':'rgba(74,222,128,.12)'};border:1px solid ${wet?'rgba(248,113,113,.4)':'rgba(74,222,128,.28)'};font-size:12px;font-weight:900;text-transform:uppercase;color:${rc};white-space:nowrap;flex-shrink:0">
             ${wet ? '⚠️ Allagato' : 'Asciutto'}
           </div>
         </div>
@@ -290,24 +303,34 @@
     }).join('');
 
     const empty = !c.pk_group && !ents.length
-      ? `<div style="padding:36px 20px;text-align:center;color:#fff;font-size:12px">Nessun sensore configurato.<br><span style="font-size:10px;color:rgba(255,255,255,.5)">Clicca ✏️ sulla chip per configurare.</span></div>`
+      ? `<div style="padding:36px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">Nessun sensore configurato<br><span style="font-size:12px;font-weight:900;text-transform:uppercase;opacity:.7">Clicca ✏️ sulla chip per configurare</span></div>`
       : '';
 
     return `<div id="gpall-popup-body">${groupSection}<div>${rows}${empty}</div></div>`;
   }
 
   /* ─── mount ─── */
-  function _hideSubtitle(el) {
+  function _syncTitle(cfg, el) {
     try {
       const hdr = el.previousElementSibling; if (!hdr) return;
       const textWrap = hdr.children && hdr.children[1]; if (!textWrap) return;
-      const subEl = textWrap.children && textWrap.children[1]; if (!subEl) return;
-      subEl.style.display = 'none';
+      const titleEl = textWrap.children && textWrap.children[0]; if (!titleEl) return;
+      const subEl = textWrap.children && textWrap.children[1]; if (subEl) subEl.style.display = 'none';
+      const c = loadCfg(cfg);
+      const ents = Array.isArray(c.entities) ? c.entities : [];
+      const h = H();
+      let isAlert = false;
+      if (c.pk_group) isAlert = h ? isOn(h, c.pk_group) : false;
+      else if (ents.length) isAlert = h ? ents.some(e => isOn(h, e.entity)) : false;
+      titleEl.style.color = '#fff';
+      titleEl.style.fontWeight = '900';
+      titleEl.style.textTransform = 'uppercase';
+      titleEl.textContent = isAlert ? 'Allagamento rilevato' : 'Tutto asciutto';
     } catch(e) {}
   }
 
   function mount(cfg, rawHass, el) {
-    setTimeout(() => _hideSubtitle(el), 0);
+    setTimeout(() => _syncTitle(cfg, el), 0);
     if (el._gaaPoll) return;
     el._gaaPoll = setInterval(() => {
       if (!el.isConnected) { clearInterval(el._gaaPoll); delete el._gaaPoll; return; }
@@ -315,14 +338,14 @@
         const h = H(); if (!h) return;
         const sp = el.parentElement, st = sp ? sp.scrollTop : 0;
         el.innerHTML = render(cfg, h);
-        _hideSubtitle(el);
+        _syncTitle(cfg, el);
         if (sp && st > 0) sp.scrollTop = st;
       } catch(e) {}
     }, 1500);
   }
 
   function update(cfg, rawHass, el) {
-    try { el.innerHTML = render(cfg, rawHass || null); } catch(e) {}
+    try { el.innerHTML = render(cfg, rawHass || null); _syncTitle(cfg, el); } catch(e) {}
   }
 
   /* ─── configure ─── */
@@ -549,7 +572,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allagamento', icon: 'mdi:water-alert',
     desc: 'Chip sensori allagamento. Chip blu/verde = asciutto, rosso pulsante = allarme. Popup con vista gruppo + sensori individuali.',
-    version: '1.2', isDistintivo: true,
+    version: '2.0', isDistintivo: true,
     defaultCfg: { label: 'Allagamento', icon: 'mdi:water-alert', color: '#38bdf8', pk_group: '', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -558,5 +581,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allagamento v1.1'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allagamento v2.0'); } catch(e) {}
 })();
