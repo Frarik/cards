@@ -1,4 +1,4 @@
-/* frarik-version: 4.4 */
+/* frarik-version: 4.5 */
 /* Centro Controllo Posta — Frarik card standalone */
 /* v4.4: aggiunta icona ingranaggio interna (la card non ne aveva una) e
    frarik_no_edit per nascondere la matita esterna in modifica; eliminato
@@ -6,6 +6,14 @@
    reset, wizard di installazione, dropdown autocomplete entità) — ora tutto
    bianco/neutro; sezione entità/sensori del wizard racchiusa in riquadro
    con contorno; tutti i popup si chiudono anche cliccando fuori. */
+/* v4.5: rimosso pallino misterioso vuoto nell'header quando non ci sono
+   consegne; testi/numeri della card (etichette, orari, statistiche, drawer)
+   ora bianchi pieni invece che grigi/opachi; popup impostazioni ampliato con
+   riquadro Notifiche (toggle master/push/Google/Alexa + orari media e push)
+   e riquadro Reset manuali (oggi/settimana/mese), rimossa la funzione morta
+   openImpostazioniHAPopup mai richiamata; aggiunta anteprima live + slider
+   dimensione card (altezza/larghezza) a 2 colonne, stesso meccanismo di
+   Meteo.js (localStorage _frk_layout_ + evento frarik-card-layout). */
 (function(){
 'use strict';
 
@@ -587,7 +595,7 @@ if(!customElements.get('posta-card')){
       super();
       this.attachShadow({mode:'open'});
       this._h=null;
-      this._c={storageKey:'',label:'Centro Posta',sensorEntity:''};
+      this._c={storageKey:'',label:'Centro Posta',sensorEntity:'',cardScale:100,cardW:100};
       this._frarikCard=null;
       this._modalHost=null;
       this._click=this._onClick.bind(this);
@@ -624,88 +632,11 @@ if(!customElements.get('posta-card')){
       const sk=cfg.storageKey||'';
       let stored={};
       try{ stored=JSON.parse(localStorage.getItem('posta-card:'+sk)||'{}'); }catch(_){}
-      this._c={storageKey:sk,label:'Centro Posta',sensorEntity:'',...stored};
+      this._c={storageKey:sk,label:'Centro Posta',sensorEntity:'',cardScale:100,cardW:100,...stored};
       this._build();
     }
 
     configure(card){ if(card?.id) this._frarikCard=card; this._openSettings(); }
-  openImpostazioniHAPopup() {
-    const h = window.frarikHass ? window.frarikHass() : null;
-    function bs(e) { return !!(h && h.states && h.states[e] && h.states[e].state === 'on'); }
-    function ss(e) { const st = h && h.states && h.states[e]; return (st && st.state) || ''; }
-    const iBase = 'background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);border-radius:8px;font-size:12px;font-family:system-ui;box-sizing:border-box;outline:none;color-scheme:dark';
-    const rows = [];
-    function dSec(lbl) { rows.push('<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding:12px 0 6px;border-bottom:1px solid rgba(56,189,248,.15)">' + lbl + '</div>'); }
-    function dToggle(entity, lbl) {
-      const on = bs(entity);
-      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
-        + '<span style="font-size:13px;color:#fff">' + lbl + '</span>'
-        + '<div class="po-sw ' + (on ? 'on' : 'off') + '" data-entity="' + entity + '"><div class="po-knob"></div></div>'
-        + '</div>');
-    }
-    function dTime(entity, lbl) {
-      const raw = ss(entity), val = raw && raw.length >= 5 ? raw.substring(0, 5) : '';
-      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
-        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + '</span>'
-        + '<input type="time" class="po-inp" data-entity="' + entity + '" data-svctype="time" value="' + val + '" style="' + iBase + ';width:108px;padding:6px 8px;text-align:center">'
-        + '</div>');
-    }
-    function csvc(d, s, data) { try { if (h && h.callService) h.callService(d, s, data||{}); } catch(e) {} }
-
-    dSec('🔔 Notifiche');
-    dToggle('input_boolean.frarik_posta_notifiche_attive', '🔔 Notifiche attive');
-    dToggle('input_boolean.frarik_posta_notifica_push',    '📱 Push');
-    dToggle('input_boolean.frarik_posta_notifica_google',  '🔊 Google');
-    dToggle('input_boolean.frarik_posta_notifica_alexa',   '🗣 Alexa');
-    dTime('input_datetime.frarik_posta_notifiche_inizio', '⏰ Inizio notifiche TTS');
-    dTime('input_datetime.frarik_posta_notifiche_fine',   '⏰ Fine notifiche TTS');
-
-    const swCss = '<style>'
-      + '.po-sw{width:44px;height:26px;border-radius:13px;cursor:pointer;position:relative;flex-shrink:0;transition:background .25s}'
-      + '.po-sw.on{background:#38bdf8}.po-sw.off{background:rgba(255,255,255,.12)}'
-      + '.po-knob{position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,.4)}'
-      + '.po-sw.on .po-knob{left:21px}.po-sw.off .po-knob{left:3px}'
-      + '.po-inp:focus{border-color:rgba(56,189,248,.55)!important}'
-      + '</style>';
-    const saveBtn = '<button id="po-save" style="width:100%;margin-top:12px;padding:13px;border-radius:12px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);color:#38bdf8;font-size:14px;font-weight:700;cursor:pointer">💾 Salva impostazioni</button>';
-    const closeId = 'po-imp-' + Math.random().toString(36).slice(2,6);
-    const html = '<div id="' + closeId + '-bd" style="position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;pointer-events:auto">'
-      + '<div style="background:#0d1627;border-radius:18px;border:1px solid rgba(56,189,248,.3);width:min(96vw,430px);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.7)">'
-      + '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.07)">'
-      + '<span style="font-size:20px">📬</span>'
-      + '<span style="font-size:15px;font-weight:800;color:#fff;flex:1">Impostazioni Posta</span>'
-      + '<button id="' + closeId + '" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer;padding:4px">✕</button>'
-      + '</div>'
-      + '<div style="overflow-y:auto;padding:14px 16px;flex:1">'
-      + swCss + rows.join('') + saveBtn
-      + '</div>'
-      + '</div>'
-      + '</div>';
-    const host = document.createElement('div');
-    host.innerHTML = html;
-    const ov = host.firstChild;
-    ov.querySelector('#' + closeId).addEventListener('click', () => { ov.remove(); });
-    ov.addEventListener('click', e => { if (e.target.id === closeId + '-bd') ov.remove(); });
-    ov.querySelectorAll('.po-sw').forEach(sw => {
-      sw.addEventListener('click', () => { sw.classList.toggle('on'); sw.classList.toggle('off'); });
-    });
-    const sb = ov.querySelector('#po-save');
-    if (sb) sb.addEventListener('click', () => {
-      ov.querySelectorAll('.po-sw[data-entity]').forEach(sw => {
-        const entity = sw.dataset.entity;
-        csvc(entity.split('.')[0], sw.classList.contains('on') ? 'turn_on' : 'turn_off', {entity_id: entity});
-      });
-      ov.querySelectorAll('.po-inp[data-entity]').forEach(inp => {
-        const entity = inp.dataset.entity, type = inp.dataset.svctype;
-        if (!entity) return;
-        if (type === 'time' && inp.value) csvc('input_datetime','set_datetime',{entity_id:entity,time:inp.value+':00'});
-      });
-      sb.textContent = '✅ Salvato!'; sb.style.background='rgba(34,197,94,.15)'; sb.style.borderColor='rgba(34,197,94,.4)'; sb.style.color='#4ade80';
-      setTimeout(() => { sb.textContent='💾 Salva impostazioni'; sb.style.background=''; sb.style.borderColor=''; sb.style.color=''; }, 2000);
-    });
-    const target = document.querySelector('home-assistant') || document.body;
-    if (target) target.appendChild(ov);
-  }
     connectedCallback(){ this.shadowRoot.addEventListener('click',this._click); this.shadowRoot.addEventListener('change',this._change); }
     disconnectedCallback(){ this.shadowRoot.removeEventListener('click',this._click); this.shadowRoot.removeEventListener('change',this._change); this._destroyModal(); _acHide(); }
 
@@ -839,7 +770,7 @@ if(!customElements.get('posta-card')){
         <div class="hdr">
           <div class="hdr-icon-wrap"><svg viewBox="0 0 24 24" fill="none" style="width:18px;height:18px"><path d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="${acc}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="hdr-tit">${this._c.label||'Centro Posta'}</div>
-          ${today>0||isOpen?`<div class="hdr-pill${isOpen?' hdr-pill-open':''}">${isOpen?'Aperta':today+' oggi'}</div>`:`<div class="hdr-dot-wrap"><div class="hdr-dot-empty"></div></div>`}
+          ${today>0||isOpen?`<div class="hdr-pill${isOpen?' hdr-pill-open':''}">${isOpen?'Aperta':today+' oggi'}</div>`:''}
           <button class="gbtn" data-a="gear" title="Impostazioni">⚙️</button>
         </div>
 
@@ -935,23 +866,65 @@ if(!customElements.get('posta-card')){
       const host=document.createElement('div'); this._modalHost=host;
       host.attachShadow({mode:'open'}); document.body.appendChild(host);
       const self=this, c=this._c;
+      const _mll=JSON.parse(localStorage.getItem('_frk_layout_'+(this._frarikCard?.id||''))||'{}');
+      this._tCardScale=_mll.cardScale??c.cardScale??100;
+      this._tCardW=_mll.cardW??c.cardW??100;
+
+      const master=this._bool('input_boolean.frarik_posta_notifiche_attive');
+      const bPush=this._bool('input_boolean.frarik_posta_notifica_push');
+      const bGoog=this._bool('input_boolean.frarik_posta_notifica_google');
+      const bAlex=this._bool('input_boolean.frarik_posta_notifica_alexa');
+      const mStart=this._getTime('input_datetime.frarik_posta_notifiche_media_inizio')||'08:00';
+      const mEnd=this._getTime('input_datetime.frarik_posta_notifiche_media_fine')||'22:00';
+      const pStart=this._getTime('input_datetime.frarik_posta_notifiche_push_inizio')||'07:00';
+      const pEnd=this._getTime('input_datetime.frarik_posta_notifiche_push_fine')||'23:00';
+      const stgl=(on,tg)=>`<div class="stgl${on?' on':''}" data-tg="${tg}"><div class="stgl-k"></div></div>`;
+      const cardScaleV=this._tCardScale, cardWV=this._tCardW;
+
       host.shadowRoot.innerHTML=`<style>
         *{box-sizing:border-box;margin:0;padding:0}
         .ov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.65);backdrop-filter:blur(6px)}
-        .mo{width:100%;max-height:80vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
+        .mo{width:100%;max-height:86vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
         @keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
         .mhdr{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
         .mico{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:#fff}
         .mtit{flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px;font-family:system-ui,sans-serif}
         .mxbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 14px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
-        .mbody{overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;scrollbar-width:none}
+        .sov-2col{display:flex;flex:1;overflow:hidden;min-height:0}
+        .sbdy{width:50%;flex-shrink:0;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;scrollbar-width:none;border-right:1px solid rgba(255,255,255,.07)}
+        .sbdy::-webkit-scrollbar{display:none}
         .flbl{font-size:12px;font-weight:900;color:#fff;letter-spacing:.7px;text-transform:uppercase;font-family:system-ui,sans-serif;margin-bottom:6px;display:flex;align-items:center;gap:6px}
         .fopt{font-size:10px;font-weight:700;background:rgba(255,255,255,.07);color:#fff;opacity:.6;padding:2px 6px;border-radius:5px;text-transform:none;letter-spacing:0}
         .finp{width:100%;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.11);border-radius:10px;padding:11px 13px;color:#fff;font-size:13px;font-family:system-ui,sans-serif;outline:none;transition:border-color .15s}
         .finp:focus{border-color:rgba(255,255,255,.4)}
         .fhint{font-size:11px;color:#fff;opacity:.55;margin-top:5px;font-family:system-ui,sans-serif;line-height:1.5}
+        .fsec{font-size:10px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-top:10px;margin-bottom:2px}
         .fsave{width:100%;padding:14px;border-radius:13px;background:#38bdf8;border:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:system-ui,sans-serif}
         .sensbox{padding:14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid #fff}
+        .stgl-row{display:flex;align-items:center;gap:9px;padding:8px 0}
+        .stgl-lbl{flex:1;font-size:12px;font-weight:700;color:#fff}
+        .stgl{width:40px;height:24px;border-radius:12px;background:rgba(255,255,255,.12);position:relative;transition:background .2s;flex-shrink:0;cursor:pointer}
+        .stgl.on{background:#38bdf8}
+        .stgl-k{width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .18s;box-shadow:0 2px 4px rgba(0,0,0,.4)}
+        .stgl.on .stgl-k{transform:translateX(16px)}
+        .stgl-sub{display:flex;flex-direction:column;gap:0;padding-left:4px;transition:opacity .2s}
+        .stgl-sub.slocked{opacity:.3;pointer-events:none}
+        .stime-row{display:flex;align-items:center;gap:6px;padding:7px 11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:10px;margin-top:4px}
+        .stime{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#fff;font-size:12px;font-weight:700;padding:4px 6px;font-family:system-ui,sans-serif;text-align:center;outline:none}
+        .stime-sep{font-size:11px;color:#fff;opacity:.5}
+        .srst-row{display:flex;gap:6px;margin-top:4px}
+        .srst-btn{flex:1;padding:9px 2px;border-radius:9px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:system-ui,sans-serif;transition:all .15s;letter-spacing:.1px}
+        .srst-btn:active{background:rgba(239,68,68,.22)}
+        .sov-prev{width:50%;flex-shrink:0;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none}
+        .sov-prev::-webkit-scrollbar{display:none}
+        .prev-ttl{font-size:11px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.7px;opacity:.6}
+        .prev-wrap{border-radius:14px;overflow:hidden;background:rgba(255,255,255,.02);padding:10px;display:flex;justify-content:center}
+        .lsect{padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
+        .layout-row{display:flex;align-items:center;gap:8px;margin-top:10px}
+        .layout-lbl{font-size:12px;font-weight:900;color:#fff;width:72px;flex-shrink:0}
+        .layout-val{font-size:12px;font-weight:900;color:#fff;width:54px;text-align:right;flex-shrink:0}
+        input[type=range].lslider{flex:1;cursor:pointer;accent-color:#fff;height:4px}
+        @media(max-width:620px){.sov-2col{flex-direction:column!important;overflow-y:auto!important;overflow-x:hidden!important}.sbdy{width:100%!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,.07)!important;overflow-y:visible!important;flex-shrink:0!important}.sov-prev{min-width:0!important;overflow-y:visible!important;width:100%!important}}
       </style>
       <div class="ov"><div class="mo">
         <div class="mhdr">
@@ -959,32 +932,151 @@ if(!customElements.get('posta-card')){
           <div class="mtit">Impostazioni Card</div>
           <button class="mxbtn" id="s-x">✕</button>
         </div>
-        <div class="mbody">
-          <div>
-            <div class="flbl">✏️ Etichetta</div>
-            <input class="finp" id="s-label" type="text" value="${(c.label||'Centro Posta').replace(/"/g,'&quot;')}" placeholder="Centro Posta"/>
+        <div class="sov-2col">
+          <div class="sbdy">
+            <div>
+              <div class="flbl">✏️ Etichetta</div>
+              <input class="finp" id="s-label" type="text" value="${(c.label||'Centro Posta').replace(/"/g,'&quot;')}" placeholder="Centro Posta"/>
+            </div>
+            <div class="sensbox">
+              <div class="flbl">📡 Sensore cassetta <span class="fopt">opzionale</span></div>
+              <input class="finp" id="s-sensor" type="text" value="${(c.sensorEntity||'').replace(/"/g,'&quot;')}" placeholder="binary_sensor.cassetta_postale" autocomplete="off" spellcheck="false"/>
+              <div class="fhint">Mostra "Cassetta aperta" quando il sensore è on</div>
+            </div>
+            <div class="sensbox">
+              <div class="flbl">🔔 Notifiche <span class="fopt">pkg</span></div>
+              <div class="stgl-row" data-tg="master"><span class="stgl-lbl">Notifiche attive</span>${stgl(master,'master')}</div>
+              <div class="stgl-sub${master?'':' slocked'}" id="s-tgl-sub">
+                <div class="stgl-row" data-tg="push"><span class="stgl-lbl">📱 Push smartphone</span>${stgl(bPush,'push')}</div>
+                <div class="stgl-row" data-tg="google"><span class="stgl-lbl">🔊 Google Home</span>${stgl(bGoog,'google')}</div>
+                <div class="stgl-row" data-tg="alexa"><span class="stgl-lbl">📣 Amazon Alexa</span>${stgl(bAlex,'alexa')}</div>
+              </div>
+              <div class="fsec">Orari media (Google / Alexa)</div>
+              <div class="stime-row"><input class="stime" type="time" id="s-mstart" value="${mStart}"><span class="stime-sep">–</span><input class="stime" type="time" id="s-mend" value="${mEnd}"></div>
+              <div class="fsec">Orari push (smartphone)</div>
+              <div class="stime-row"><input class="stime" type="time" id="s-pstart" value="${pStart}"><span class="stime-sep">–</span><input class="stime" type="time" id="s-pend" value="${pEnd}"></div>
+            </div>
+            <div class="sensbox">
+              <div class="flbl">🔄 Reset manuali</div>
+              <div class="srst-row">
+                <button class="srst-btn" id="s-rst-oggi">↺ Oggi</button>
+                <button class="srst-btn" id="s-rst-sett">↺ Settimana</button>
+                <button class="srst-btn" id="s-rst-mese">↺ Mese</button>
+              </div>
+            </div>
+            <button class="fsave" id="s-save">💾 Salva</button>
           </div>
-          <div class="sensbox">
-            <div class="flbl">📡 Sensore cassetta <span class="fopt">opzionale</span></div>
-            <input class="finp" id="s-sensor" type="text" value="${(c.sensorEntity||'').replace(/"/g,'&quot;')}" placeholder="binary_sensor.cassetta_postale" autocomplete="off" spellcheck="false"/>
-            <div class="fhint">Mostra "Cassetta aperta" quando il sensore è on</div>
+          <div class="sov-prev">
+            <div class="prev-ttl">Anteprima live</div>
+            <div class="prev-wrap"><posta-card id="posta-preview-card" style="--fgear:none;display:block;"></posta-card></div>
+            <div class="lsect">
+              <div class="prev-ttl">Dimensione card</div>
+              <div class="layout-row">
+                <span class="layout-lbl">Altezza</span>
+                <input type="range" class="lslider" id="s-cardscale" min="20" max="100" step="5" value="${cardScaleV}">
+                <span class="layout-val" id="s-cardscale-lbl">${cardScaleV>=100?'Auto (100%)':cardScaleV+'%'}</span>
+              </div>
+              <div class="layout-row">
+                <span class="layout-lbl">Larghezza</span>
+                <input type="range" class="lslider" id="s-cardw" min="20" max="100" step="5" value="${cardWV}">
+                <span class="layout-val" id="s-cardw-lbl">${cardWV>=100?'Auto (100%)':cardWV+'%'}</span>
+              </div>
+            </div>
           </div>
-          <button class="fsave" id="s-save">💾 Salva</button>
         </div>
       </div></div>`;
       const sr=host.shadowRoot;
-      host.shadowRoot.addEventListener('click',e=>{ if(e.target.classList.contains('ov')) self._destroyModal(); });
-      sr.getElementById('s-x').onclick=()=>self._destroyModal();
+      host.shadowRoot.addEventListener('click',e=>{ if(e.target.classList.contains('ov')) self._closeSettings(); });
+      sr.getElementById('s-x').onclick=()=>self._closeSettings();
       const sInp=sr.getElementById('s-sensor');
       sInp.addEventListener('focus',()=>_acShow(sInp,self._h,'binary_sensor'));
       sInp.addEventListener('blur',()=>setTimeout(_acHide,160));
-      sInp.addEventListener('input',()=>_acShow(sInp,self._h,'binary_sensor'));
+      sInp.addEventListener('input',()=>{ _acShow(sInp,self._h,'binary_sensor'); self._schedPrev(); });
+      sr.getElementById('s-label').addEventListener('input',()=>self._schedPrev());
+
+      const tgEid={master:'input_boolean.frarik_posta_notifiche_attive',push:'input_boolean.frarik_posta_notifica_push',google:'input_boolean.frarik_posta_notifica_google',alexa:'input_boolean.frarik_posta_notifica_alexa'};
+      sr.querySelectorAll('.stgl').forEach(sw=>{
+        sw.addEventListener('click',()=>{
+          const tg=sw.dataset.tg, eid=tgEid[tg]; if(!eid) return;
+          if(tg!=='master'){
+            const sub=sr.getElementById('s-tgl-sub');
+            if(!sub||sub.classList.contains('slocked')) return;
+          }
+          const nowOn=!sw.classList.contains('on');
+          self._callSvc('homeassistant',nowOn?'turn_on':'turn_off',{entity_id:eid});
+          sw.classList.toggle('on',nowOn);
+          if(tg==='master') sr.getElementById('s-tgl-sub')?.classList.toggle('slocked',!nowOn);
+        });
+      });
+      sr.getElementById('s-mstart').addEventListener('change',e=>self._setTime('input_datetime.frarik_posta_notifiche_media_inizio',e.target.value));
+      sr.getElementById('s-mend').addEventListener('change',e=>self._setTime('input_datetime.frarik_posta_notifiche_media_fine',e.target.value));
+      sr.getElementById('s-pstart').addEventListener('change',e=>self._setTime('input_datetime.frarik_posta_notifiche_push_inizio',e.target.value));
+      sr.getElementById('s-pend').addEventListener('change',e=>self._setTime('input_datetime.frarik_posta_notifiche_push_fine',e.target.value));
+
+      sr.getElementById('s-rst-oggi').onclick=()=>self._confirmReset('script.frarik_posta_reset_oggi','il contatore giornaliero e gli orari di oggi');
+      sr.getElementById('s-rst-sett').onclick=()=>self._confirmReset('script.frarik_posta_reset_settimana','il contatore settimanale');
+      sr.getElementById('s-rst-mese').onclick=()=>self._confirmReset('script.frarik_posta_reset_mese','il contatore mensile');
+
+      sr.getElementById('s-cardscale').addEventListener('input',e=>{
+        self._tCardScale=Math.max(20,Math.min(100,parseInt(e.target.value)||100));
+        const lbl=sr.getElementById('s-cardscale-lbl'); if(lbl) lbl.textContent=self._tCardScale>=100?'Auto (100%)':self._tCardScale+'%';
+        self._schedPrev();
+      });
+      sr.getElementById('s-cardw').addEventListener('input',e=>{
+        self._tCardW=Math.max(20,Math.min(100,parseInt(e.target.value)||100));
+        const lbl=sr.getElementById('s-cardw-lbl'); if(lbl) lbl.textContent=self._tCardW>=100?'Auto (100%)':self._tCardW+'%';
+        self._schedPrev();
+      });
+
       sr.getElementById('s-save').onclick=()=>{
         self._c.label=sr.getElementById('s-label').value||'Centro Posta';
         self._c.sensorEntity=(sr.getElementById('s-sensor').value||'').trim();
-        self._save(); _acHide(); self._destroyModal();
+        self._c.cardScale=Math.max(20,Math.min(100,parseInt(self._tCardScale)||100));
+        self._c.cardW=Math.max(20,Math.min(100,parseInt(self._tCardW)||100));
+        self._save(); _acHide();
+        if(self._frarikCard?.id){
+          self.dispatchEvent(new CustomEvent('frarik-card-layout',{
+            bubbles:true,composed:true,
+            detail:{cardId:self._frarikCard.id,cardScale:self._c.cardScale,cardW:self._c.cardW}
+          }));
+        }
+        self._destroyModal();
         self._prevSig=''; self._build();
       };
+      this._updatePreview();
+    }
+
+    _closeSettings(){
+      _acHide(); this._destroyModal();
+      if(this._frarikCard?.id){
+        this.dispatchEvent(new CustomEvent('frarik-card-layout',{
+          bubbles:true,composed:true,
+          detail:{cardId:this._frarikCard.id,cardScale:this._c.cardScale??100,cardW:this._c.cardW??100}
+        }));
+      }
+    }
+
+    _schedPrev(){
+      if(this._prevTimer) clearTimeout(this._prevTimer);
+      this._prevTimer=setTimeout(()=>this._updatePreview(),180);
+    }
+
+    _updatePreview(){
+      const sr=this._modalHost?.shadowRoot;
+      const pc=sr?.querySelector('#posta-preview-card');
+      if(!pc) return;
+      try{
+        pc.setConfig({
+          storageKey:'__prev__',
+          label:sr.getElementById('s-label')?.value||this._c.label||'Centro Posta',
+          sensorEntity:(sr.getElementById('s-sensor')?.value||'').trim(),
+        });
+        if(this._h) pc.hass=this._h;
+        const sc=this._tCardScale??100;
+        pc.style.display='block';
+        pc.style.zoom=sc<100?sc+'%':'';
+        pc.style.width=this._tCardW<100?this._tCardW+'%':'';
+      }catch(err){}
     }
 
     _destroyModal(){ this._modalHost?.remove(); this._modalHost=null; }
@@ -1002,13 +1094,11 @@ if(!customElements.get('posta-card')){
 /* header */
 .hdr{display:flex;align-items:center;gap:9px;padding:12px 15px 10px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}
 .hdr-icon-wrap{width:28px;height:28px;border-radius:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.gbtn{width:26px;height:26px;border-radius:8px;border:none;background:rgba(255,255,255,.06);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;font-size:13px;transition:background .15s}
+.gbtn{width:26px;height:26px;border-radius:8px;border:none;background:rgba(255,255,255,.06);cursor:pointer;align-items:center;justify-content:center;color:#fff;flex-shrink:0;font-size:13px;transition:background .15s;display:var(--fgear,flex)}
 .gbtn:hover{background:rgba(255,255,255,.12)}
 .hdr-tit{flex:1;font-size:14px;font-weight:800;color:#fff;letter-spacing:.2px}
 .hdr-pill{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#38bdf8;letter-spacing:.2px;animation:fade-up .2s ease}
 .hdr-pill.hdr-pill-open{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.3);color:#34d399}
-.hdr-dot-wrap{width:8px;height:8px;display:flex;align-items:center;justify-content:center}
-.hdr-dot-empty{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.12)}
 
 /* body scroll */
 .bscroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}
@@ -1021,15 +1111,15 @@ if(!customElements.get('posta-card')){
 .hero-n{font-size:54px;font-weight:900;color:rgba(255,255,255,.14);line-height:1;letter-spacing:-3px;transition:color .35s,text-shadow .35s}
 .hero-n.hero-n-act{color:#38bdf8;text-shadow:0 0 28px rgba(56,189,248,.35)}
 .hero-n.hero-n-open{color:#34d399;text-shadow:0 0 28px rgba(56,189,248,.35)}
-.hero-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.7px;margin-top:1px}
-.hero-last{display:flex;align-items:center;gap:5px;margin-top:8px;padding:5px 9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;font-size:11px;color:rgba(255,255,255,.55);font-weight:600;line-height:1.3;animation:fade-up .2s ease}
+.hero-lbl{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.7px;margin-top:1px}
+.hero-last{display:flex;align-items:center;gap:5px;margin-top:8px;padding:5px 9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;font-size:11px;color:#fff;font-weight:600;line-height:1.3;animation:fade-up .2s ease}
 .open-pill{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:4px 9px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);border-radius:18px;font-size:10px;color:#34d399;font-weight:800;letter-spacing:.2px;animation:pulse 2.5s ease infinite}
 
 /* section */
 .sec{padding:0 15px 10px}
 .sec-hdr{display:flex;align-items:center;gap:7px;margin-bottom:8px}
 .sec-ln{flex:1;height:1px;background:rgba(255,255,255,.05)}
-.sec-lb{font-size:9px;font-weight:800;color:rgba(255,255,255,.22);text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
+.sec-lb{font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
 
 /* timeline */
 .tl{display:flex;flex-direction:column}
@@ -1048,18 +1138,18 @@ if(!customElements.get('posta-card')){
 .stat-box{flex:1;display:flex;flex-direction:column;align-items:center;padding:9px 6px;gap:2px}
 .stat-sep{width:1px;background:rgba(255,255,255,.06)}
 .stat-n{font-size:20px;font-weight:900;color:#fff;line-height:1}
-.stat-l{font-size:9px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px}
+.stat-l{font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px}
 
 /* drawer toggle */
 .drw-toggle{display:flex;align-items:center;gap:8px;padding:10px 15px;background:rgba(255,255,255,.025);border-top:1px solid rgba(255,255,255,.06);cursor:pointer;user-select:none;transition:background .15s;flex-shrink:0}
 .drw-toggle:active{background:rgba(255,255,255,.06)}
 .drw-ico{font-size:13px}
-.drw-lbl{flex:1;font-size:11px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.2px}
-.drw-chev{font-size:10px;color:rgba(255,255,255,.25)}
+.drw-lbl{flex:1;font-size:11px;font-weight:700;color:#fff;letter-spacing:.2px}
+.drw-chev{font-size:10px;color:#fff}
 
 /* drawer */
 .drw{padding:10px 15px 16px;display:flex;flex-direction:column;gap:5px;animation:fade-up .15s ease}
-.drw-sec{font-size:9px;font-weight:800;color:rgba(255,255,255,.22);text-transform:uppercase;letter-spacing:1px;margin-top:5px;margin-bottom:3px}
+.drw-sec{font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-top:5px;margin-bottom:3px}
 .drw-row{display:flex;align-items:center;gap:9px;padding:9px 11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:10px;cursor:pointer;user-select:none;transition:background .15s}
 .drw-row:active{background:rgba(255,255,255,.08)}
 .dri{font-size:15px;flex-shrink:0}
@@ -1075,7 +1165,7 @@ if(!customElements.get('posta-card')){
 
 /* time row */
 .time-row{display:flex;align-items:center;gap:6px;padding:7px 11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:10px}
-.tl-lbl{font-size:10px;color:rgba(255,255,255,.38);min-width:26px}
+.tl-lbl{font-size:10px;font-weight:700;color:#fff;min-width:26px}
 .ti{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#fff;font-size:12px;font-weight:700;padding:4px 6px;font-family:system-ui,sans-serif;appearance:none;text-align:center;outline:none}
 .ti:focus{border-color:rgba(56,189,248,.5);background:rgba(56,189,248,.07)}
 
