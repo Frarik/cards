@@ -1,4 +1,4 @@
-/* frarik-version: 5.22 */
+/* frarik-version: 5.23 */
 /* v5.15: aggiunta anteprima live + slider dimensione card (altezza/larghezza)
    nel popup Impostazioni, stesso meccanismo di Meteo.js/posta-card
    (localStorage _frk_layout_ + evento frarik-card-layout); aggiunto
@@ -50,6 +50,13 @@
    residua dai testi dei popup (sottotitoli toggle/orario, "Anteprima
    live", "Dimensione card", note del wizard). Riquadro Settimana ancora
    più grande (padding 16px→20px, testo 14px→15px, righe 16px→18px). */
+/* v5.23: capito il vero riferimento — non il popup Settimana ma il
+   pulsante "📅 Settimana" sotto l'immagine nella card, troppo piccolo
+   rispetto al riquadro "Ultima consegna" di posta-card. Sostituito con
+   un riquadro identico per stile (icona 32px + etichetta + valore,
+   padding 12px 13px) che mostra la prossima raccolta in arrivo (dato già
+   calcolato ma mai mostrato); resta cliccabile per aprire il popup
+   Settimana. Rimossa la variabile morta nextAbbr, mai utilizzata. */
 ;(function () {
   'use strict';
 
@@ -213,11 +220,11 @@
     });
 
     /* prossima raccolta */
-    var nextFull = '', nextAbbr = '', nextDaysAway = 0;
+    var nextFull = '', nextDaysAway = 0;
     for (var dd = 1; dd <= 7; dd++) {
       var ni = (ti + dd) % 7;
       if (parseWastes(S(h, 'input_text.frarik_differenziata_rifiuto_' + DAYS[ni]) || '').length) {
-        nextFull = DFULL[ni]; nextAbbr = DLBL[ni]; nextDaysAway = dd; break;
+        nextFull = DFULL[ni]; nextDaysAway = dd; break;
       }
     }
     var nextLabel = nextFull
@@ -261,9 +268,12 @@
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:5px;justify-content:flex-start;min-width:0;padding-left:10px;overflow:hidden}'
       + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:space-between;gap:6px}'
       + '#' + rid + ' .fc-met-lbl{font-size:12px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px;flex-shrink:0}'
-      + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:10px 14px 12px;margin-top:14px}'
-      + '#' + rid + ' .fc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s}'
-      + '#' + rid + ' .fc-btn:hover{background:rgba(' + ACC_RGB + ',.12);border-color:rgba(' + ACC_RGB + ',.3);color:' + ACC + '}'
+      + '#' + rid + ' .fc-next-box{display:flex;align-items:center;gap:10px;margin:4px 14px 14px;padding:12px 13px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;cursor:pointer;transition:background .15s}'
+      + '#' + rid + ' .fc-next-box:hover{background:rgba(255,255,255,.06)}'
+      + '#' + rid + ' .fc-next-ic{width:32px;height:32px;border-radius:9px;background:rgba(' + ACC_RGB + ',.1);border:1px solid rgba(' + ACC_RGB + ',.22);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}'
+      + '#' + rid + ' .fc-next-tx{display:flex;flex-direction:column;gap:1px;min-width:0}'
+      + '#' + rid + ' .fc-next-lbl{font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.6px}'
+      + '#' + rid + ' .fc-next-val{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
       + '#' + rid + ' [data-sya]{cursor:pointer}'
       + (hasPickup ? '@keyframes fcPulse{0%,100%{opacity:.6}50%{opacity:1}}' : '')
       + '</style>';
@@ -285,8 +295,12 @@
       + '</div>'
       + '</div>';
 
-    const btnsHtml = '<div class="fc-btns">'
-      + '<div class="fc-btn" data-sya="popup-settimana">📅 Settimana</div>'
+    const btnsHtml = '<div class="fc-next-box" data-sya="popup-settimana">'
+      + '<div class="fc-next-ic">📅</div>'
+      + '<div class="fc-next-tx">'
+      + '<span class="fc-next-lbl">Prossima raccolta</span>'
+      + '<span class="fc-next-val">' + nextLabel + '</span>'
+      + '</div>'
       + '</div>';
 
     return css
@@ -1075,7 +1089,7 @@ automation:
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.22',
+    version: '5.23',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',
