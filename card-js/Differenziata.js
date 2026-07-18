@@ -1,4 +1,4 @@
-/* frarik-version: 5.16 */
+/* frarik-version: 5.17 */
 /* v5.15: aggiunta anteprima live + slider dimensione card (altezza/larghezza)
    nel popup Impostazioni, stesso meccanismo di Meteo.js/posta-card
    (localStorage _frk_layout_ + evento frarik-card-layout); aggiunto
@@ -10,6 +10,14 @@
    pill di stato) — prima l'unico accesso alle impostazioni era il
    pulsante testuale "⚙ Impostazioni" in fondo alla card, non un'icona
    nell'header come le altre card Frarik (Meteo, posta-card). */
+/* v5.17: rimosso il pulsante testuale "⚙ Impostazioni" in fondo alla card
+   (duplicato dell'icona ingranaggio nell'header, resta solo "📅 Settimana").
+   Uniformati testi bianchi pieni e stessa dimensione in card e popup
+   (etichette sezione, header giorni, pill rifiuto, placeholder "nessun
+   ritiro" — erano in vari grigi/opacità diverse); aggiunti riquadri con
+   contorno bianco attorno alle sezioni "Rifiuti per giorno"/"Colori per
+   tipo"/"Notifiche" nel popup Impostazioni; pulsante Salva ora blu #38bdf8
+   come da standard Frarik (era verde, colore non universale). */
 ;(function () {
   'use strict';
 
@@ -149,7 +157,7 @@
       + '</div>';
   }
   function sttl(t) {
-    return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.45);margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.06)">' + t + '</div>';
+    return '<div style="font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:#fff;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.06)">' + t + '</div>';
   }
 
   /* ── RENDER ── */
@@ -202,10 +210,10 @@
     }
     var tonightRows = hasPickup
       ? todayWastes.map(wasteRow).join('')
-      : '<div class="fc-met"><span class="fc-met-lbl" style="color:rgba(255,255,255,.3)">Niente da esporre</span></div>';
+      : '<div class="fc-met"><span class="fc-met-lbl">Niente da esporre</span></div>';
     var tmrRows = tmrWastes.length
       ? tmrWastes.map(wasteRow).join('')
-      : '<div class="fc-met"><span class="fc-met-lbl" style="color:rgba(255,255,255,.3)">Nessun ritiro</span></div>';
+      : '<div class="fc-met"><span class="fc-met-lbl">Nessun ritiro</span></div>';
 
     const css = '<style>'
       + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block;background:#070d18;border-radius:var(--card-r,20px);overflow:hidden}'
@@ -234,7 +242,7 @@
     const dot = (c, pulse) => '<div style="width:6px;height:6px;border-radius:50%;background:' + c + ';flex-shrink:0' + (pulse ? ';box-shadow:0 0 6px ' + c + ';animation:fcPulse 1.5s ease-in-out infinite' : '') + '"></div>';
     const secHdr = (label, c) => '<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">'
       + dot(c || 'rgba(255,255,255,.25)', !!(c && hasPickup))
-      + '<span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:' + (c || 'rgba(255,255,255,.35)') + '">' + label + '</span>'
+      + '<span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:' + (c || '#fff') + '">' + label + '</span>'
       + '</div>';
 
     const heroHtml = '<div class="fc-hero">'
@@ -250,7 +258,6 @@
 
     const btnsHtml = '<div class="fc-btns">'
       + '<div class="fc-btn" data-sya="popup-settimana">📅 Settimana</div>'
-      + '<div class="fc-btn" data-sya="popup-imp">⚙ Impostazioni</div>'
       + '</div>';
 
     return css
@@ -315,9 +322,9 @@
               + '<span style="font-size:12px;font-weight:700;color:#fff">' + (t ? t.label : id) + '</span>'
               + '</div>';
           }).join('')
-        : '<span style="font-size:11px;color:rgba(255,255,255,.3)">Nessun ritiro</span>';
-      return '<div style="padding:10px;border-radius:10px;border:1px solid ' + (isToday ? 'rgba(74,222,128,.3)' : 'rgba(255,255,255,.06)') + ';background:' + (isToday ? 'rgba(74,222,128,.05)' : 'rgba(255,255,255,.02)') + ';margin-bottom:6px">'
-        + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:' + (isToday ? '#4ade80' : 'rgba(255,255,255,.45)') + ';margin-bottom:6px">'
+        : '<span style="font-size:12px;font-weight:700;color:#fff">Nessun ritiro</span>';
+      return '<div style="padding:10px;border-radius:10px;border:1px solid ' + (isToday ? '#4ade80' : '#fff') + ';background:' + (isToday ? 'rgba(74,222,128,.05)' : 'rgba(255,255,255,.02)') + ';margin-bottom:6px">'
+        + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:' + (isToday ? '#4ade80' : '#fff') + ';margin-bottom:6px">'
         + DFULL[i] + (isToday ? ' — OGGI' : '') + '</div>'
         + '<div style="display:flex;flex-wrap:wrap;gap:8px">' + dots + '</div>'
         + '</div>';
@@ -357,11 +364,10 @@
           var border = sel ? c : 'rgba(255,255,255,.1)';
           var bg     = sel ? 'rgba(0,0,0,.25)' : 'rgba(255,255,255,.03)';
           var dot    = '<div style="width:8px;height:8px;border-radius:50%;background:' + (sel ? c : 'rgba(255,255,255,.2)') + ';flex-shrink:0"></div>';
-          var fc     = sel ? '#fff' : 'rgba(255,255,255,.45)';
-          return '<button data-di="' + d + '" data-ti="' + t.id + '" style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1.5px solid ' + border + ';background:' + bg + ';color:' + fc + ';font-size:11px;font-weight:700;cursor:pointer;font-family:system-ui;transition:all .15s">'
+          return '<button data-di="' + d + '" data-ti="' + t.id + '" style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1.5px solid ' + border + ';background:' + bg + ';color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:system-ui;transition:all .15s">'
             + dot + t.label + '</button>';
         }).join('');
-        var dayColor = hasSel ? '#fff' : 'rgba(255,255,255,.35)';
+        var dayColor = '#fff';
         return '<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
           + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:' + dayColor + ';margin-bottom:6px">' + DFULL[i] + '</div>'
           + '<div style="display:flex;gap:5px;flex-wrap:wrap">' + pills + '</div>'
@@ -395,14 +401,14 @@
       var knob = on ? 'left:22px' : 'left:3px';
       return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
         + '<div><div style="font-size:13px;font-weight:700;color:#fff">' + lbl + '</div>'
-        + '<div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:1px">' + sub + '</div></div>'
+        + '<div style="font-size:10px;color:#fff;opacity:.6;margin-top:1px">' + sub + '</div></div>'
         + '<div data-tg="' + id + '" style="width:44px;height:26px;border-radius:13px;background:' + bg + ';cursor:pointer;position:relative;flex-shrink:0;transition:background .18s">'
         + '<div style="position:absolute;top:3px;' + knob + ';width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:left .18s"></div>'
         + '</div>'
         + '</div>';
     }
 
-    const saveBtn = '<button id="dd-save" style="width:100%;margin-top:16px;padding:14px;border-radius:13px;background:#22c55e;border:none;color:#060d14;font-size:14px;font-weight:900;cursor:pointer;font-family:system-ui;letter-spacing:.01em">💾 Salva impostazioni</button>';
+    const saveBtn = '<button id="dd-save" style="width:100%;margin-top:16px;padding:14px;border-radius:13px;background:#38bdf8;border:none;color:#fff;font-size:14px;font-weight:900;cursor:pointer;font-family:system-ui;letter-spacing:.01em">💾 Salva impostazioni</button>';
 
     function layoutRow(lbl, id, val) {
       var vLbl = val >= 100 ? 'Auto (100%)' : val + '%';
@@ -413,19 +419,24 @@
         + '</div>';
     }
 
+    const boxOpen  = '<div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid #fff">';
+    const boxClose = '</div>';
+
     const settingsHtml = sttl('📅 Rifiuti per giorno')
-      + '<div id="dd-giorni">' + renderGiorni() + '</div>'
+      + boxOpen + '<div id="dd-giorni">' + renderGiorni() + '</div>' + boxClose
       + sttl('🎨 Colori per tipo')
-      + '<div id="dd-colori">' + renderColori() + '</div>'
+      + boxOpen + '<div id="dd-colori">' + renderColori() + '</div>' + boxClose
       + sttl('🔔 Notifiche')
+      + boxOpen
       + tog('push',   pushOn,   '📱 Push',   'Notifica su app mobile')
       + tog('alexa',  alexaOn,  '🗣 Alexa',  'Annuncio vocale Alexa')
       + tog('google', googleOn, '🔊 Google', 'Annuncio vocale Google')
       + '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0">'
       + '<div><div style="font-size:13px;font-weight:700;color:#fff">⏰ Orario</div>'
-      + '<div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:1px">Il giorno della raccolta</div></div>'
+      + '<div style="font-size:10px;color:#fff;opacity:.6;margin-top:1px">Il giorno della raccolta</div></div>'
       + '<input type="time" id="dd-time" value="' + notifT + '" style="height:32px;padding:0 10px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;font-size:13px;font-family:system-ui">'
       + '</div>'
+      + boxClose
       + saveBtn;
 
     const previewHtml = '<div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:#fff;opacity:.6">Anteprima live</div>'
@@ -441,7 +452,7 @@
       + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;padding-left:16px;border-left:1px solid rgba(255,255,255,.07)">' + previewHtml + '</div>'
       + '</div>';
 
-    var ov = mkOv(popShell('♻️', '34,197,94', 'Raccolta Differenziata', 'Configura giorni, colori e notifiche', 'dd-close', content), 'dd-close');
+    var ov = mkOv(popShell('♻️', '74,222,128', 'Raccolta Differenziata', 'Configura giorni, colori e notifiche', 'dd-close', content), 'dd-close');
 
     /* anteprima live — stessa render() della card reale, scalata */
     function updatePreview() {
@@ -518,8 +529,8 @@
         document.dispatchEvent(new CustomEvent('frarik-card-layout', { bubbles: true, detail: { cardId: cardId, cardScale: tScale, cardW: tW } }));
       }
       var sb = ov.querySelector('#dd-save');
-      sb.textContent = '✅ Salvato!'; sb.style.background = 'rgba(34,197,94,.5)';
-      setTimeout(function() { sb.textContent = '💾 Salva impostazioni'; sb.style.background = '#22c55e'; }, 2000);
+      sb.textContent = '✅ Salvato!'; sb.style.background = 'rgba(56,189,248,.5)';
+      setTimeout(function() { sb.textContent = '💾 Salva impostazioni'; sb.style.background = '#38bdf8'; }, 2000);
     });
   }
 
@@ -1040,7 +1051,7 @@ automation:
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.16',
+    version: '5.17',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',
