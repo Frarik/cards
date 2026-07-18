@@ -1,8 +1,9 @@
-/* frarik-version: 2.0 */
+/* frarik-version: 2.1 */
 /**
- * GruppoCalendario.js — Distintivo FratechStore v2.0
+ * GruppoCalendario.js — Distintivo FratechStore v2.1
  * Chip: count eventi nel giorno più vicino + colore giorni mancanti
  * Popup: lista eventi 7 giorni (via HA callApi), raggruppata per giorno
+ * v2.1: chip label+value uniti, righe evento stile glass, titolo popup dinamico
  */
 (function () {
   'use strict';
@@ -23,6 +24,12 @@
   function attrOf(h, id, k) { const s = h && h.states && h.states[id]; return (s && s.attributes && s.attributes[k]) ?? null; }
   function eh(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function liveH(r) { return H() || (r && r.states ? r : null); }
+  function hex2rgba(hex, a) {
+    let h = (hex||'').replace('#','');
+    if (h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    if (h.length!==6) return `rgba(255,255,255,${a})`;
+    return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`;
+  }
 
   /* ─── Colore in base ai giorni mancanti ─── */
   function _dayColor(days, isActive) {
@@ -102,8 +109,7 @@
     const _cond = { event_today: days === 0 || isActive, event_soon: v => days !== null && days >= 0 && days <= parseFloat(v||7), no_event: days === null };
     return {
       icon: _chipSvg(days, count, isActive),
-      label: c.label || 'Calendario',
-      value,
+      value: `${(c.label || 'Calendario').toUpperCase()}: ${value.toUpperCase()}`,
       color: (_fcr && _fcr.evalColor(cfg, _cond)) || color,
       borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
     };
@@ -182,7 +188,7 @@
   function _renderLoading() {
     return `<div style="padding:44px 20px;text-align:center">
       <div style="font-size:26px;display:inline-block;animation:gcalSpin 1.1s linear infinite">📅</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:10px">Caricamento eventi…</div>
+      <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;margin-top:10px">Caricamento eventi…</div>
       <style>@keyframes gcalSpin{to{transform:rotate(20deg)translateY(-2px)rotate(-20deg)}}</style>
     </div>`;
   }
@@ -192,8 +198,8 @@
     if (!events.length) {
       return `<div style="padding:40px 20px;text-align:center;color:#fff">
         <div style="font-size:36px;margin-bottom:10px">🎉</div>
-        <div style="font-size:13px;font-weight:700">Nessun evento nei prossimi 7 giorni</div>
-        <div style="font-size:11px;color:#fff;margin-top:5px">La settimana è libera!</div>
+        <div style="font-size:12px;font-weight:900;text-transform:uppercase">Nessun evento nei prossimi 7 giorni</div>
+        <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;opacity:.7;margin-top:5px">La settimana è libera!</div>
       </div>`;
     }
 
@@ -217,26 +223,25 @@
         const timeStr  = _evTime(ev);
         const loc      = ev.location || '';
         const calColor = ev._calColor || '#818cf8';
-        const calName  = ev._calName  || '';
 
-        return `<div style="display:flex;align-items:flex-start;gap:12px;padding:13px 16px 13px 14px;border-bottom:1px solid rgba(255,255,255,.06)">
-          <div style="padding-top:6px;flex-shrink:0">
+        return `<div style="position:relative;overflow:hidden;display:flex;align-items:flex-start;gap:12px;border-radius:16px;background:linear-gradient(155deg,${hex2rgba(hdrCol,.14)},${hex2rgba(hdrCol,.03)});border:1px solid ${hex2rgba(hdrCol,.3)};padding:12px 14px;margin:0 14px 8px">
+          <div style="padding-top:3px;flex-shrink:0">
             <div style="width:10px;height:10px;border-radius:50%;background:${calColor}"></div>
           </div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:15px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(title)}</div>
+            <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(title)}</div>
             <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:5px;align-items:center">
-              <span style="font-size:12px;color:#fff;font-weight:600">${eh(timeStr)}</span>
-              ${loc ? `<span style="font-size:11px;color:#fff">📍 ${eh(String(loc).slice(0,40))}</span>` : ''}
+              <span style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff">${eh(timeStr)}</span>
+              ${loc ? `<span style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;opacity:.7">📍 ${eh(String(loc).slice(0,40))}</span>` : ''}
             </div>
           </div>
         </div>`;
       }).join('');
 
       return `<div>
-        <div style="padding:10px 16px 9px;background:linear-gradient(90deg,${hdrCol}28,transparent);border-left:3px solid ${hdrCol};display:flex;align-items:center;gap:8px">
-          <span style="font-size:13px;font-weight:800;color:${hdrCol};text-transform:capitalize">${eh(label)}</span>
-          <span style="font-size:11px;color:#fff;font-weight:600">${nEvs} event${nEvs>1?'i':'o'}</span>
+        <div style="margin:0 14px 8px;padding:8px 14px;border-radius:12px;background:linear-gradient(90deg,${hex2rgba(hdrCol,.16)},transparent);border-left:3px solid ${hdrCol};display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;font-weight:900;text-transform:uppercase;color:${hdrCol}">${eh(label)}</span>
+          <span style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff">${nEvs} event${nEvs>1?'i':'o'}</span>
         </div>
         ${rows}
       </div>`;
@@ -250,40 +255,52 @@
     const c    = loadCfg(cfg);
     const ents = Array.isArray(c.entities) ? c.entities : [];
     if (!ents.length) {
-      return `<div id="gcal-popup-body"><div style="padding:36px 20px;text-align:center;color:#fff;font-size:12px">Nessun calendario configurato.<br><span style="font-size:10px;color:rgba(255,255,255,.5)">Clicca ✏️ sulla chip per configurare.</span></div></div>`;
+      return `<div id="gcal-popup-body"><div style="padding:36px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">Nessun calendario configurato<br><span style="font-size:12px;font-weight:900;text-transform:uppercase;opacity:.7">Clicca ✏️ sulla chip per configurare</span></div></div>`;
     }
     return _renderLoading();
   }
 
-  /* ─── _hideSubtitle ─── */
-  function _hideSubtitle(el) {
+  /* ─── titolo popup: bianco/maiuscolo/grassetto + sottotitolo nascosto ─── */
+  function _syncTitle(cfg, el) {
     try {
       const hdr = el.previousElementSibling; if (!hdr) return;
       const tw = hdr.children && hdr.children[1]; if (!tw) return;
-      const sub = tw.children && tw.children[1]; if (!sub) return;
-      sub.style.display = 'none';
+      const titleEl = tw.children && tw.children[0]; if (!titleEl) return;
+      const sub = tw.children && tw.children[1]; if (sub) sub.style.display = 'none';
+      const c = loadCfg(cfg);
+      const ents = Array.isArray(c.entities) ? c.entities : [];
+      const h = H();
+      const { days, count, isActive } = _soonest(h, ents);
+      titleEl.style.color = '#fff';
+      titleEl.style.fontWeight = '900';
+      titleEl.style.textTransform = 'uppercase';
+      titleEl.textContent = days === null ? 'Nessun evento'
+        : isActive ? `${count} in corso`
+        : days === 0 ? `${count} oggi`
+        : days === 1 ? `${count} domani`
+        : `${count} tra ${days} giorni`;
     } catch(e) {}
   }
 
   /* ─── mount() — fetch API e aggiorna popup ─── */
   function mount(cfg, rawHass, el) {
-    setTimeout(() => _hideSubtitle(el), 0);
+    setTimeout(() => _syncTitle(cfg, el), 0);
 
     const _doFetch = () => {
       const h = H() || rawHass;
       const c = loadCfg(cfg);
       if (!(Array.isArray(c.entities) ? c.entities : []).length) {
-        el.innerHTML = render(cfg, h); _hideSubtitle(el); return;
+        el.innerHTML = render(cfg, h); _syncTitle(cfg, el); return;
       }
       if (!h || typeof h.callApi !== 'function') {
-        el.innerHTML = `<div style="padding:24px;text-align:center;color:rgba(255,255,255,.5);font-size:11px">⚠️ API HA non disponibile — usa la modalità add-on</div>`;
-        _hideSubtitle(el); return;
+        el.innerHTML = `<div style="padding:24px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">⚠️ API HA non disponibile — usa la modalità add-on</div>`;
+        _syncTitle(cfg, el); return;
       }
-      el.innerHTML = _renderLoading(); _hideSubtitle(el);
+      el.innerHTML = _renderLoading(); _syncTitle(cfg, el);
       _fetchWeekEvents(cfg, h).then(events => {
         if (!el.isConnected) return;
         el.innerHTML = _renderEvents(cfg, events, h);
-        _hideSubtitle(el);
+        _syncTitle(cfg, el);
       });
     };
 
@@ -474,7 +491,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Calendario', icon: 'mdi:calendar',
     desc: 'Chip con count eventi del giorno più vicino + colore per giorni mancanti. Popup: 7 giorni di eventi via API HA.',
-    version: '2.0', isDistintivo: true,
+    version: '2.1', isDistintivo: true,
     defaultCfg: { label:'Calendario', icon:'mdi:calendar', color:'#60a5fa', entities:[], colorMode:'auto', colorRules:[] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -483,5 +500,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-calendario v2.0'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-calendario v2.1'); } catch(e) {}
 })();
