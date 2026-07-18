@@ -1,4 +1,4 @@
-/* frarik-version: 5.23 */
+/* frarik-version: 5.24 */
 /* v5.15: aggiunta anteprima live + slider dimensione card (altezza/larghezza)
    nel popup Impostazioni, stesso meccanismo di Meteo.js/posta-card
    (localStorage _frk_layout_ + evento frarik-card-layout); aggiunto
@@ -57,6 +57,13 @@
    padding 12px 13px) che mostra la prossima raccolta in arrivo (dato già
    calcolato ma mai mostrato); resta cliccabile per aprire il popup
    Settimana. Rimossa la variabile morta nextAbbr, mai utilizzata. */
+/* v5.24: bidoni ridisegnati da zero in stile flat cartoon su riferimento
+   fornito dall'utente — corpo pieno del colore del tipo di rifiuto,
+   coperchio con maniglia e cardini visibili, ruote nere, pedale, grande
+   simbolo di riciclo bianco al centro (costruito con vera geometria ad
+   arco, non decorativo). Riquadro "Questa sera/Domani" nella card
+   diviso in due box separati con contorno, staccati dal bordo alto
+   (padding-top aggiunto, colonna centrata verticalmente). */
 ;(function () {
   'use strict';
 
@@ -94,81 +101,54 @@
   }
   function todayIdx() { const d = new Date().getDay(); return d === 0 ? 6 : d - 1; }
 
-  /* ── bidone SVG — illustrazione prodotto (corpo navy + coperchio colorato) ── */
+  /* ── bidone SVG — illustrazione stile flat cartoon (corpo pieno colorato + simbolo riciclo) ── */
   function binSvg(color, sz) {
     const uid = 'b' + color.replace(/[^0-9a-f]/gi,'').slice(0,6) + String(sz);
-    const lL  = shade(color,  58);
-    const lD  = shade(color, -28);
-    const h   = Math.round(sz * 1.56);
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 100" width="' + sz + '" height="' + h + '" style="display:block;filter:drop-shadow(0 6px 18px rgba(0,0,0,.7))">'
+    const lite = shade(color, 45);
+    const dark = shade(color, -35);
+    const lidC = shade(color, 18);
+    const lidLite = shade(color, 62);
+    const h = Math.round(sz * 1.3);
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 130" width="' + sz + '" height="' + h + '" style="display:block;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5))">'
       + '<defs>'
-      + '<linearGradient id="' + uid + 'bd" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1a3255"/><stop offset="30%" stop-color="#0b1929"/><stop offset="100%" stop-color="#050d1a"/></linearGradient>'
-      + '<linearGradient id="' + uid + 'ld" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="' + lL + '"/><stop offset="100%" stop-color="' + lD + '"/></linearGradient>'
-      + '<radialGradient id="' + uid + 'sp" cx="26%" cy="28%" r="58%"><stop offset="0%" stop-color="rgba(255,255,255,.52)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></radialGradient>'
+      + '<linearGradient id="' + uid + 'bd" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="' + lite + '"/><stop offset="55%" stop-color="' + color + '"/><stop offset="100%" stop-color="' + dark + '"/></linearGradient>'
+      + '<linearGradient id="' + uid + 'ld" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + lidLite + '"/><stop offset="100%" stop-color="' + lidC + '"/></linearGradient>'
       + '</defs>'
-      + '<ellipse cx="32" cy="97" rx="26" ry="3.5" fill="rgba(0,0,0,.35)"/>'
-      + '<rect x="9" y="79" width="46" height="5" rx="2.5" fill="#040912"/>'
-      + '<circle cx="17" cy="87" r="10" fill="#0a1828"/>'
-      + '<circle cx="17" cy="87" r="8" fill="#070e1c"/>'
-      + '<circle cx="17" cy="87" r="5.5" fill="#050b16"/>'
-      + '<circle cx="17" cy="87" r="2.5" fill="#030910"/>'
-      + '<circle cx="15.5" cy="85.5" r="1" fill="rgba(255,255,255,.15)"/>'
-      + '<line x1="17" y1="79" x2="17" y2="82" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
-      + '<line x1="17" y1="92" x2="17" y2="95" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
-      + '<line x1="9.3" y1="82.5" x2="12" y2="84.8" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
-      + '<line x1="22" y1="89.2" x2="24.7" y2="91.5" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
-      + '<line x1="9.3" y1="91.5" x2="12" y2="89.2" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
-      + '<line x1="22" y1="84.8" x2="24.7" y2="82.5" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
-      + '<circle cx="47" cy="87" r="10" fill="#0a1828"/>'
-      + '<circle cx="47" cy="87" r="8" fill="#070e1c"/>'
-      + '<circle cx="47" cy="87" r="5.5" fill="#050b16"/>'
-      + '<circle cx="47" cy="87" r="2.5" fill="#030910"/>'
-      + '<circle cx="45.5" cy="85.5" r="1" fill="rgba(255,255,255,.15)"/>'
-      + '<line x1="47" y1="79" x2="47" y2="82" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
-      + '<line x1="47" y1="92" x2="47" y2="95" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
-      + '<line x1="39.3" y1="82.5" x2="42" y2="84.8" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
-      + '<line x1="52" y1="89.2" x2="54.7" y2="91.5" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
-      + '<line x1="39.3" y1="91.5" x2="42" y2="89.2" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
-      + '<line x1="52" y1="84.8" x2="54.7" y2="82.5" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
-      + '<path d="M10,24 L12,80 Q12,84 17,84 H47 Q52,84 52,80 L54,24 Z" fill="url(#' + uid + 'bd)" stroke="#0a1e38" stroke-width=".8"/>'
-      + '<path d="M10,24 L12,80 Q12,84 17,84 H19 L17,24 Z" fill="rgba(255,255,255,.08)"/>'
-      + '<path d="M54,24 L52,80 Q52,84 47,84 H45 L53,24 Z" fill="rgba(0,0,0,.22)"/>'
-      + '<path d="M11,42 Q32,40.5 53,42" stroke="rgba(255,255,255,.05)" stroke-width="1.2" fill="none"/>'
-      + '<path d="M11.5,61 Q32,59.5 52.5,61" stroke="rgba(255,255,255,.035)" stroke-width="1.2" fill="none"/>'
-      + '<rect x="19" y="36" width="26" height="34" rx="4" fill="rgba(0,0,0,.2)" stroke="rgba(255,255,255,.06)" stroke-width=".7"/>'
-      + '<path d="M10.5,25 L11,33 Q32,31 53,33 L53.5,25 Z" fill="' + color + '" opacity=".2"/>'
-      + '<path d="M10.5,25 Q32,23.5 53.5,25 L53.5,26.5 Q32,25 10.5,26.5 Z" fill="' + color + '" opacity=".12"/>'
-      + '<rect x="8" y="18" width="48" height="8" rx="3.5" fill="#070f1c" stroke="#0a1e38" stroke-width=".7"/>'
-      + '<rect x="8" y="18" width="48" height="2.5" rx="3.5" fill="rgba(255,255,255,.05)"/>'
-      + '<rect x="26" y="16" width="12" height="5" rx="2.5" fill="#050c1a"/>'
-      + '<rect x="5" y="5" width="54" height="15" rx="5.5" fill="url(#' + uid + 'ld)"/>'
-      + '<rect x="5" y="5" width="54" height="15" rx="5.5" fill="url(#' + uid + 'sp)"/>'
-      + '<rect x="5" y="5" width="54" height="15" rx="5.5" fill="none" stroke="' + lD + '" stroke-width=".7" opacity=".5"/>'
-      + '<path d="M10,7 Q32,5.5 54,7" stroke="rgba(255,255,255,.15)" stroke-width=".8" fill="none"/>'
-      + '<path d="M10,10 Q25,6.5 44,9" stroke="rgba(255,255,255,.42)" stroke-width="3" fill="none" stroke-linecap="round"/>'
-      + '<path d="M10,13 Q22,11 36,12.5" stroke="rgba(255,255,255,.12)" stroke-width="1.5" fill="none" stroke-linecap="round"/>'
-      + '<rect x="22" y=".5" width="20" height="6" rx="3" fill="#060d1c" stroke="#0a1e38" stroke-width=".7"/>'
-      + '<rect x="24" y="1.5" width="8" height="2" rx="1" fill="rgba(255,255,255,.12)"/>'
+      + '<ellipse cx="50" cy="125" rx="30" ry="4" fill="#000" opacity=".3"/>'
+      + '<circle cx="27" cy="118" r="7" fill="#161616"/>'
+      + '<circle cx="73" cy="118" r="7" fill="#161616"/>'
+      + '<circle cx="27" cy="118" r="2.4" fill="#3a3a3a"/>'
+      + '<circle cx="73" cy="118" r="2.4" fill="#3a3a3a"/>'
+      + '<path d="M17,42 L83,42 L79,118 Q79,122 75,122 L25,122 Q21,122 21,118 Z" fill="url(#' + uid + 'bd)" stroke="' + dark + '" stroke-width="1.2"/>'
+      + '<ellipse cx="50" cy="80" rx="24" ry="30" fill="' + dark + '" opacity=".18"/>'
+      + '<rect x="41" y="112" width="18" height="7" rx="2.5" fill="#161616"/>'
+      + '<g fill="#fff" transform="translate(50,78) scale(0.85)">'
+      + '<path d="M 17,0 A 17 17 0 0 1 3.53,16.63 L 6.18,19.02 L -2.87,16.25 L 2.16,6.66 L 2.08,9.78 A 10 10 0 0 0 10,0 Z"/>'
+      + '<path d="M -8.5,14.72 A 17 17 0 0 1 -16.17,-5.25 L -19.56,-4.16 L -12.64,-10.61 L -6.85,-1.46 L -9.51,-3.09 A 10 10 0 0 0 -5,8.66 Z"/>'
+      + '<path d="M -8.5,-14.72 A 17 17 0 0 1 12.63,-11.38 L 13.38,-14.86 L 15.5,-5.64 L 4.68,-5.2 L 7.43,-6.69 A 10 10 0 0 0 -5,-8.66 Z"/>'
+      + '</g>'
+      + '<rect x="14" y="16" width="72" height="28" rx="12" fill="url(#' + uid + 'ld)" stroke="' + dark + '" stroke-width="1.2"/>'
+      + '<rect x="24" y="20" width="52" height="5" rx="2.5" fill="#fff" opacity=".35"/>'
+      + '<rect x="41" y="8" width="18" height="9" rx="3.5" fill="' + lidC + '" stroke="' + dark + '" stroke-width="1"/>'
+      + '<rect x="27" y="12" width="7" height="6" rx="1.5" fill="' + dark + '" opacity=".5"/>'
+      + '<rect x="46.5" y="12" width="7" height="6" rx="1.5" fill="' + dark + '" opacity=".5"/>'
+      + '<rect x="66" y="12" width="7" height="6" rx="1.5" fill="' + dark + '" opacity=".5"/>'
       + '</svg>';
   }
 
   function emptyBinSvg(sz) {
-    const h = Math.round(sz * 1.56);
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 100" width="' + sz + '" height="' + h + '" style="display:block;filter:drop-shadow(0 4px 8px rgba(0,0,0,.4))">'
-      + '<ellipse cx="32" cy="97" rx="26" ry="3.5" fill="rgba(255,255,255,.02)"/>'
-      + '<rect x="9" y="79" width="46" height="5" rx="2.5" fill="rgba(255,255,255,.04)"/>'
-      + '<circle cx="17" cy="87" r="10" fill="rgba(255,255,255,.04)"/>'
-      + '<circle cx="17" cy="87" r="8" fill="rgba(255,255,255,.03)"/>'
-      + '<circle cx="17" cy="87" r="5.5" fill="rgba(255,255,255,.02)"/>'
-      + '<circle cx="47" cy="87" r="10" fill="rgba(255,255,255,.04)"/>'
-      + '<circle cx="47" cy="87" r="8" fill="rgba(255,255,255,.03)"/>'
-      + '<circle cx="47" cy="87" r="5.5" fill="rgba(255,255,255,.02)"/>'
-      + '<path d="M10,24 L12,80 Q12,84 17,84 H47 Q52,84 52,80 L54,24 Z" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.1)" stroke-width="1.2"/>'
-      + '<rect x="8" y="18" width="48" height="8" rx="3.5" fill="rgba(255,255,255,.05)"/>'
-      + '<rect x="5" y="5" width="54" height="15" rx="5.5" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.08)" stroke-width=".7"/>'
-      + '<rect x="22" y=".5" width="20" height="6" rx="3" fill="rgba(255,255,255,.04)"/>'
-      + '<line x1="21" y1="38" x2="43" y2="68" stroke="rgba(255,255,255,.15)" stroke-width="3.5" stroke-linecap="round"/>'
-      + '<line x1="43" y1="38" x2="21" y2="68" stroke="rgba(255,255,255,.15)" stroke-width="3.5" stroke-linecap="round"/>'
+    const h = Math.round(sz * 1.3);
+    const c = 'rgba(255,255,255,.08)', b = 'rgba(255,255,255,.12)';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 130" width="' + sz + '" height="' + h + '" style="display:block;filter:drop-shadow(0 4px 8px rgba(0,0,0,.4))">'
+      + '<ellipse cx="50" cy="125" rx="30" ry="4" fill="rgba(255,255,255,.03)"/>'
+      + '<circle cx="27" cy="118" r="7" fill="' + c + '"/>'
+      + '<circle cx="73" cy="118" r="7" fill="' + c + '"/>'
+      + '<path d="M17,42 L83,42 L79,118 Q79,122 75,122 L25,122 Q21,122 21,118 Z" fill="' + c + '" stroke="' + b + '" stroke-width="1.2"/>'
+      + '<rect x="41" y="112" width="18" height="7" rx="2.5" fill="rgba(255,255,255,.1)"/>'
+      + '<rect x="14" y="16" width="72" height="28" rx="12" fill="' + c + '" stroke="' + b + '" stroke-width="1.2"/>'
+      + '<rect x="41" y="8" width="18" height="9" rx="3.5" fill="' + c + '" stroke="' + b + '" stroke-width="1"/>'
+      + '<line x1="35" y1="60" x2="65" y2="100" stroke="rgba(255,255,255,.18)" stroke-width="4" stroke-linecap="round"/>'
+      + '<line x1="65" y1="60" x2="35" y2="100" stroke="rgba(255,255,255,.18)" stroke-width="4" stroke-linecap="round"/>'
       + '</svg>';
   }
 
@@ -265,7 +245,8 @@
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
       + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;max-height:160px}'
-      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:5px;justify-content:flex-start;min-width:0;padding-left:10px;overflow:hidden}'
+      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:10px;justify-content:center;min-width:0;padding-left:10px;padding-top:10px;overflow:hidden}'
+      + '#' + rid + ' .fc-sec-box{padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09)}'
       + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:space-between;gap:6px}'
       + '#' + rid + ' .fc-met-lbl{font-size:12px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px;flex-shrink:0}'
       + '#' + rid + ' .fc-next-box{display:flex;align-items:center;gap:10px;margin:4px 14px 14px;padding:12px 13px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;cursor:pointer;transition:background .15s}'
@@ -287,11 +268,14 @@
     const heroHtml = '<div class="fc-hero">'
       + '<div class="fc-hero-img">' + binsHtml + '</div>'
       + '<div class="fc-hero-r">'
+      + '<div class="fc-sec-box">'
       + secHdr('Questa sera', col)
       + tonightRows
-      + '<div style="margin:8px 0 6px"></div>'
+      + '</div>'
+      + '<div class="fc-sec-box">'
       + secHdr('Domani — ' + DFULL[tmrI].slice(0,3), null)
       + tmrRows
+      + '</div>'
       + '</div>'
       + '</div>';
 
@@ -1089,7 +1073,7 @@ automation:
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.23',
+    version: '5.24',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',
