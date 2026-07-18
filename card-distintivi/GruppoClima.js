@@ -1,7 +1,15 @@
-/* frarik-version: 1.4 */
+/* frarik-version: 2.0 */
 /**
- * GruppoClima.js — Distintivo FratechStore v1.3
+ * GruppoClima.js — Distintivo FratechStore v2.0
  * Chip climi attivi + popup con temp/umidità da sensore, controlli HVAC/ventola/alette
+ * v2.0: stesso trattamento di GruppoAllarme/GruppoLuci/GruppoFinestre/GruppoPorte/
+ *       GruppoTapparelle — chip "CLIMA: N" (unico value maiuscolo/grassetto); popup
+ *       rifatto a stile "glass" con hero riepilogo, riquadri con lo stesso
+ *       sfondo/colore/altezza degli altri distintivi (icona + nome + stato + toggle
+ *       potenza + temp/umidità + ±temperatura + pannello espandibile modalità/
+ *       ventola/alette), automazione come badge nell'angolo (verde/rosso, senza
+ *       scritte, icona robot); titolo popup bianco/maiuscolo/grassetto; tutto il
+ *       testo a dimensione unica (12px)
  */
 (function () {
   'use strict';
@@ -152,8 +160,7 @@
     const _cond = { any_on: active > 0, all_off: active === 0 };
     return {
       icon: iconHtml(_dynIcon(c.icon||'🌡️', active > 0)),
-      label: c.label || 'Clima',
-      value: ents.length ? `${active}/${ents.length}` : '—',
+      value: `${(c.label || 'Clima').toUpperCase()}: ${ents.length ? active : '—'}`,
       color: (_fcr && _fcr.evalColor(cfg, _cond)) || (active > 0 ? col : '#fff'),
       borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
     };
@@ -178,8 +185,26 @@
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const col = c.color || '#f97316';
 
-    const btnBase = 'width:26px;height:26px;border-radius:7px;cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;outline:none;flex-shrink:0;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff';
-    const secLbl  = 'font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:#fff;margin-bottom:5px';
+    const activeCount = h ? ents.filter(e => climaIsActive(h, e.entity)).length : 0;
+    const anyActive = activeCount > 0;
+    const heroCol = anyActive ? col : '#fff';
+    const heroTxt = !ents.length ? 'NESSUN CLIMA'
+      : activeCount === 0 ? 'TUTTI SPENTI'
+      : activeCount === ents.length ? 'TUTTI ACCESI'
+      : `${activeCount}/${ents.length} ACCESI`;
+
+    const hero = `<div style="position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;padding:16px;border-radius:18px;background:linear-gradient(155deg,${hex2rgba(heroCol,.16)},${hex2rgba(heroCol,.04)});border:1px solid ${hex2rgba(heroCol,.32)};margin:0 14px 14px">
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 18% 15%,${hex2rgba(heroCol,.22)},transparent 62%);pointer-events:none"></div>
+      <div style="position:relative;width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(heroCol,.18)};border:1.5px solid ${hex2rgba(heroCol,.45)};box-shadow:0 0 18px ${hex2rgba(heroCol,.35)}">
+        <span style="font-size:26px;color:${heroCol}">${iconHtml(_dynIcon(c.icon||'🌡️', anyActive), 26)}</span>
+      </div>
+      <div style="position:relative;flex:1;min-width:0">
+        <div style="font-size:19px;font-weight:900;color:${heroCol};letter-spacing:.3px;text-transform:uppercase">${heroTxt}</div>
+      </div>
+    </div>`;
+
+    const btnBase = 'width:32px;height:32px;border-radius:9px;cursor:pointer;font-size:16px;font-weight:900;display:flex;align-items:center;justify-content:center;outline:none;flex-shrink:0;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff';
+    const secLbl  = 'font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.7px;color:#fff;margin-bottom:6px';
 
     const rows = ents.map((e, i) => {
       if (!e.entity) return '';
@@ -189,10 +214,8 @@
       const active = mode !== 'off' && mode !== 'unknown' && mode !== 'unavailable';
       const lbl    = e.label || nameOf(h, e.entity);
       const stCol  = climaStCol(mode, action, col);
-      const stBg   = active ? hex2rgba(stCol, .12) : 'rgba(255,255,255,.04)';
-      const stBdr  = active ? hex2rgba(stCol, .28) : 'rgba(255,255,255,.09)';
       const stLbl  = climaLbl(mode, action);
-      const rowIco = iconHtml(_dynIcon(c.icon||'🌡️', active), 18);
+      const rowIco = iconHtml(_dynIcon(c.icon||'🌡️', active), 22);
 
       // Temperature: prefer tempSensor over climate current_temperature
       const sensorTempRaw = (e.tempSensor && h) ? parseFloat(stateOf(h, e.tempSensor)) : NaN;
@@ -234,61 +257,61 @@
       const modeBtns = hvacModes.map(m => {
         const mCol2 = HVAC_COL[m] || '#64748b';
         const mActive = mode === m;
-        return `<button data-cc-mode="${i}" data-val="${eh(m)}" data-entity="${eh(e.entity)}" style="padding:5px 9px;border-radius:8px;border:1px solid ${mActive?hex2rgba(mCol2,.4):'rgba(255,255,255,.1)'};background:${mActive?hex2rgba(mCol2,.2):'rgba(255,255,255,.05)'};color:${mActive?mCol2:'#fff'};cursor:pointer;font-size:10px;font-weight:700;white-space:nowrap;outline:none">${HVAC_ICO[m]||''} ${HVAC_LBL[m]||m}</button>`;
+        return `<button data-cc-mode="${i}" data-val="${eh(m)}" data-entity="${eh(e.entity)}" style="padding:8px 12px;border-radius:10px;border:1px solid ${mActive?hex2rgba(mCol2,.4):'rgba(255,255,255,.1)'};background:${mActive?hex2rgba(mCol2,.2):'rgba(255,255,255,.05)'};color:${mActive?mCol2:'#fff'};cursor:pointer;font-size:12px;font-weight:900;text-transform:uppercase;white-space:nowrap;outline:none">${HVAC_ICO[m]||''} ${HVAC_LBL[m]||m}</button>`;
       }).join('');
 
       const fanBtns = fanModes.length > 1 ? fanModes.map(m => {
         const fActive = curFan === m;
-        return `<button data-cc-fan="${i}" data-val="${eh(m)}" data-entity="${eh(e.entity)}" style="padding:4px 8px;border-radius:7px;border:1px solid ${fActive?'rgba(56,189,248,.38)':'rgba(255,255,255,.1)'};background:${fActive?'rgba(56,189,248,.18)':'rgba(255,255,255,.05)'};color:${fActive?'#38bdf8':'#fff'};cursor:pointer;font-size:10px;font-weight:700;outline:none">${FAN_LBL[m]||m}</button>`;
+        return `<button data-cc-fan="${i}" data-val="${eh(m)}" data-entity="${eh(e.entity)}" style="padding:7px 11px;border-radius:10px;border:1px solid ${fActive?'rgba(56,189,248,.38)':'rgba(255,255,255,.1)'};background:${fActive?'rgba(56,189,248,.18)':'rgba(255,255,255,.05)'};color:${fActive?'#38bdf8':'#fff'};cursor:pointer;font-size:12px;font-weight:900;text-transform:uppercase;outline:none">${FAN_LBL[m]||m}</button>`;
       }).join('') : '';
 
       const swingBtns = swingModes.length > 1 ? swingModes.map(m => {
         const sActive = curSwing === m;
-        return `<button data-cc-swing="${i}" data-val="${eh(m)}" data-entity="${eh(e.entity)}" style="padding:4px 8px;border-radius:7px;border:1px solid ${sActive?'rgba(167,139,250,.38)':'rgba(255,255,255,.1)'};background:${sActive?'rgba(167,139,250,.18)':'rgba(255,255,255,.05)'};color:${sActive?'#a78bfa':'#fff'};cursor:pointer;font-size:10px;font-weight:700;outline:none">${SWING_LBL[m]||m}</button>`;
+        return `<button data-cc-swing="${i}" data-val="${eh(m)}" data-entity="${eh(e.entity)}" style="padding:7px 11px;border-radius:10px;border:1px solid ${sActive?'rgba(167,139,250,.38)':'rgba(255,255,255,.1)'};background:${sActive?'rgba(167,139,250,.18)':'rgba(255,255,255,.05)'};color:${sActive?'#a78bfa':'#fff'};cursor:pointer;font-size:12px;font-weight:900;text-transform:uppercase;outline:none">${SWING_LBL[m]||m}</button>`;
       }).join('') : '';
 
-      let autoBadge = '';
+      // pallino automazione — piccolo badge nell'angolo del riquadro, senza scritte: solo colore stato
+      let autoDot = '';
       if (e.automation) {
         const autoOn = h ? (stateOf(h, e.automation) === 'on') : false;
-        autoBadge = `<button data-cc-auto="${i}" style="padding:3px 8px;border-radius:6px;border:1px solid ${autoOn?'rgba(74,222,128,.38)':'rgba(248,113,113,.38)'};background:${autoOn?'rgba(74,222,128,.13)':'rgba(248,113,113,.13)'};color:${autoOn?'#4ade80':'#f87171'};cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;outline:none">${autoOn?'🟢 Attiva':'🔴 Disattiva'}</button>`;
+        const aCol = autoOn ? '#4ade80' : '#f87171';
+        autoDot = `<button data-cc-auto="${i}" style="position:absolute;top:8px;right:8px;z-index:1;width:26px;height:26px;border-radius:50%;border:1.5px solid ${hex2rgba(aCol,.55)};background:linear-gradient(155deg,${hex2rgba(aCol,.4)},${hex2rgba(aCol,.12)});box-shadow:0 0 8px ${hex2rgba(aCol,.35)};display:flex;align-items:center;justify-content:center;cursor:pointer;outline:none;color:${aCol}">${iconHtml('mdi:robot', 13)}</button>`;
       }
 
-      return `<div style="border-bottom:1px solid rgba(255,255,255,.04)" data-cc-row="${i}" data-cc-step="${step}" data-cc-min="${minT}" data-cc-max="${maxT}">
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px">
-          <div style="width:36px;height:36px;border-radius:50%;background:${stBg};border:1px solid ${stBdr};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${stCol}">${rowIco}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-            <div style="font-size:10px;color:${stCol};margin-top:2px;font-weight:600">${eh(stLbl)}</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-              <div style="display:flex;align-items:center;gap:7px">
-                <span style="font-size:11px;color:${curTmpCol};font-weight:700">${eh(curTxt)}</span>
-                ${humTxt ? `<span style="font-size:11px;color:${humCol};font-weight:700">💧 ${eh(humTxt)}</span>` : ''}
-              </div>
-              <div style="display:flex;align-items:center;gap:3px">
-                <button data-cc-down="${i}" style="${btnBase}">−</button>
-                <span data-cc-target="${i}" data-val="${targetDataVal}" style="font-size:13px;font-weight:700;color:#fff;min-width:48px;text-align:center">${displayTargetStr}</span>
-                <button data-cc-up="${i}" style="${btnBase}">+</button>
-                <button data-cc-expand="${i}" style="width:24px;height:24px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;flex-shrink:0;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff">${CHEV_RIGHT}</button>
-              </div>
-            </div>
-            <div style="width:1px;height:46px;background:rgba(255,255,255,.1);flex-shrink:0"></div>
-            <button data-cc-toggle="${i}" style="width:40px;height:40px;border-radius:50%;border:1.5px solid ${togBdr};background:${togBg};color:${togCol};cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;flex-shrink:0">
-              <span class="mdi mdi-power" style="font-size:21px;color:inherit"></span>
-            </button>
-          </div>
+      return `<div style="position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(155deg,${hex2rgba(stCol,.18)},${hex2rgba(stCol,.03)});border:1px solid ${hex2rgba(stCol,.4)};padding:16px;margin:0 14px 8px" data-cc-row="${i}" data-cc-step="${step}" data-cc-min="${minT}" data-cc-max="${maxT}">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(stCol,.2)},transparent 62%);pointer-events:none"></div>
+        ${autoDot}
+        <div style="position:relative;display:flex;align-items:center;gap:12px">
+          <span style="width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(stCol,.22)};border:1px solid ${hex2rgba(stCol,.5)};box-shadow:0 0 12px ${hex2rgba(stCol,.3)};color:${stCol}">${rowIco}</span>
+          <span style="flex:1;min-width:0">
+            <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</span>
+            <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:${stCol};letter-spacing:.3px;margin-top:2px">${eh(stLbl)}</span>
+          </span>
+          <button data-cc-toggle="${i}" style="width:40px;height:40px;border-radius:50%;border:1.5px solid ${togBdr};background:${togBg};color:${togCol};cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;flex-shrink:0">
+            <span class="mdi mdi-power" style="font-size:20px;color:inherit"></span>
+          </button>
         </div>
-        <div data-cc-panel="${i}" style="display:none;flex-direction:column;gap:9px;padding:0 14px 12px 58px">
-          <div><div style="${secLbl}">Modalità</div><div style="display:flex;flex-wrap:wrap;gap:4px">${modeBtns}</div></div>
-          ${fanModes.length > 1 ? `<div><div style="${secLbl}">Ventola</div><div style="display:flex;flex-wrap:wrap;gap:4px">${fanBtns}</div></div>` : ''}
-          ${swingModes.length > 1 ? `<div><div style="${secLbl}">Alette</div><div style="display:flex;flex-wrap:wrap;gap:4px">${swingBtns}</div></div>` : ''}
-          ${autoBadge ? `<div style="padding-top:2px">${autoBadge}</div>` : ''}
+        <div style="position:relative;display:flex;align-items:center;gap:10px;margin-top:12px">
+          <span style="font-size:12px;font-weight:900;color:${curTmpCol}">${eh(curTxt)}</span>
+          ${humTxt ? `<span style="font-size:12px;font-weight:900;color:${humCol}">💧 ${eh(humTxt)}</span>` : ''}
+          <span style="flex:1"></span>
+          <button data-cc-down="${i}" style="${btnBase}">−</button>
+          <span data-cc-target="${i}" data-val="${targetDataVal}" style="font-size:12px;font-weight:900;color:#fff;min-width:44px;text-align:center">${displayTargetStr}</span>
+          <button data-cc-up="${i}" style="${btnBase}">+</button>
+          <button data-cc-expand="${i}" style="width:32px;height:32px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;flex-shrink:0;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff">${CHEV_RIGHT}</button>
+        </div>
+        <div data-cc-panel="${i}" style="position:relative;display:none;flex-direction:column;gap:10px;margin-top:12px">
+          <div><div style="${secLbl}">Modalità</div><div style="display:flex;flex-wrap:wrap;gap:6px">${modeBtns}</div></div>
+          ${fanModes.length > 1 ? `<div><div style="${secLbl}">Ventola</div><div style="display:flex;flex-wrap:wrap;gap:6px">${fanBtns}</div></div>` : ''}
+          ${swingModes.length > 1 ? `<div><div style="${secLbl}">Alette</div><div style="display:flex;flex-wrap:wrap;gap:6px">${swingBtns}</div></div>` : ''}
         </div>
       </div>`;
     }).join('');
 
-    return `<div id="cc-popup-body"><div>${rows||'<div style="padding:32px 20px;text-align:center;color:#fff;font-size:12px">Nessun clima configurato.<br><span style="font-size:10px;">Clicca ✏️ sulla chip per configurare.</span></div>'}</div></div>`;
+    return `<div id="cc-popup-body">
+      ${hero}
+      <div>${rows||'<div style="padding:32px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">Nessun clima configurato<br><span style="font-size:12px;font-weight:900;text-transform:uppercase;opacity:.7">Clicca ✏️ sulla chip per configurare</span></div>'}</div>
+    </div>`;
   }
 
   /* ── mount + handlers ── */
@@ -431,10 +454,11 @@
         const e = ents[parseInt(auto.dataset.ccAuto)]; if (!e||!e.automation) return;
         const h = H();
         const autoOn = h ? (stateOf(h, e.automation) === 'on') : false;
-        auto.textContent   = autoOn ? '🟢 Attiva' : '🔴 Disattiva';
-        auto.style.color       = autoOn ? '#4ade80' : '#f87171';
-        auto.style.borderColor = autoOn ? 'rgba(74,222,128,.38)' : 'rgba(248,113,113,.38)';
-        auto.style.background  = autoOn ? 'rgba(74,222,128,.13)' : 'rgba(248,113,113,.13)';
+        const newCol = autoOn ? '#f87171' : '#4ade80';
+        auto.style.color = newCol;
+        auto.style.borderColor = hex2rgba(newCol, .55);
+        auto.style.background = `linear-gradient(155deg,${hex2rgba(newCol,.4)},${hex2rgba(newCol,.12)})`;
+        auto.style.boxShadow = `0 0 8px ${hex2rgba(newCol,.35)}`;
         callSvc('automation', autoOn ? 'turn_off' : 'turn_on', e.automation);
         ev.stopPropagation(); return;
       }
@@ -458,8 +482,9 @@
         const ents = Array.isArray(c.entities) ? c.entities : [];
         const h = H();
         const active = h ? ents.filter(e => climaIsActive(h, e.entity)).length : 0;
-        const col = c.color || '#f97316';
-        titleEl.style.color = active > 0 ? col : '';
+        titleEl.style.color = '#fff';
+        titleEl.style.fontWeight = '900';
+        titleEl.style.textTransform = 'uppercase';
         titleEl.textContent = active === 1 ? '1 clima attivo' : `${active} climi attivi`;
       } catch(e) {}
     }
@@ -809,7 +834,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Clima', icon: '🌡️',
     desc: 'Chip climi attivi. Clic → temp/umidità da sensore, ±1°, ON/OFF, modalità HVAC, ventola, alette per ogni clima.',
-    version: '1.4', isDistintivo: true,
+    version: '2.0', isDistintivo: true,
     defaultCfg: { label: 'Clima', icon: '🌡️', color: '#f97316', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -818,5 +843,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-clima v1.4'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-clima v2.0'); } catch(e){}
 })();
