@@ -1,4 +1,4 @@
-/* frarik-version: 4.9 */
+/* frarik-version: 5.0 */
 /* Centro Controllo Posta — Frarik card standalone */
 /* v4.4: aggiunta icona ingranaggio interna (la card non ne aveva una) e
    frarik_no_edit per nascondere la matita esterna in modifica; eliminato
@@ -32,6 +32,14 @@
    spia LED montata sullo sportello. Layout tornato a 2 colonne: immagine
    a sinistra (tutta l'altezza), numero/pill/orari/statistiche impilati
    a destra, al posto del banner a tutta larghezza. */
+/* v5.0: cassetta ridisegnata da zero in volume isometrico reale (3 facce
+   con ombreggiatura corretta: alto/fronte/lato) invece del profilo piatto
+   precedente — cassetta smart con sportello che si apre ruotando sul
+   cardine, spia LED di stato, busta che sbircia dalla fessura sul top.
+   Rimossa la bandierina (non coerente con una cassetta smart da esterno).
+   Corpo della card semplificato: colonna destra ora mostra solo i 3
+   numeri oggi/settimana/mese (niente più chip orari), con un riquadro
+   a piena larghezza sotto per data/ora dell'ultima consegna. */
 (function(){
 'use strict';
 
@@ -585,65 +593,62 @@ function _acShow(inputEl,hass,domain){
 function _acHide(){ document.getElementById('__frk_posta_ac__')?.remove(); }
 
 /* ══════════════════════════════════════════════════════════════
-   PostaCard v4.9 — cassetta postale rurale realistica (legno + metallo)
+   PostaCard v5.0 — cassetta smart isometrica (volume 3D reale)
    ══════════════════════════════════════════════════════════════ */
 
 function _svgMailbox(count, isOpen){
   const active=isOpen||count>0;
-  const led=isOpen?'#34d399':count>0?'#38bdf8':'rgba(255,255,255,.15)';
+  const led=isOpen?'#34d399':count>0?'#38bdf8':'rgba(255,255,255,.18)';
 
-  const envelope=count>0?`<g class="mbx-env" style="transform-origin:103px 27px">
-      <rect x="95" y="15" width="16" height="13" rx="1" fill="#f8fafc" stroke="#cbd5e1" stroke-width=".8" transform="rotate(-8 103 21)"/>
-      <path d="M95 16 L103 22 L111 16" stroke="#cbd5e1" stroke-width=".8" fill="none" transform="rotate(-8 103 21)"/>
+  const envelope=count>0?`<g class="mbx-env" style="transform-origin:74px 70.5px">
+      <rect x="64" y="64" width="20" height="13" rx="1.5" fill="#f8fafc" stroke="#cbd5e1" stroke-width=".8" transform="rotate(-32.6 74 70.5)"/>
+      <path d="M64 65 L74 72 L84 65" stroke="#cbd5e1" stroke-width=".8" fill="none" transform="rotate(-32.6 74 70.5)"/>
     </g>`:'';
 
   return `<svg viewBox="0 0 140 190" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible">
     <defs>
-      <linearGradient id="mbxBody" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#5b6572"/>
-        <stop offset="45%" stop-color="#333c47"/>
-        <stop offset="100%" stop-color="#12161c"/>
+      <linearGradient id="mbxTop" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#7c8792"/>
+        <stop offset="100%" stop-color="#aeb8c2"/>
       </linearGradient>
-      <linearGradient id="mbxDoor" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stop-color="#3a4350"/>
-        <stop offset="100%" stop-color="#181e26"/>
+      <linearGradient id="mbxFront" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#5b6672"/>
+        <stop offset="100%" stop-color="#333c46"/>
       </linearGradient>
-      <linearGradient id="mbxWood" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stop-color="#8b5e34"/>
-        <stop offset="50%" stop-color="#7a4f2a"/>
-        <stop offset="100%" stop-color="#5c3a1c"/>
+      <linearGradient id="mbxSide" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#333c46"/>
+        <stop offset="100%" stop-color="#1b2129"/>
+      </linearGradient>
+      <linearGradient id="mbxDoor" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#454e5a"/>
+        <stop offset="100%" stop-color="#262d36"/>
       </linearGradient>
       <filter id="mbx-ledblur" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="2.2"/></filter>
+      <filter id="mbx-shblur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3"/></filter>
     </defs>
 
-    <ellipse cx="70" cy="178" rx="46" ry="7" fill="#000" opacity=".35"/>
+    <ellipse cx="75" cy="150" rx="58" ry="8" fill="#000" opacity=".35" filter="url(#mbx-shblur)"/>
 
-    <rect x="60" y="110" width="20" height="62" rx="2" fill="url(#mbxWood)"/>
-    <rect x="64" y="118" width="1.4" height="48" fill="#4a2e14" opacity=".4"/>
-    <rect x="74" y="122" width="1.2" height="40" fill="#4a2e14" opacity=".3"/>
-    <rect x="44" y="104" width="52" height="9" rx="3" fill="#1f2937"/>
+    <rect x="36" y="138" width="7" height="9" rx="1.5" fill="#14181e"/>
+    <rect x="73" y="138" width="7" height="9" rx="1.5" fill="#14181e"/>
 
-    <rect x="18" y="30" width="104" height="58" rx="29" fill="url(#mbxBody)" stroke="#0b0f14" stroke-width="1.6"/>
-    <rect x="30" y="35" width="80" height="6" rx="3" fill="#fff" opacity=".14"/>
-    <circle cx="24" cy="36" r="1.4" fill="#0b0f14" opacity=".5"/>
-    <circle cx="24" cy="82" r="1.4" fill="#0b0f14" opacity=".5"/>
+    <polygon points="86,90 86,140 112,127 112,77" fill="url(#mbxSide)" stroke="#0b0f14" stroke-width="1.2"/>
+    <rect x="97" y="95" width="3" height="38" fill="${led}" opacity=".3"/>
 
-    <ellipse cx="104" cy="59" rx="15" ry="27" fill="#05070a"/>
-    <rect x="96" y="26" width="14" height="3" rx="1" fill="#05070a" opacity=".8"/>
+    <polygon points="30,90 86,90 112,77 56,77" fill="url(#mbxTop)" stroke="#0b0f14" stroke-width="1.2"/>
+    <rect x="60" y="81.5" width="22" height="4" rx="2" fill="#05070a" opacity=".75" transform="rotate(-26.6 71 83.5)"/>
     ${envelope}
 
-    <g class="mbx-door${isOpen?' open':''}" style="transform-origin:104px 32px">
-      <ellipse cx="104" cy="59" rx="15" ry="29" fill="url(#mbxDoor)" stroke="#0b0f14" stroke-width="1.4"/>
-      <circle cx="99" cy="59" r="3" fill="#cbd5e1" stroke="#475569" stroke-width=".6"/>
-      <circle cx="100.5" cy="52" r="5" fill="${led}" opacity=".25" filter="url(#mbx-ledblur)"/>
-      <circle class="mbx-led${active?' active':''}" cx="100.5" cy="52" r="2.2" fill="${led}"/>
+    <rect x="30" y="90" width="56" height="50" fill="url(#mbxFront)" stroke="#0b0f14" stroke-width="1.4"/>
+    <rect x="30" y="90" width="56" height="5" fill="#fff" opacity=".1"/>
+
+    <g class="mbx-door${isOpen?' open':''}" style="transform-origin:55px 130px">
+      <rect x="38" y="98" width="34" height="32" rx="4" fill="url(#mbxDoor)" stroke="#0b0f14" stroke-width="1.2"/>
+      <circle cx="67" cy="114" r="2.3" fill="#cbd5e1" stroke="#475569" stroke-width=".5"/>
     </g>
 
-    <g class="mbx-flag${count>0?' up':' down'}" style="transform-origin:124px 86px">
-      <rect x="122.8" y="60" width="2.4" height="26" rx="1.2" fill="#1e2634"/>
-      <path d="M125.2 58 L138 64 L125.2 70 Z" fill="#dc2626"/>
-      <path d="M125.2 58 L138 64 L125.2 64 Z" fill="#dc2626" opacity=".35"/>
-    </g>
+    <circle cx="74" cy="104" r="5" fill="${led}" opacity=".25" filter="url(#mbx-ledblur)"/>
+    <circle class="mbx-led${active?' active':''}" cx="74" cy="104" r="2.4" fill="${led}"/>
   </svg>`;
 }
 
@@ -715,12 +720,6 @@ if(!customElements.get('posta-card')){
       }catch(_){ return null; }
     }
 
-    _orariOggi(){
-      const s=this._st('input_text.frarik_posta_oggi_orari')||'';
-      if(!s||s==='unknown'||s==='unavailable') return [];
-      return s.split(',').map(t=>t.trim()).filter(Boolean);
-    }
-
     _getTime(eid){
       const s=this._st(eid);
       return(s&&s!=='unknown'&&s!=='unavailable')?s.substring(0,5):'';
@@ -758,19 +757,7 @@ if(!customElements.get('posta-card')){
     _renderMain(){
       const today=this._today(), week=this._week(), month=this._month();
       const isOpen=this._isOpen(), last=this._lastDelivery();
-      const orari=this._orariOggi();
       const acc=isOpen?'#34d399':today>0?'#38bdf8':'rgba(255,255,255,.2)';
-
-      /* consegne di oggi — chip strip */
-      let orariHtml='';
-      if(orari.length){
-        orariHtml=`<div class="chip-row">`+orari.map((t,i)=>{
-          const isLast=i===orari.length-1;
-          return `<div class="chip${isLast?' last':''}"><span class="chip-dot"></span>${t}</div>`;
-        }).join('')+`</div>`;
-      } else {
-        orariHtml=`<div class="tl-empty">Nessuna consegna registrata oggi</div>`;
-      }
 
       return `<style>${this._css()}</style>
       <div class="card">
@@ -787,19 +774,26 @@ if(!customElements.get('posta-card')){
           <div class="body2col">
             <div class="img-col">${_svgMailbox(today,isOpen)}</div>
             <div class="info-col">
-              <div class="info-n${today>0?' act':''}${isOpen?' open':''}">${today}</div>
-              <div class="info-lbl">consegn${today===1?'a':'e'} oggi</div>
-              ${isOpen?`<div class="info-pill open">Cassetta aperta</div>`:last?`<div class="info-pill"><svg viewBox="0 0 16 16" fill="none" style="width:10px;height:10px;flex-shrink:0"><circle cx="8" cy="8" r="6.5" stroke="rgba(255,255,255,.35)" stroke-width="1.3"/><path d="M8 5v3.2l2 1.3" stroke="rgba(255,255,255,.45)" stroke-width="1.3" stroke-linecap="round"/></svg><span>${last}</span></div>`:''}
-
-              <div class="sec-mini">
-                <span class="sec-lb">Consegne di oggi</span>
-                ${orariHtml}
+              <div class="num-row">
+                <span class="num-n${today>0?' act':''}${isOpen?' open':''}">${today}</span>
+                <span class="num-l">Oggi</span>
               </div>
-
-              <div class="stat-row">
-                <div class="stat-mini"><span class="stat-mini-n">${week}</span><span class="stat-mini-l">Settimana</span></div>
-                <div class="stat-mini"><span class="stat-mini-n">${month}</span><span class="stat-mini-l">Mese</span></div>
+              <div class="num-row">
+                <span class="num-n2">${week}</span>
+                <span class="num-l">Settimana</span>
               </div>
+              <div class="num-row">
+                <span class="num-n2">${month}</span>
+                <span class="num-l">Mese</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="last-box">
+            <div class="last-ic"><svg viewBox="0 0 16 16" fill="none" style="width:15px;height:15px"><circle cx="8" cy="8" r="6.5" stroke="#38bdf8" stroke-width="1.3"/><path d="M8 5v3.2l2 1.3" stroke="#38bdf8" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+            <div class="last-tx">
+              <span class="last-lbl">Ultima consegna</span>
+              <span class="last-val">${last||'Nessuna consegna registrata'}</span>
             </div>
           </div>
 
@@ -1094,43 +1088,32 @@ if(!customElements.get('posta-card')){
 .bscroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}
 .bscroll::-webkit-scrollbar{display:none}
 
-/* corpo a 2 colonne: immagine a sinistra, resto a destra */
-.body2col{display:flex;gap:14px;padding:14px 15px 16px;align-items:stretch}
+/* corpo a 2 colonne: immagine a sinistra, numeri a destra */
+.body2col{display:flex;gap:14px;padding:14px 15px 10px;align-items:stretch}
 .img-col{flex:0 0 40%;max-width:132px;aspect-ratio:140/190}
-.info-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
-.info-n{font-size:40px;font-weight:900;color:rgba(255,255,255,.16);line-height:1;letter-spacing:-2px}
-.info-n.act{color:#38bdf8;text-shadow:0 0 24px rgba(56,189,248,.3)}
-.info-n.open{color:#34d399;text-shadow:0 0 24px rgba(52,211,153,.3)}
-.info-lbl{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.6px;margin-top:-4px}
-.info-pill{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-size:10px;color:#fff;font-weight:600;width:fit-content}
-.info-pill.open{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3);color:#34d399;font-weight:800;animation:pulse 2.5s ease infinite}
+.info-col{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.num-row{display:flex;align-items:baseline;gap:9px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.num-row:last-child{border-bottom:none}
+.num-n{font-size:32px;font-weight:900;color:rgba(255,255,255,.18);line-height:1;letter-spacing:-1px}
+.num-n.act{color:#38bdf8;text-shadow:0 0 20px rgba(56,189,248,.3)}
+.num-n.open{color:#34d399;text-shadow:0 0 20px rgba(52,211,153,.3)}
+.num-n2{font-size:22px;font-weight:900;color:#fff;line-height:1}
+.num-l{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px;opacity:.6}
 
-/* cassetta postale realistica */
+/* cassetta smart isometrica */
 @keyframes mbx-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.6px)}}
-@keyframes mbx-flag-sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(4deg)}}
 @keyframes mbx-led-pulse{0%,100%{opacity:1}50%{opacity:.55}}
 .mbx-env{animation:mbx-bob 2.6s ease-in-out infinite}
-.mbx-flag.down{transform:rotate(75deg)}
-.mbx-flag.up{transform:rotate(0deg);animation:mbx-flag-sway 3.2s ease-in-out infinite}
 .mbx-led.active{animation:mbx-led-pulse 2.2s ease-in-out infinite}
-.mbx-door{transform:rotate(0deg)}
-.mbx-door.open{transform:rotate(-24deg)}
+.mbx-door{transform:rotate(0deg);transition:transform .2s}
+.mbx-door.open{transform:rotate(14deg)}
 
-/* consegne di oggi — chip strip */
-.sec-mini{display:flex;flex-direction:column;gap:6px;margin-top:2px}
-.sec-lb{font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px;opacity:.6}
-.chip-row{display:flex;flex-wrap:wrap;gap:6px}
-.chip{display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:9px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);font-size:12px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;animation:fade-up .18s ease both}
-.chip.last{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.3);color:#38bdf8}
-.chip-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.3);flex-shrink:0}
-.chip.last .chip-dot{background:#38bdf8;box-shadow:0 0 6px rgba(56,189,248,.6)}
-.tl-empty{padding:10px;text-align:center;font-size:10px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.06);border-radius:10px}
-
-/* statistiche */
-.stat-row{display:flex;gap:8px;margin-top:auto;padding-top:8px}
-.stat-mini{flex:1;display:flex;flex-direction:column;gap:1px;padding:8px 9px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px}
-.stat-mini-n{font-size:16px;font-weight:900;color:#fff;line-height:1}
-.stat-mini-l{font-size:8px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.4px;opacity:.6}
+/* ultima consegna */
+.last-box{display:flex;align-items:center;gap:10px;margin:4px 15px 16px;padding:12px 13px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px}
+.last-ic{width:32px;height:32px;border-radius:9px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.last-tx{display:flex;flex-direction:column;gap:1px;min-width:0}
+.last-lbl{font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.6px;opacity:.6}
+.last-val{font-size:13px;font-weight:700;color:#fff}
 
 /* not installed */
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:26px 18px}
