@@ -1,4 +1,4 @@
-/* frarik-version: 4.5 */
+/* frarik-version: 4.6 */
 /* Centro Controllo Posta — Frarik card standalone */
 /* v4.4: aggiunta icona ingranaggio interna (la card non ne aveva una) e
    frarik_no_edit per nascondere la matita esterna in modifica; eliminato
@@ -14,6 +14,10 @@
    openImpostazioniHAPopup mai richiamata; aggiunta anteprima live + slider
    dimensione card (altezza/larghezza) a 2 colonne, stesso meccanismo di
    Meteo.js (localStorage _frk_layout_ + evento frarik-card-layout). */
+/* v4.6: rimosso il drawer "Notifiche e opzioni" dentro la card (toggle,
+   orari, reset) perché duplicato — le stesse impostazioni sono ora
+   raggiungibili solo dal popup dell'ingranaggio; ripulito il codice morto
+   collegato (stato _drawerOpen, handler onChange, CSS del drawer). */
 (function(){
 'use strict';
 
@@ -599,9 +603,7 @@ if(!customElements.get('posta-card')){
       this._frarikCard=null;
       this._modalHost=null;
       this._click=this._onClick.bind(this);
-      this._change=this._onChange.bind(this);
       this._prevSig='';
-      this._drawerOpen=false;
     }
 
     set hass(h){
@@ -613,14 +615,6 @@ if(!customElements.get('posta-card')){
         h?.states?.['counter.frarik_posta_mese']?.state,
         h?.states?.['input_datetime.frarik_posta_ultima_consegna']?.state,
         h?.states?.['input_text.frarik_posta_oggi_orari']?.state,
-        h?.states?.['input_boolean.frarik_posta_notifiche_attive']?.state,
-        h?.states?.['input_boolean.frarik_posta_notifica_push']?.state,
-        h?.states?.['input_boolean.frarik_posta_notifica_google']?.state,
-        h?.states?.['input_boolean.frarik_posta_notifica_alexa']?.state,
-        h?.states?.['input_datetime.frarik_posta_notifiche_media_inizio']?.state,
-        h?.states?.['input_datetime.frarik_posta_notifiche_media_fine']?.state,
-        h?.states?.['input_datetime.frarik_posta_notifiche_push_inizio']?.state,
-        h?.states?.['input_datetime.frarik_posta_notifiche_push_fine']?.state,
         this._c.sensorEntity?h?.states?.[this._c.sensorEntity]?.state:'',
       ].join('|');
       if(sig===this._prevSig) return;
@@ -637,8 +631,8 @@ if(!customElements.get('posta-card')){
     }
 
     configure(card){ if(card?.id) this._frarikCard=card; this._openSettings(); }
-    connectedCallback(){ this.shadowRoot.addEventListener('click',this._click); this.shadowRoot.addEventListener('change',this._change); }
-    disconnectedCallback(){ this.shadowRoot.removeEventListener('click',this._click); this.shadowRoot.removeEventListener('change',this._change); this._destroyModal(); _acHide(); }
+    connectedCallback(){ this.shadowRoot.addEventListener('click',this._click); }
+    disconnectedCallback(){ this.shadowRoot.removeEventListener('click',this._click); this._destroyModal(); _acHide(); }
 
     /* ── helpers ── */
     _skKey(){ return 'posta-card:'+(this._c.storageKey||'default'); }
@@ -680,14 +674,6 @@ if(!customElements.get('posta-card')){
       else window.frarikCallService?.(domain,service,data,{});
     }
 
-    _onChange(e){
-      const inp=e.target.closest('[data-a]'); if(!inp) return;
-      const a=inp.dataset.a,v=inp.value||'';
-      if(a==='set-media-start') this._setTime('input_datetime.frarik_posta_notifiche_media_inizio',v);
-      else if(a==='set-media-end') this._setTime('input_datetime.frarik_posta_notifiche_media_fine',v);
-      else if(a==='set-push-start') this._setTime('input_datetime.frarik_posta_notifiche_push_inizio',v);
-      else if(a==='set-push-end') this._setTime('input_datetime.frarik_posta_notifiche_push_fine',v);
-    }
     _setTime(eid,v){ if(!v) return; this._callSvc('input_datetime','set_datetime',{entity_id:eid,time:v+':00'}); }
 
     _build(){
@@ -716,17 +702,7 @@ if(!customElements.get('posta-card')){
       const today=this._today(), week=this._week(), month=this._month();
       const isOpen=this._isOpen(), last=this._lastDelivery();
       const orari=this._orariOggi();
-      const master=this._bool('input_boolean.frarik_posta_notifiche_attive');
-      const bPush=this._bool('input_boolean.frarik_posta_notifica_push');
-      const bGoog=this._bool('input_boolean.frarik_posta_notifica_google');
-      const bAlex=this._bool('input_boolean.frarik_posta_notifica_alexa');
-      const mStart=this._getTime('input_datetime.frarik_posta_notifiche_media_inizio')||'08:00';
-      const mEnd=this._getTime('input_datetime.frarik_posta_notifiche_media_fine')||'22:00';
-      const pStart=this._getTime('input_datetime.frarik_posta_notifiche_push_inizio')||'07:00';
-      const pEnd=this._getTime('input_datetime.frarik_posta_notifiche_push_fine')||'23:00';
       const acc=isOpen?'#34d399':today>0?'#38bdf8':'rgba(255,255,255,.2)';
-
-      const tgl=on=>`<div class="tgl${on?' on':''}"><div class="tgl-k"></div></div>`;
 
       /* timeline orari */
       let orariHtml='';
@@ -742,27 +718,6 @@ if(!customElements.get('posta-card')){
       } else {
         orariHtml=`<div class="tl-empty">Nessuna consegna registrata oggi</div>`;
       }
-
-      /* drawer */
-      const drawerHtml=this._drawerOpen?`<div class="drw">
-        <div class="drw-sec">NOTIFICHE</div>
-        <div class="drw-row" data-a="toggle-master"><span class="dri">🔔</span><span class="drl">Tutte le notifiche</span>${tgl(master)}</div>
-        <div class="drw-sub${master?'':' locked'}">
-          <div class="drw-row" data-a="toggle-push"><span class="dri">📱</span><span class="drl">Push smartphone</span>${tgl(bPush)}</div>
-          <div class="drw-row" data-a="toggle-google"><span class="dri">🔊</span><span class="drl">Google Home</span>${tgl(bGoog)}</div>
-          <div class="drw-row" data-a="toggle-alexa"><span class="dri">📣</span><span class="drl">Amazon Alexa</span>${tgl(bAlex)}</div>
-        </div>
-        <div class="drw-sec" style="margin-top:10px">ORARI MEDIA (Google / Alexa)</div>
-        <div class="time-row"><span class="tl-lbl">Dalle</span><input class="ti" type="time" data-a="set-media-start" value="${mStart}"><span class="tl-lbl">alle</span><input class="ti" type="time" data-a="set-media-end" value="${mEnd}"></div>
-        <div class="drw-sec" style="margin-top:8px">ORARI PUSH (Smartphone)</div>
-        <div class="time-row"><span class="tl-lbl">Dalle</span><input class="ti" type="time" data-a="set-push-start" value="${pStart}"><span class="tl-lbl">alle</span><input class="ti" type="time" data-a="set-push-end" value="${pEnd}"></div>
-        <div class="drw-sec" style="margin-top:10px">RESET MANUALI</div>
-        <div class="rst-row">
-          <button class="rst-btn" data-a="reset-oggi">↺ Oggi</button>
-          <button class="rst-btn" data-a="reset-sett">↺ Settimana</button>
-          <button class="rst-btn" data-a="reset-mese">↺ Mese</button>
-        </div>
-      </div>`:'';
 
       return `<style>${this._css()}</style>
       <div class="card">
@@ -797,14 +752,6 @@ if(!customElements.get('posta-card')){
             <div class="stat-box"><span class="stat-n">${month}</span><span class="stat-l">Mese</span></div>
           </div>
 
-          <div class="drw-toggle" data-a="toggle-drawer">
-            <span class="drw-ico">🔔</span>
-            <span class="drw-lbl">Notifiche e opzioni</span>
-            <span class="drw-chev">${this._drawerOpen?'▲':'▼'}</span>
-          </div>
-
-          ${drawerHtml}
-
         </div>
       </div>`;
     }
@@ -814,14 +761,6 @@ if(!customElements.get('posta-card')){
       const b=e.target.closest('[data-a]'); if(!b) return;
       const a=b.dataset.a;
       if(a==='gear') this._openSettings();
-      else if(a==='toggle-drawer'){ this._drawerOpen=!this._drawerOpen; this._prevSig=''; this._build(); }
-      else if(a==='toggle-master') this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifiche_attive')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifiche_attive'});
-      else if(a==='toggle-push'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_push')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_push'}); }
-      else if(a==='toggle-google'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_google')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_google'}); }
-      else if(a==='toggle-alexa'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_alexa')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_alexa'}); }
-      else if(a==='reset-oggi') this._confirmReset('script.frarik_posta_reset_oggi','il contatore giornaliero e gli orari di oggi');
-      else if(a==='reset-sett') this._confirmReset('script.frarik_posta_reset_settimana','il contatore settimanale');
-      else if(a==='reset-mese') this._confirmReset('script.frarik_posta_reset_mese','il contatore mensile');
     }
 
     /* ── confirm reset ── */
@@ -1139,40 +1078,6 @@ if(!customElements.get('posta-card')){
 .stat-sep{width:1px;background:rgba(255,255,255,.06)}
 .stat-n{font-size:20px;font-weight:900;color:#fff;line-height:1}
 .stat-l{font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px}
-
-/* drawer toggle */
-.drw-toggle{display:flex;align-items:center;gap:8px;padding:10px 15px;background:rgba(255,255,255,.025);border-top:1px solid rgba(255,255,255,.06);cursor:pointer;user-select:none;transition:background .15s;flex-shrink:0}
-.drw-toggle:active{background:rgba(255,255,255,.06)}
-.drw-ico{font-size:13px}
-.drw-lbl{flex:1;font-size:11px;font-weight:700;color:#fff;letter-spacing:.2px}
-.drw-chev{font-size:10px;color:#fff}
-
-/* drawer */
-.drw{padding:10px 15px 16px;display:flex;flex-direction:column;gap:5px;animation:fade-up .15s ease}
-.drw-sec{font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-top:5px;margin-bottom:3px}
-.drw-row{display:flex;align-items:center;gap:9px;padding:9px 11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:10px;cursor:pointer;user-select:none;transition:background .15s}
-.drw-row:active{background:rgba(255,255,255,.08)}
-.dri{font-size:15px;flex-shrink:0}
-.drl{flex:1;font-size:12px;font-weight:700;color:#fff}
-.drw-sub{display:flex;flex-direction:column;gap:4px;padding-left:6px;transition:opacity .2s}
-.drw-sub.locked{opacity:.28;pointer-events:none}
-
-/* toggle */
-.tgl{width:40px;height:24px;border-radius:12px;background:rgba(255,255,255,.12);position:relative;transition:background .2s;flex-shrink:0}
-.tgl.on{background:#38bdf8}
-.tgl-k{width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .18s;box-shadow:0 2px 4px rgba(0,0,0,.4)}
-.tgl.on .tgl-k{transform:translateX(16px)}
-
-/* time row */
-.time-row{display:flex;align-items:center;gap:6px;padding:7px 11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:10px}
-.tl-lbl{font-size:10px;font-weight:700;color:#fff;min-width:26px}
-.ti{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#fff;font-size:12px;font-weight:700;padding:4px 6px;font-family:system-ui,sans-serif;appearance:none;text-align:center;outline:none}
-.ti:focus{border-color:rgba(56,189,248,.5);background:rgba(56,189,248,.07)}
-
-/* reset */
-.rst-row{display:flex;gap:6px}
-.rst-btn{flex:1;padding:9px 2px;border-radius:9px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);color:rgba(255,255,255,.7);font-size:11px;font-weight:800;cursor:pointer;font-family:system-ui,sans-serif;transition:all .15s;letter-spacing:.1px}
-.rst-btn:active{background:rgba(239,68,68,.22)}
 
 /* not installed */
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:26px 18px}
