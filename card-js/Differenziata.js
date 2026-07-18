@@ -1,4 +1,4 @@
-/* frarik-version: 5.21 */
+/* frarik-version: 5.22 */
 /* v5.15: aggiunta anteprima live + slider dimensione card (altezza/larghezza)
    nel popup Impostazioni, stesso meccanismo di Meteo.js/posta-card
    (localStorage _frk_layout_ + evento frarik-card-layout); aggiunto
@@ -43,6 +43,13 @@
 /* v5.21: riquadro del popup Settimana ingrandito — righe più spaziose
    (padding 16px invece di 10px), testo giorno/rifiuto più grande (14px
    invece di 12px), pallino colore più grande (10px invece di 8px). */
+/* v5.22: bug vero trovato in secHdr() — l'etichetta "QUESTA SERA" nella
+   card prendeva il colore di stato (grigio #64748b quando non c'è ritiro
+   oggi) invece di restare sempre bianca; ora il testo è sempre #fff, solo
+   il pallino resta colorato in base allo stato. Rimossa ogni opacità
+   residua dai testi dei popup (sottotitoli toggle/orario, "Anteprima
+   live", "Dimensione card", note del wizard). Riquadro Settimana ancora
+   più grande (padding 16px→20px, testo 14px→15px, righe 16px→18px). */
 ;(function () {
   'use strict';
 
@@ -264,7 +271,7 @@
     const dot = (c, pulse) => '<div style="width:6px;height:6px;border-radius:50%;background:' + c + ';flex-shrink:0' + (pulse ? ';box-shadow:0 0 6px ' + c + ';animation:fcPulse 1.5s ease-in-out infinite' : '') + '"></div>';
     const secHdr = (label, c) => '<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">'
       + dot(c || 'rgba(255,255,255,.25)', !!(c && hasPickup))
-      + '<span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:' + (c || '#fff') + '">' + label + '</span>'
+      + '<span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#fff">' + label + '</span>'
       + '</div>';
 
     const heroHtml = '<div class="fc-hero">'
@@ -336,19 +343,19 @@
       var dots = ws.length
         ? ws.map(function(id) {
             var t = TIPI.find(function(x) { return x.id === id; }), c = getClr(id);
-            return '<div style="display:flex;align-items:center;gap:7px">'
-              + '<div style="width:10px;height:10px;border-radius:50%;background:' + c + ';box-shadow:0 0 5px ' + c + '88;flex-shrink:0"></div>'
-              + '<span style="font-size:14px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">' + (t ? t.label : id) + '</span>'
+            return '<div style="display:flex;align-items:center;gap:8px">'
+              + '<div style="width:11px;height:11px;border-radius:50%;background:' + c + ';box-shadow:0 0 6px ' + c + '88;flex-shrink:0"></div>'
+              + '<span style="font-size:15px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">' + (t ? t.label : id) + '</span>'
               + '</div>';
           }).join('')
-        : '<span style="font-size:14px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">Nessun ritiro</span>';
-      return '<div style="padding:16px 0' + (isLast ? '' : ';border-bottom:1px solid rgba(255,255,255,.06)') + '">'
-        + '<div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:' + (isToday ? '#4ade80' : '#fff') + ';margin-bottom:10px">'
+        : '<span style="font-size:15px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">Nessun ritiro</span>';
+      return '<div style="padding:18px 0' + (isLast ? '' : ';border-bottom:1px solid rgba(255,255,255,.06)') + '">'
+        + '<div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:' + (isToday ? '#4ade80' : '#fff') + ';margin-bottom:12px">'
         + DFULL[i] + (isToday ? ' — OGGI' : '') + '</div>'
-        + '<div style="display:flex;flex-wrap:wrap;gap:14px">' + dots + '</div>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:16px">' + dots + '</div>'
         + '</div>';
     }).join('');
-    const content = '<div style="padding:6px 18px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid #fff">' + rows + '</div>';
+    const content = '<div style="padding:16px 20px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid #fff">' + rows + '</div>';
     mkOv(popShell('📅', 'Rifiuti della settimana', 'ds-close', content), 'ds-close');
   }
 
@@ -421,7 +428,7 @@
       var knob = on ? 'left:22px' : 'left:3px';
       return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
         + '<div><div style="font-size:13px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">' + lbl + '</div>'
-        + '<div style="font-size:10px;color:#fff;opacity:.6;margin-top:1px">' + sub + '</div></div>'
+        + '<div style="font-size:10px;color:#fff;margin-top:1px">' + sub + '</div></div>'
         + '<div data-tg="' + id + '" style="width:44px;height:26px;border-radius:13px;background:' + bg + ';cursor:pointer;position:relative;flex-shrink:0;transition:background .18s">'
         + '<div style="position:absolute;top:3px;' + knob + ';width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:left .18s"></div>'
         + '</div>'
@@ -453,16 +460,16 @@
       + tog('google', googleOn, '🔊 Google', 'Annuncio vocale Google')
       + '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0">'
       + '<div><div style="font-size:13px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">⏰ Orario</div>'
-      + '<div style="font-size:10px;color:#fff;opacity:.6;margin-top:1px">Il giorno della raccolta</div></div>'
+      + '<div style="font-size:10px;color:#fff;margin-top:1px">Il giorno della raccolta</div></div>'
       + '<input type="time" id="dd-time" value="' + notifT + '" style="height:32px;padding:0 10px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;font-size:13px;font-family:system-ui">'
       + '</div>'
       + boxClose
       + saveBtn;
 
-    const previewHtml = '<div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:#fff;opacity:.6">Anteprima live</div>'
+    const previewHtml = '<div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:#fff">Anteprima live</div>'
       + '<div id="dd-prev-wrap" style="border-radius:14px;overflow:hidden;background:rgba(255,255,255,.02);margin-top:8px;padding:10px;display:flex;justify-content:center"></div>'
       + '<div style="margin-top:14px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)">'
-      + '<div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:#fff;opacity:.6">Dimensione card</div>'
+      + '<div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:#fff">Dimensione card</div>'
       + layoutRow('Altezza', 'dd-scale', tScale)
       + layoutRow('Larghezza', 'dd-w', tW)
       + '</div>';
@@ -957,7 +964,7 @@ automation:
         + '.wd-push-row .wd-inp{flex:1}'
         + '.wd-rm{width:30px;height:38px;border-radius:8px;background:rgba(255,255,255,.07);border:none;color:#fff;cursor:pointer;font-size:14px;flex-shrink:0}'
         + '.wd-add{padding:6px 12px;border-radius:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer}'
-        + '.wd-note{font-size:11px;color:#fff;opacity:.6;line-height:1.5;margin:0 0 10px}'
+        + '.wd-note{font-size:11px;color:#fff;line-height:1.5;margin:0 0 10px}'
         + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
         + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
         + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#060d14}'
@@ -1068,7 +1075,7 @@ automation:
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.21',
+    version: '5.22',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',

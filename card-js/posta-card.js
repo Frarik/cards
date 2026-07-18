@@ -1,5 +1,11 @@
-/* frarik-version: 5.5 */
+/* frarik-version: 5.6 */
 /* Centro Controllo Posta — Frarik card standalone */
+/* v5.6: rimossa ogni opacità residua dal testo della card e dei popup
+   (num-l, last-lbl, ni-sub, fhint, fopt, prev-ttl, stime-sep, wsec-hint,
+   wadd, testo post-installazione) — erano ancora rgba/opacity < 100%
+   nonostante il colore base #fff, quindi visivamente grigie. Anche il
+   numero grande "0" (oggi/mese) ora bianco pieno anche a riposo, invece
+   del grigio "fantasma" — solo il colore accento indica lo stato attivo. */
 /* v5.5: ultimo giro di rifiniture testo — sottotitolo installazione
    pacchetto riuscita e testo "package non installato" ora bianco pieno
    con opacità gestita separatamente (era rgba incorporata), coerente con
@@ -970,10 +976,10 @@ if(!customElements.get('posta-card')){
         .sbdy{width:50%;flex-shrink:0;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;scrollbar-width:none;border-right:1px solid rgba(255,255,255,.07)}
         .sbdy::-webkit-scrollbar{display:none}
         .flbl{font-size:12px;font-weight:900;color:#fff;letter-spacing:.7px;text-transform:uppercase;font-family:system-ui,sans-serif;margin-bottom:6px;display:flex;align-items:center;gap:6px}
-        .fopt{font-size:10px;font-weight:700;background:rgba(255,255,255,.07);color:#fff;opacity:.6;padding:2px 6px;border-radius:5px;text-transform:none;letter-spacing:0}
+        .fopt{font-size:10px;font-weight:700;background:rgba(255,255,255,.07);color:#fff;padding:2px 6px;border-radius:5px;text-transform:none;letter-spacing:0}
         .finp{width:100%;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.11);border-radius:10px;padding:11px 13px;color:#fff;font-size:13px;font-family:system-ui,sans-serif;outline:none;transition:border-color .15s}
         .finp:focus{border-color:rgba(255,255,255,.4)}
-        .fhint{font-size:11px;color:#fff;opacity:.55;margin-top:5px;font-family:system-ui,sans-serif;line-height:1.5}
+        .fhint{font-size:11px;color:#fff;margin-top:5px;font-family:system-ui,sans-serif;line-height:1.5}
         .fsec{font-size:10px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-top:10px;margin-bottom:2px}
         .fsave{width:100%;padding:14px;border-radius:13px;background:#38bdf8;border:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:system-ui,sans-serif}
         .sensbox{padding:14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid #fff}
@@ -987,13 +993,13 @@ if(!customElements.get('posta-card')){
         .stgl-sub.slocked{opacity:.3;pointer-events:none}
         .stime-row{display:flex;align-items:center;gap:6px;padding:7px 11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:10px;margin-top:4px}
         .stime{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#fff;font-size:12px;font-weight:700;padding:4px 6px;font-family:system-ui,sans-serif;text-align:center;outline:none}
-        .stime-sep{font-size:11px;color:#fff;opacity:.5}
+        .stime-sep{font-size:11px;color:#fff}
         .srst-row{display:flex;gap:6px;margin-top:4px}
         .srst-btn{flex:1;padding:9px 2px;border-radius:9px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:system-ui,sans-serif;transition:all .15s;letter-spacing:.1px}
         .srst-btn:active{background:rgba(239,68,68,.22)}
         .sov-prev{width:50%;flex-shrink:0;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none}
         .sov-prev::-webkit-scrollbar{display:none}
-        .prev-ttl{font-size:11px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.7px;opacity:.6}
+        .prev-ttl{font-size:11px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.7px}
         .prev-wrap{border-radius:14px;overflow:hidden;background:rgba(255,255,255,.02);padding:10px;display:flex;justify-content:center}
         .lsect{padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
         .layout-row{display:flex;align-items:center;gap:8px;margin-top:10px}
@@ -1184,11 +1190,11 @@ if(!customElements.get('posta-card')){
 .info-col{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
 .num-row{display:flex;align-items:baseline;gap:9px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
 .num-row:last-child{border-bottom:none}
-.num-n{font-size:32px;font-weight:900;color:rgba(255,255,255,.18);line-height:1;letter-spacing:-1px}
+.num-n{font-size:32px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px}
 .num-n.act{color:#38bdf8;text-shadow:0 0 20px rgba(56,189,248,.3)}
 .num-n.open{color:#34d399;text-shadow:0 0 20px rgba(52,211,153,.3)}
 .num-n2{font-size:22px;font-weight:900;color:#fff;line-height:1}
-.num-l{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px;opacity:.6}
+.num-l{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px}
 
 /* cassetta a parete stile "Alubox" */
 @keyframes mbx-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.8px)}}
@@ -1205,14 +1211,14 @@ if(!customElements.get('posta-card')){
 .last-box{display:flex;align-items:center;gap:10px;margin:4px 15px 16px;padding:12px 13px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px}
 .last-ic{width:32px;height:32px;border-radius:9px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .last-tx{display:flex;flex-direction:column;gap:1px;min-width:0}
-.last-lbl{font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.6px;opacity:.6}
+.last-lbl{font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.6px}
 .last-val{font-size:13px;font-weight:700;color:#fff}
 
 /* not installed */
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:26px 18px}
 .ni-env{width:96px;height:104px;opacity:.4}
 .ni-title{font-size:16px;font-weight:900;color:#fff}
-.ni-sub{font-size:12px;color:#fff;opacity:.6;line-height:1.8;max-width:240px}
+.ni-sub{font-size:12px;color:#fff;line-height:1.8;max-width:240px}
 .ni-sub strong{color:#38bdf8;opacity:1}
 `;}
   };
@@ -1252,8 +1258,8 @@ PostaCard.openWizard=function(hass,onDone,_tpl,opts){
     .wsec-ttl{font-size:12px;font-weight:900;color:#fff;letter-spacing:.6px;text-transform:uppercase;font-family:system-ui,sans-serif}
     .tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;font-family:system-ui,sans-serif}
     .req{background:rgba(239,68,68,.2);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
-    .opt{background:rgba(255,255,255,.07);color:#fff;opacity:.6;border:1px solid rgba(255,255,255,.12)}
-    .wsec-hint{font-size:11px;color:#fff;opacity:.55;font-family:system-ui,sans-serif;line-height:1.6}
+    .opt{background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.12)}
+    .wsec-hint{font-size:11px;color:#fff;font-family:system-ui,sans-serif;line-height:1.6}
     .wsec-hint code{background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px;font-size:10px;color:#fff;font-family:monospace}
     .wlist{display:flex;flex-direction:column;gap:6px}
     .wrow{display:flex;gap:6px;align-items:center}
@@ -1261,7 +1267,7 @@ PostaCard.openWizard=function(hass,onDone,_tpl,opts){
     .winp:focus{border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.09)}
     .winp.err{border-color:rgba(239,68,68,.6)!important}
     .wrem{width:32px;height:32px;flex-shrink:0;border-radius:8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#fca5a5;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-family:system-ui,sans-serif}
-    .wadd{align-self:flex-start;background:none;border:1px dashed rgba(255,255,255,.18);border-radius:9px;padding:7px 16px;color:#fff;opacity:.6;font-size:12px;font-weight:600;cursor:pointer;font-family:system-ui,sans-serif;transition:all .15s}
+    .wadd{align-self:flex-start;background:none;border:1px dashed rgba(255,255,255,.18);border-radius:9px;padding:7px 16px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:system-ui,sans-serif;transition:all .15s}
     .wadd:hover{opacity:1;border-color:rgba(255,255,255,.4)}
     .werr{font-size:11px;color:#fca5a5;font-family:system-ui,sans-serif}
     .wdiv{height:1px;background:rgba(255,255,255,.08)}
@@ -1398,7 +1404,7 @@ PostaCard.openWizard=function(hass,onDone,_tpl,opts){
           <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 20px;gap:16px;text-align:center">
             <div style="font-size:52px">✅</div>
             <div style="font-size:16px;font-weight:900;color:#fff;font-family:system-ui,sans-serif">Package installato!</div>
-            <div style="font-size:13px;color:#fff;opacity:.6;font-family:system-ui,sans-serif;line-height:1.8">
+            <div style="font-size:13px;color:#fff;font-family:system-ui,sans-serif;line-height:1.8">
               Riavvia <strong style="color:#fff;opacity:1">Home Assistant</strong> per attivare le entità.<br>
               Poi torna nello Store e aggiungi la card alla dashboard.
             </div>
