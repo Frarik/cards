@@ -1,6 +1,6 @@
-/* frarik-version: 2.7 */
+/* frarik-version: 2.8 */
 /**
- * GruppoFinestre.js — Distintivo FratechStore v2.7
+ * GruppoFinestre.js — Distintivo FratechStore v2.8
  * Chip contatore finestre aperte + popup con sommario, finestra bianca SVG animata
  * v2.3: chip allineato al pattern di GruppoAllarme/GruppoLuci — "FINESTRE: N" è un unico
  *       value in maiuscolo/grassetto (solo n. finestre aperte, non più N/M). Popup rifatto
@@ -22,6 +22,9 @@
  *       (12px) invece di più livelli diversi — richiesta esplicita di uniformità
  *       assoluta; soglia della griglia alzata (260px) per garantire 1 colonna su
  *       schermo da telefono invece di restare a 2 strette
+ * v2.8: il chip mostrava il colore personalizzato (o il verde-teal di default #34d399)
+ *       quando una finestra era aperta, mentre il popup mostra rosso — ora il chip usa
+ *       lo stesso rosso/verde canonico del popup (aperta=#f87171, chiusa=#4ade80)
  */
 (function () {
   'use strict';
@@ -116,14 +119,15 @@
     const h = liveH(rawHass);
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
-    const col = c.color || '#34d399';
     const anyOpen = active > 0;
     const _fcr = window.FratechColorRules;
     const _cond = { any_open: active > 0, all_closed: active === 0 };
     return {
       icon: iconHtml(_dynIcon(c.icon||'🪟', anyOpen)),
       value: `${(c.label || 'Finestre').toUpperCase()}: ${ents.length ? active : '—'}`,
-      color: (_fcr && _fcr.evalColor(cfg, _cond)) || (active > 0 ? col : '#fff'),
+      // stesso rosso/verde canonico del popup (aperta=rosso, chiusa=verde), non l'accento
+      // configurabile — altrimenti il chip mostrava un colore diverso dal popup
+      color: (_fcr && _fcr.evalColor(cfg, _cond)) || (anyOpen ? '#f87171' : '#4ade80'),
       borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
     };
   }
@@ -141,7 +145,6 @@
     const c = loadCfg(cfg);
     const h = liveH(rawHass);
     const ents = Array.isArray(c.entities) ? c.entities : [];
-    const col = c.color || '#34d399';
 
     const openCount = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
     const anyOpen = openCount > 0;
@@ -535,7 +538,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Finestre', icon: '🪟',
     desc: 'Chip con contatore finestre aperte. Clic → stato Aperta/Chiusa per ogni finestra.',
-    version: '2.7', isDistintivo: true,
+    version: '2.8', isDistintivo: true,
     defaultCfg: { label: 'Finestre', icon: '🪟', color: '#34d399', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -544,5 +547,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-finestre v2.7'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-finestre v2.8'); } catch(e){}
 })();

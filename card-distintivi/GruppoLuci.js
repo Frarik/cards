@@ -1,6 +1,6 @@
-/* frarik-version: 2.7 */
+/* frarik-version: 2.8 */
 /**
- * GruppoLuci.js — Distintivo FratechStore v2.7
+ * GruppoLuci.js — Distintivo FratechStore v2.8
  * Fix: icona configurabile (preserve su re-render), sottotitolo popup nascosto
  * v1.9: testi maiuscolo+grassetto (chip e popup), layout popup a stile "glass"
  *       (hero riepilogo + tasti accendi/spegni a medaglione + righe luci glass)
@@ -28,6 +28,9 @@
  *       GruppoAllarme/GruppoFinestre
  * v2.7: TUTTO il testo del popup (tranne il titolo hero) ora a un'unica dimensione
  *       (12px) invece di più livelli diversi — richiesta esplicita di uniformità assoluta
+ * v2.8: il pulsante "Accendi tutte" usava il colore personalizzato della luce invece del
+ *       verde canonico (#4ade80) usato ovunque altrove per lo stato "on/positivo" —
+ *       ora usa lo stesso verde del resto dell'app
  */
 (function () {
   'use strict';
@@ -138,10 +141,10 @@
     const ctrlBar = ents.length ? `
       <div style="display:flex;gap:20px;justify-content:center;margin:0 14px 16px">
         <button data-gl-all="on" style="background:none;border:none;padding:4px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;outline:none">
-          <span style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(155deg,${hex2rgba(col,.3)},${hex2rgba(col,.08)});border:1.5px solid ${hex2rgba(col,.55)};box-shadow:0 0 16px ${hex2rgba(col,.35)}">
-            <span style="font-size:21px;color:${col}">${iconHtml('mdi:lightbulb-on', 21)}</span>
+          <span style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(155deg,${hex2rgba('#4ade80',.3)},${hex2rgba('#4ade80',.08)});border:1.5px solid ${hex2rgba('#4ade80',.55)};box-shadow:0 0 16px ${hex2rgba('#4ade80',.35)}">
+            <span style="font-size:21px;color:#4ade80">${iconHtml('mdi:lightbulb-on', 21)}</span>
           </span>
-          <span style="white-space:nowrap;color:${col};text-transform:uppercase;font-weight:900;font-size:12px">Accendi tutte</span>
+          <span style="white-space:nowrap;color:#4ade80;text-transform:uppercase;font-weight:900;font-size:12px">Accendi tutte</span>
         </button>
         <button data-gl-all="off" style="background:none;border:none;padding:4px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;outline:none">
           <span style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.12)">
@@ -599,7 +602,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Luci', icon: '💡',
     desc: 'Chip con contatore luci accese. Clic → pannello toggle + Accendi/Spegni tutte.',
-    version: '2.7', isDistintivo: true,
+    version: '2.8', isDistintivo: true,
     defaultCfg: { label: 'Luci', icon: '💡', color: '#fbbf24', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -608,5 +611,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v2.7'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v2.8'); } catch(e){}
 })();
