@@ -1,6 +1,6 @@
-/* frarik-version: 3.8 */
+/* frarik-version: 3.9 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v3.8
+ * GruppoAllarme.js — Distintivo FratechStore v3.9
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
  * v2.3: fix bypass — azzera solo sulla transizione armato→disarmato, non mentre è già disarmato
@@ -47,6 +47,10 @@
  *       tile sensori/sirena stessa altezza di GruppoLuci/Finestre (icona 44px, padding
  *       16px, invece di 40px/14px); griglia sensori ora responsive (auto-fit) — su
  *       schermi stretti (telefono) scende a 1 colonna invece di restare forzata a 2
+ * v3.9: TUTTO il testo del popup (tranne il titolo hero) ora a un'unica dimensione
+ *       (12px) invece di più livelli diversi — richiesta esplicita di uniformità
+ *       assoluta; soglia della griglia sensori alzata (260px) per garantire 1 colonna
+ *       su schermo da telefono invece di restare a 2 strette
  */
 (function () {
   'use strict';
@@ -253,7 +257,7 @@
     if (!c.alarmEntity) {
       return `<div style="padding:40px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase;font-family:system-ui,sans-serif">
         Nessuna entità allarme configurata.<br>
-        <span style="font-size:11px;">Clicca ✏️ sulla chip per configurare.</span>
+        <span style="font-size:12px;">Clicca ✏️ sulla chip per configurare.</span>
       </div>`;
     }
 
@@ -274,7 +278,7 @@
     }).length;
     const bypassedCount = bypassed.size;
 
-    const secLbl = 'font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:8px';
+    const secLbl = 'font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:8px';
 
     /* griglia 2 colonne, tile basse e larghe (non quadrate): icona+nome+stato in riga,
        2 affiancate a riempire la larghezza del popup. Click = attiva/disattiva l'esclusione */
@@ -291,16 +295,16 @@
       else if (open)  { sIcoCol = '#f87171'; statusTxt = 'APERTO'; }
 
       const bypassBtn = isBypassed
-        ? `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="position:relative;flex-shrink:0;padding:8px 11px;border-radius:10px;border:1px solid rgba(250,204,21,.5);background:rgba(250,204,21,.16);color:#facc15;cursor:pointer;font-size:11px;font-weight:900;text-transform:uppercase;white-space:nowrap;outline:none">✕ Includi</button>`
-        : `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="position:relative;flex-shrink:0;padding:8px 11px;border-radius:10px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font-size:11px;font-weight:900;text-transform:uppercase;white-space:nowrap;outline:none">🛡 Escludi</button>`;
+        ? `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="position:relative;flex-shrink:0;padding:8px 11px;border-radius:10px;border:1px solid rgba(250,204,21,.5);background:rgba(250,204,21,.16);color:#facc15;cursor:pointer;font-size:12px;font-weight:900;text-transform:uppercase;white-space:nowrap;outline:none">✕ Includi</button>`
+        : `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="position:relative;flex-shrink:0;padding:8px 11px;border-radius:10px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font-size:12px;font-weight:900;text-transform:uppercase;white-space:nowrap;outline:none">🛡 Escludi</button>`;
 
       /* stesso linguaggio "vetro" dell'header: gradiente + alone, ma col colore di stato del sensore */
       return `<div style="position:relative;overflow:hidden;display:flex;align-items:center;gap:12px;border-radius:16px;background:linear-gradient(155deg,${hex2rgba(sIcoCol,.2)},${hex2rgba(sIcoCol,.05)});border:1px solid ${hex2rgba(sIcoCol,.4)};padding:16px 16px;min-width:0">
         <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(sIcoCol,.22)},transparent 62%);pointer-events:none"></div>
         <span style="position:relative;width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(sIcoCol,.22)};border:1px solid ${hex2rgba(sIcoCol,.5)};box-shadow:0 0 12px ${hex2rgba(sIcoCol,.3)};color:${sIcoCol}">${mdi(sIco, 22)}</span>
         <span style="position:relative;flex:1;min-width:0;text-align:left">
-          <span style="display:block;font-size:14.5px;font-weight:900;text-transform:uppercase;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sLbl)}</span>
-          <span style="display:block;font-size:10.5px;font-weight:900;text-transform:uppercase;color:${sIcoCol};letter-spacing:.3px;margin-top:2px">${statusTxt}</span>
+          <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sLbl)}</span>
+          <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:${sIcoCol};letter-spacing:.3px;margin-top:2px">${statusTxt}</span>
         </span>
         ${bypassBtn}
       </div>`;
@@ -314,7 +318,7 @@
         <span style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${isCur ? `linear-gradient(155deg,${hex2rgba(mCol,.3)},${hex2rgba(mCol,.08)})` : 'rgba(255,255,255,.05)'};border:1.5px solid ${isCur ? hex2rgba(mCol,.55) : 'rgba(255,255,255,.12)'};${isCur ? `box-shadow:0 0 16px ${hex2rgba(mCol,.35)}` : ''};transition:all .15s">
           <span style="font-size:21px;color:${isCur ? mCol : '#fff'}">${mdi(m.ico, 21)}</span>
         </span>
-        <span style="white-space:nowrap;color:${isCur ? mCol : '#fff'};text-transform:uppercase;font-weight:900;font-size:11px">${eh(m.lbl)}</span>
+        <span style="white-space:nowrap;color:${isCur ? mCol : '#fff'};text-transform:uppercase;font-weight:900;font-size:12px">${eh(m.lbl)}</span>
       </button>`;
     }).join('');
 
@@ -322,7 +326,7 @@
       <span style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${state==='disarmed' ? 'linear-gradient(155deg,rgba(74,222,128,.3),rgba(74,222,128,.08))' : 'rgba(255,255,255,.05)'};border:1.5px solid ${state==='disarmed' ? 'rgba(74,222,128,.55)' : 'rgba(255,255,255,.12)'};${state==='disarmed' ? 'box-shadow:0 0 16px rgba(74,222,128,.35)' : ''};transition:all .15s">
         <span style="font-size:21px;color:${state==='disarmed' ? '#4ade80' : '#fff'}">${mdi('mdi:lock-open-variant', 21)}</span>
       </span>
-      <span style="white-space:nowrap;color:${state==='disarmed' ? '#4ade80' : '#fff'};text-transform:uppercase;font-weight:900;font-size:11px">Disarma</span>
+      <span style="white-space:nowrap;color:${state==='disarmed' ? '#4ade80' : '#fff'};text-transform:uppercase;font-weight:900;font-size:12px">Disarma</span>
     </button>`;
 
     /* warning sensori aperti */
@@ -330,7 +334,7 @@
       <span style="width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(250,204,21,.18);border:1px solid rgba(250,204,21,.45);font-size:16px">⚠️</span>
       <div style="flex:1">
         <div style="font-size:12px;color:#facc15;font-weight:900;text-transform:uppercase">${openActive} sensore${openActive > 1 ? 'i aperti' : ' aperto'}</div>
-        <div style="font-size:11px;color:#fff;margin-top:1px;font-weight:900;text-transform:uppercase">Escludi i sensori che vuoi ignorare, poi premi un tasto di attivazione</div>
+        <div style="font-size:12px;color:#fff;margin-top:1px;font-weight:900;text-transform:uppercase">Escludi i sensori che vuoi ignorare, poi premi un tasto di attivazione</div>
       </div>
     </div>` : '';
 
@@ -348,10 +352,10 @@
           <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(sirenCol,.2)},transparent 62%);pointer-events:none"></div>
           <span style="position:relative;width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(sirenCol,.22)};border:1px solid ${hex2rgba(sirenCol,.5)};box-shadow:0 0 12px ${hex2rgba(sirenCol,.3)};color:${sirenCol}">${mdi('mdi:bullhorn-outline', 22)}</span>
           <span style="position:relative;flex:1;min-width:0">
-            <span style="display:block;font-size:14.5px;font-weight:900;text-transform:uppercase;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sName)}</span>
-            <span style="display:block;font-size:10.5px;font-weight:900;text-transform:uppercase;color:${sirenCol};letter-spacing:.3px;margin-top:2px">${sirenOn ? 'ATTIVA' : 'SPENTA'}</span>
+            <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sName)}</span>
+            <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:${sirenCol};letter-spacing:.3px;margin-top:2px">${sirenOn ? 'ATTIVA' : 'SPENTA'}</span>
           </span>
-          ${sirenOn ? `<button data-ca-siren-off style="position:relative;flex-shrink:0;padding:8px 12px;border-radius:10px;border:1px solid rgba(248,113,113,.42);background:rgba(248,113,113,.14);color:#f87171;cursor:pointer;font-size:11px;font-weight:900;text-transform:uppercase;outline:none">Spegni</button>` : ''}
+          ${sirenOn ? `<button data-ca-siren-off style="position:relative;flex-shrink:0;padding:8px 12px;border-radius:10px;border:1px solid rgba(248,113,113,.42);background:rgba(248,113,113,.14);color:#f87171;cursor:pointer;font-size:12px;font-weight:900;text-transform:uppercase;outline:none">Spegni</button>` : ''}
         </div>
       </div>`;
     }
@@ -369,7 +373,7 @@
         </div>
         <div style="position:relative;flex:1;min-width:0">
           <div style="font-size:19px;font-weight:900;color:${col};letter-spacing:.3px;text-transform:uppercase">${def.lbl}</div>
-          ${bypassedCount > 0 && armed ? `<div style="font-size:10.5px;font-weight:900;text-transform:uppercase;color:#facc15;margin-top:3px">🛡 ${bypassedCount} sensore${bypassedCount>1?'i esclusi':' escluso'}</div>` : ''}
+          ${bypassedCount > 0 && armed ? `<div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#facc15;margin-top:3px">🛡 ${bypassedCount} sensore${bypassedCount>1?'i esclusi':' escluso'}</div>` : ''}
         </div>
       </div>
 
@@ -380,7 +384,7 @@
 
       ${openWarn}
 
-      ${sensors.length ? `<div style="${secLbl}">Sensori (${sensors.length})</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px">${sensorRows}</div>` : ''}
+      ${sensors.length ? `<div style="${secLbl}">Sensori (${sensors.length})</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px">${sensorRows}</div>` : ''}
 
       ${sirenRow}
       <div style="height:14px"></div>
@@ -769,7 +773,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '3.8', isDistintivo: true,
+    version: '3.9', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '', colorMode: 'auto', colorRules: [] },
     chip,
     watchEntities,
@@ -783,5 +787,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v3.8'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v3.9'); } catch (e) {}
 })();

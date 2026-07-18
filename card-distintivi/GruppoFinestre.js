@@ -1,6 +1,6 @@
-/* frarik-version: 2.6 */
+/* frarik-version: 2.7 */
 /**
- * GruppoFinestre.js — Distintivo FratechStore v2.6
+ * GruppoFinestre.js — Distintivo FratechStore v2.7
  * Chip contatore finestre aperte + popup con sommario, finestra bianca SVG animata
  * v2.3: chip allineato al pattern di GruppoAllarme/GruppoLuci — "FINESTRE: N" è un unico
  *       value in maiuscolo/grassetto (solo n. finestre aperte, non più N/M). Popup rifatto
@@ -18,6 +18,10 @@
  *       padding 16px invece di 12px); griglia responsive (auto-fit) — su schermi stretti
  *       (telefono) scende a 1 colonna invece di restare forzata a 2; bump hint stato
  *       vuoto da 10 a 11px
+ * v2.7: TUTTO il testo del popup (tranne il titolo hero) ora a un'unica dimensione
+ *       (12px) invece di più livelli diversi — richiesta esplicita di uniformità
+ *       assoluta; soglia della griglia alzata (260px) per garantire 1 colonna su
+ *       schermo da telefono invece di restare a 2 strette
  */
 (function () {
   'use strict';
@@ -179,15 +183,15 @@
           <span style="display:block;width:60px;height:60px;transform:scale(.733);transform-origin:center">${_windowSvg(on, i)}</span>
         </span>
         <span style="position:relative;flex:1;min-width:0">
-          <span style="display:block;font-size:14.5px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</span>
-          <span style="display:block;font-size:10.5px;font-weight:900;text-transform:uppercase;color:${rCol};letter-spacing:.3px;margin-top:2px">${on ? 'Aperta' : 'Chiusa'}</span>
+          <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</span>
+          <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:${rCol};letter-spacing:.3px;margin-top:2px">${on ? 'Aperta' : 'Chiusa'}</span>
         </span>
       </div>`;
     }).join('');
 
     return `<div id="gf-popup-body">
       ${hero}
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:0 14px 8px">${tiles||'<div style="grid-column:1/-1;padding:32px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">Nessuna finestra configurata<br><span style="font-size:11px;font-weight:900;text-transform:uppercase;opacity:.7">Clicca ✏️ sulla chip per configurare</span></div>'}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;margin:0 14px 8px">${tiles||'<div style="grid-column:1/-1;padding:32px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">Nessuna finestra configurata<br><span style="font-size:12px;font-weight:900;text-transform:uppercase;opacity:.7">Clicca ✏️ sulla chip per configurare</span></div>'}</div>
     </div>`;
   }
 
@@ -531,7 +535,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Finestre', icon: '🪟',
     desc: 'Chip con contatore finestre aperte. Clic → stato Aperta/Chiusa per ogni finestra.',
-    version: '2.6', isDistintivo: true,
+    version: '2.7', isDistintivo: true,
     defaultCfg: { label: 'Finestre', icon: '🪟', color: '#34d399', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -540,5 +544,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-finestre v2.6'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-finestre v2.7'); } catch(e){}
 })();

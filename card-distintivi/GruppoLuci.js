@@ -1,6 +1,6 @@
-/* frarik-version: 2.6 */
+/* frarik-version: 2.7 */
 /**
- * GruppoLuci.js — Distintivo FratechStore v2.6
+ * GruppoLuci.js — Distintivo FratechStore v2.7
  * Fix: icona configurabile (preserve su re-render), sottotitolo popup nascosto
  * v1.9: testi maiuscolo+grassetto (chip e popup), layout popup a stile "glass"
  *       (hero riepilogo + tasti accendi/spegni a medaglione + righe luci glass)
@@ -26,6 +26,8 @@
  * v2.6: bump etichette piccole (Accendi/Spegni tutte, hint stato vuoto) da 10 a 11px,
  *       per coerenza col resto — questo file resta il riferimento di dimensioni per
  *       GruppoAllarme/GruppoFinestre
+ * v2.7: TUTTO il testo del popup (tranne il titolo hero) ora a un'unica dimensione
+ *       (12px) invece di più livelli diversi — richiesta esplicita di uniformità assoluta
  */
 (function () {
   'use strict';
@@ -139,13 +141,13 @@
           <span style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(155deg,${hex2rgba(col,.3)},${hex2rgba(col,.08)});border:1.5px solid ${hex2rgba(col,.55)};box-shadow:0 0 16px ${hex2rgba(col,.35)}">
             <span style="font-size:21px;color:${col}">${iconHtml('mdi:lightbulb-on', 21)}</span>
           </span>
-          <span style="white-space:nowrap;color:${col};text-transform:uppercase;font-weight:900;font-size:11px">Accendi tutte</span>
+          <span style="white-space:nowrap;color:${col};text-transform:uppercase;font-weight:900;font-size:12px">Accendi tutte</span>
         </button>
         <button data-gl-all="off" style="background:none;border:none;padding:4px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;outline:none">
           <span style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.12)">
             <span style="font-size:21px;color:#fff">${iconHtml('mdi:lightbulb-off-outline', 21)}</span>
           </span>
-          <span style="white-space:nowrap;color:#fff;text-transform:uppercase;font-weight:900;font-size:11px">Spegni tutte</span>
+          <span style="white-space:nowrap;color:#fff;text-transform:uppercase;font-weight:900;font-size:12px">Spegni tutte</span>
         </button>
       </div>` : '';
 
@@ -169,8 +171,8 @@
         ${on?`<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(col,.2)},transparent 62%);pointer-events:none"></div>`:''}
         <span style="position:relative;width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${on?hex2rgba(col,.22):'rgba(255,255,255,.06)'};border:1px solid ${on?hex2rgba(col,.5):'rgba(255,255,255,.14)'};${on?`box-shadow:0 0 12px ${hex2rgba(col,.3)};`:''}color:${on?col:'#fff'}">${iconHtml(_dynIcon(c.icon||'💡',on),22)}</span>
         <span style="position:relative;flex:1;min-width:0">
-          <span style="display:block;font-size:14.5px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</span>
-          <span style="display:block;font-size:10.5px;font-weight:900;text-transform:uppercase;color:${on?col:'#fff'};letter-spacing:.3px;margin-top:2px">${on?'Accesa':'Spenta'}</span>
+          <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</span>
+          <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:${on?col:'#fff'};letter-spacing:.3px;margin-top:2px">${on?'Accesa':'Spenta'}</span>
         </span>
       </div>`;
 
@@ -180,7 +182,7 @@
     return `<div id="gl-popup-body">
       ${hero}
       ${ctrlBar}
-      <div>${rows||'<div style="padding:32px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">Nessuna luce configurata<br><span style="font-size:11px;font-weight:900;text-transform:uppercase;opacity:.7">Clicca ✏️ sulla chip per configurare</span></div>'}</div>
+      <div>${rows||'<div style="padding:32px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">Nessuna luce configurata<br><span style="font-size:12px;font-weight:900;text-transform:uppercase;opacity:.7">Clicca ✏️ sulla chip per configurare</span></div>'}</div>
     </div>`;
   }
 
@@ -597,7 +599,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Luci', icon: '💡',
     desc: 'Chip con contatore luci accese. Clic → pannello toggle + Accendi/Spegni tutte.',
-    version: '2.6', isDistintivo: true,
+    version: '2.7', isDistintivo: true,
     defaultCfg: { label: 'Luci', icon: '💡', color: '#fbbf24', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -606,5 +608,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v2.6'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v2.7'); } catch(e){}
 })();
