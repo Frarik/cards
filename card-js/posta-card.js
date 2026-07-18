@@ -1,4 +1,4 @@
-/* frarik-version: 5.1 */
+/* frarik-version: 5.2 */
 /* Centro Controllo Posta — Frarik card standalone */
 /* v4.4: aggiunta icona ingranaggio interna (la card non ne aveva una) e
    frarik_no_edit per nascondere la matita esterna in modifica; eliminato
@@ -45,6 +45,14 @@
    della manopola, barra LED di stato luminosa sul fronte invece del
    pallino. Colonne corpo card ora esattamente uguali (50/50, era 40/60).
    Rimossa la mini-chip "N oggi/Aperta" nell'header accanto all'ingranaggio. */
+/* v5.2: cassetta ridisegnata da zero in vista frontale stile "Alubox" su
+   riferimento fornito dall'utente — corpo rettangolare grigio antracite
+   con angoli smussati, coperchio superiore a listello, grande motivo a V
+   incassato (piega a "busta") sul fronte, fessura per pacchi/giornale in
+   basso. Animazioni quando arriva posta: motivo a V che pulsa nel colore
+   di stato, busta che sbircia dalla fessura del coperchio con leggero
+   movimento, spia LED che pulsa; il coperchio si solleva leggermente
+   quando la cassetta risulta aperta. */
 (function(){
 'use strict';
 
@@ -598,60 +606,56 @@ function _acShow(inputEl,hass,domain){
 function _acHide(){ document.getElementById('__frk_posta_ac__')?.remove(); }
 
 /* ══════════════════════════════════════════════════════════════
-   PostaCard v5.1 — cassetta smart moderna (minimal, barra LED)
+   PostaCard v5.2 — cassetta a parete stile "Alubox" (motivo a V)
    ══════════════════════════════════════════════════════════════ */
 
 function _svgMailbox(count, isOpen){
   const active=isOpen||count>0;
-  const led=isOpen?'#34d399':count>0?'#38bdf8':'rgba(255,255,255,.16)';
+  const led=isOpen?'#34d399':count>0?'#38bdf8':'rgba(255,255,255,.18)';
+  const seamCol=active?led:'#14171a';
 
-  const envelope=count>0?`<g class="mbx-env" style="transform-origin:74px 70.5px">
-      <rect x="64" y="64" width="20" height="13" rx="1.5" fill="#f8fafc" stroke="#cbd5e1" stroke-width=".8" transform="rotate(-32.6 74 70.5)"/>
-      <path d="M64 65 L74 72 L84 65" stroke="#cbd5e1" stroke-width=".8" fill="none" transform="rotate(-32.6 74 70.5)"/>
+  const envelope=count>0?`<g class="mbx-env" style="transform-origin:60px 36px">
+      <rect x="48" y="31" width="24" height="10" rx="1.3" fill="#f5f7f9" stroke="#cbd5e1" stroke-width=".7"/>
+      <path d="M48 32 L60 39 L72 32" stroke="#cbd5e1" stroke-width=".7" fill="none"/>
     </g>`:'';
 
-  return `<svg viewBox="0 50 140 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible">
+  return `<svg viewBox="0 10 120 130" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible">
     <defs>
-      <linearGradient id="mbxTop" x1="0" y1="1" x2="0" y2="0">
-        <stop offset="0%" stop-color="#3a4048"/>
-        <stop offset="100%" stop-color="#585f68"/>
+      <linearGradient id="mbxFront" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#454b53"/>
+        <stop offset="100%" stop-color="#22262b"/>
       </linearGradient>
-      <linearGradient id="mbxFront" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#2c3138"/>
-        <stop offset="100%" stop-color="#181b20"/>
-      </linearGradient>
-      <linearGradient id="mbxSide" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#20242a"/>
-        <stop offset="100%" stop-color="#101216"/>
-      </linearGradient>
-      <linearGradient id="mbxDoor" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#363c44"/>
-        <stop offset="100%" stop-color="#20242a"/>
+      <linearGradient id="mbxLid" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#565c65"/>
+        <stop offset="100%" stop-color="#383e46"/>
       </linearGradient>
       <filter id="mbx-ledblur" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="2.4"/></filter>
-      <filter id="mbx-shblur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3"/></filter>
+      <filter id="mbx-shblur" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3.5"/></filter>
     </defs>
 
-    <ellipse cx="75" cy="150" rx="58" ry="8" fill="#000" opacity=".35" filter="url(#mbx-shblur)"/>
-    <rect x="25" y="141" width="100" height="8" rx="4" fill="#101216"/>
+    <rect x="15" y="24" width="100" height="112" rx="8" fill="#000" opacity=".38" filter="url(#mbx-shblur)"/>
 
-    <polygon points="86,90 86,138 112,125 112,77" fill="url(#mbxSide)" stroke="#05070a" stroke-width="1.2"/>
-    <rect x="97" y="95" width="3" height="36" rx="1.5" fill="${led}" opacity=".3"/>
+    <rect x="10" y="18" width="100" height="112" rx="7" fill="url(#mbxFront)" stroke="#0a0c0e" stroke-width="1.4"/>
+    <rect x="10" y="18" width="5" height="112" rx="2.5" fill="#000" opacity=".18"/>
 
-    <polygon points="30,90 86,90 112,77 56,77" fill="url(#mbxTop)" stroke="#05070a" stroke-width="1.2"/>
-    <rect x="60" y="81.5" width="22" height="4" rx="2" fill="#05070a" opacity=".75" transform="rotate(-26.6 71 83.5)"/>
-    ${envelope}
+    <rect x="10" y="100" width="100" height="1.3" fill="#0a0c0e" opacity=".65"/>
+    <rect x="20" y="108" width="40" height="9" rx="2" fill="#0e1013"/>
 
-    <path d="M30,90 L86,90 L86,130 Q86,138 78,138 L38,138 Q30,138 30,130 Z" fill="url(#mbxFront)" stroke="#05070a" stroke-width="1.4"/>
-    <rect x="30" y="90" width="56" height="5" fill="#fff" opacity=".08"/>
-
-    <g class="mbx-door${isOpen?' open':''}" style="transform-origin:55px 128px">
-      <rect x="38" y="98" width="34" height="30" rx="8" fill="url(#mbxDoor)" stroke="#05070a" stroke-width="1.2"/>
-      <rect x="46" y="118" width="18" height="3" rx="1.5" fill="#05070a" opacity=".6"/>
+    <g class="mbx-seam${active?' active':''}">
+      <path d="M20,40 L60,88" stroke="${seamCol}" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M100,40 L60,88" stroke="${seamCol}" stroke-width="2.6" stroke-linecap="round"/>
     </g>
+    <path d="M19,39 L59,87" stroke="#6b7178" stroke-width="1" opacity=".35"/>
+    <path d="M99,39 L59,87" stroke="#6b7178" stroke-width="1" opacity=".35"/>
 
-    <rect x="33" y="130.5" width="50" height="6" rx="3" fill="${led}" opacity=".22" filter="url(#mbx-ledblur)"/>
-    <rect class="mbx-led${active?' active':''}" x="36" y="132" width="44" height="3" rx="1.5" fill="${led}"/>
+    <g class="mbx-door${isOpen?' open':''}" style="transform-origin:60px 18px">
+      <rect x="10" y="18" width="100" height="15" rx="7" fill="url(#mbxLid)" stroke="#0a0c0e" stroke-width="1.2"/>
+      <rect x="16" y="21" width="88" height="3" rx="1.5" fill="#fff" opacity=".12"/>
+      <circle cx="96" cy="25" r="5" fill="${led}" opacity=".25" filter="url(#mbx-ledblur)"/>
+      <circle class="mbx-led${active?' active':''}" cx="96" cy="25" r="2" fill="${led}"/>
+    </g>
+    <rect x="10" y="32.5" width="100" height="1.3" fill="#0a0c0e" opacity=".65"/>
+    ${envelope}
   </svg>`;
 }
 
@@ -1090,7 +1094,7 @@ if(!customElements.get('posta-card')){
 
 /* corpo a 2 colonne: immagine a sinistra, numeri a destra */
 .body2col{display:flex;gap:14px;padding:14px 15px 10px;align-items:stretch}
-.img-col{flex:1;min-width:0;aspect-ratio:140/120}
+.img-col{flex:1;min-width:0;aspect-ratio:120/130}
 .info-col{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
 .num-row{display:flex;align-items:baseline;gap:9px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
 .num-row:last-child{border-bottom:none}
@@ -1100,13 +1104,16 @@ if(!customElements.get('posta-card')){
 .num-n2{font-size:22px;font-weight:900;color:#fff;line-height:1}
 .num-l{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px;opacity:.6}
 
-/* cassetta smart isometrica */
-@keyframes mbx-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.6px)}}
+/* cassetta a parete stile "Alubox" */
+@keyframes mbx-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.8px)}}
 @keyframes mbx-led-pulse{0%,100%{opacity:1}50%{opacity:.55}}
+@keyframes mbx-seam-pulse{0%,100%{opacity:.7}50%{opacity:1}}
 .mbx-env{animation:mbx-bob 2.6s ease-in-out infinite}
 .mbx-led.active{animation:mbx-led-pulse 2.2s ease-in-out infinite}
-.mbx-door{transform:rotate(0deg);transition:transform .2s}
-.mbx-door.open{transform:rotate(14deg)}
+.mbx-door{transform:rotate(0deg)}
+.mbx-door.open{transform:rotate(-7deg) translateY(-2px)}
+.mbx-seam{opacity:.5}
+.mbx-seam.active{animation:mbx-seam-pulse 2.2s ease-in-out infinite}
 
 /* ultima consegna */
 .last-box{display:flex;align-items:center;gap:10px;margin:4px 15px 16px;padding:12px 13px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px}
@@ -1117,7 +1124,7 @@ if(!customElements.get('posta-card')){
 
 /* not installed */
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:26px 18px}
-.ni-env{width:112px;height:96px;opacity:.4}
+.ni-env{width:96px;height:104px;opacity:.4}
 .ni-title{font-size:16px;font-weight:900;color:#fff}
 .ni-sub{font-size:12px;color:rgba(255,255,255,.4);line-height:1.8;max-width:240px}
 .ni-sub strong{color:#38bdf8;opacity:1}
