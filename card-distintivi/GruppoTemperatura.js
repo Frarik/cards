@@ -1,4 +1,15 @@
-/* frarik-version: 1.9.2 */
+/* frarik-version: 2.0 */
+/**
+ * v2.0: stesso trattamento degli altri distintivi — chip con unico value
+ *       maiuscolo/grassetto invece di label separata a peso inferiore; tutto
+ *       il testo del popup (label hero, footer min/max, consigli, header
+ *       stanza, badge comfort) uniformato a 12px/peso 900/maiuscolo (i soli
+ *       numeri grandi di temperatura/umidità restano più grandi, come
+ *       negli altri distintivi con un valore "titolo"); rimossa l'opacità
+ *       ridotta sui piccoli label; aggiunto il titolo del popup
+ *       bianco/maiuscolo/grassetto con il valore medio (prima nascondeva
+ *       solo il sottotitolo senza impostare il titolo)
+ */
 (function () {
   'use strict';
 
@@ -305,12 +316,28 @@
     document.head.appendChild(s);
   }
 
-  /* ── nascondi sottotitolo popup ─────────────────────────────── */
+  /* ── titolo popup: bianco/maiuscolo/grassetto + valore medio, sottotitolo nascosto ── */
   function _syncTitle(cfg, el) {
     try {
       const hdr = el.previousElementSibling; if (!hdr) return;
       const textWrap = hdr.children?.[1]; if (!textWrap) return;
+      const titleEl = textWrap.firstElementChild; if (!titleEl) return;
       const subEl = textWrap.children?.[1]; if (subEl) subEl.style.display = 'none';
+      const c = loadCfg(cfg);
+      const h = H();
+      const ents = Array.isArray(c.entities) ? c.entities : [];
+      let t = null;
+      if (c.avgTempEntity && h) {
+        const v = parseFloat(stateOf(h, c.avgTempEntity));
+        if (!isNaN(v)) t = v;
+      } else if (h && ents.length) {
+        const temps = ents.map(e => parseFloat(stateOf(h, e.tempEntity))).filter(v => !isNaN(v));
+        if (temps.length) t = temps.reduce((a,b)=>a+b,0) / temps.length;
+      }
+      titleEl.style.color = '#fff';
+      titleEl.style.fontWeight = '900';
+      titleEl.style.textTransform = 'uppercase';
+      titleEl.textContent = t != null ? `${t.toFixed(1)}°` : '—';
     } catch(e) {}
   }
 
@@ -345,8 +372,7 @@
     }
     return {
       icon:  `<span class="mdi mdi-thermometer" style="font-size:16px;line-height:1;color:inherit"></span>`,
-      label: c.label || 'Temperatura',
-      value: chipVal,
+      value: `${(c.label || 'Temperatura').toUpperCase()}: ${chipVal}`,
       color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, (() => { const _t = c.avgTempEntity && h ? parseFloat(stateOf(h, c.avgTempEntity)) : (h && ents.length ? (ts => ts.length ? ts.reduce((a,b)=>a+b,0)/ts.length : NaN)(ents.map(e=>parseFloat(stateOf(h, e.tempEntity))).filter(v=>!isNaN(v))) : NaN); return { temp_gt: v => !isNaN(_t) && _t > parseFloat(v||0), temp_lte: v => !isNaN(_t) && _t <= parseFloat(v||0) }; })())) || chipCol,
       borderColor: (window.FratechColorRules && window.FratechColorRules.evalBorderColor(cfg, (() => { const _t = c.avgTempEntity && h ? parseFloat(stateOf(h, c.avgTempEntity)) : (h && ents.length ? (ts => ts.length ? ts.reduce((a,b)=>a+b,0)/ts.length : NaN)(ents.map(e=>parseFloat(stateOf(h, e.tempEntity))).filter(v=>!isNaN(v))) : NaN); return { temp_gt: v => !isNaN(_t) && _t > parseFloat(v||0), temp_lte: v => !isNaN(_t) && _t <= parseFloat(v||0) }; })())) || null,
     };
@@ -368,10 +394,10 @@
     const ents = Array.isArray(c.entities) ? c.entities : [];
 
     if (!ents.length) {
-      return `<div style="padding:48px 24px;text-align:center;color:#fff;font-size:12px">
+      return `<div style="padding:48px 24px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">
         <div style="font-size:42px;margin-bottom:12px">🌡️</div>
-        <div style="font-size:13px;font-weight:700;margin-bottom:6px">Nessun sensore configurato</div>
-        <div style="font-size:10px">Clicca ✏️ sulla chip per aggiungere le stanze.</div>
+        <div style="font-size:12px;font-weight:900;text-transform:uppercase;margin-bottom:6px">Nessun sensore configurato</div>
+        <div style="font-size:12px;font-weight:900;text-transform:uppercase;opacity:.7">Clicca ✏️ sulla chip per aggiungere le stanze</div>
       </div>`;
     }
 
@@ -403,8 +429,8 @@
     /* footer min/max (solo se multi + ci sono dati) */
     const footCell = (ico, lbl, val, col) =>
       `<div style="text-align:center;padding:9px 4px">
-        <div style="font-size:7px;color:#fff;font-weight:700;letter-spacing:.5px;margin-bottom:2px">${ico} ${lbl}</div>
-        <div style="font-size:15px;font-weight:900;color:${col};line-height:1">${val}</div>
+        <div style="font-size:12px;color:#fff;font-weight:900;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">${ico} ${lbl}</div>
+        <div style="font-size:12px;font-weight:900;color:${col};line-height:1">${val}</div>
       </div>`;
 
     const heroFooter = multi ? `
@@ -428,7 +454,7 @@
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
             <div style="display:flex;align-items:center;gap:5px">
               <span class="mdi mdi-home-thermometer-outline" style="color:${comfort.color};font-size:15px"></span>
-              <span style="font-size:10px;font-weight:700;color:#fff;letter-spacing:.3px">${eh(heroLabel)}</span>
+              <span style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;letter-spacing:.3px">${eh(heroLabel)}</span>
             </div>
             <span style="font-size:18px;line-height:1">${comfort.emoji}</span>
           </div>
@@ -440,7 +466,7 @@
                 <span ${numClass} style="font-size:58px;font-weight:900;color:${tCol};line-height:.95;letter-spacing:-2px">${heroTemp!=null?heroTemp.toFixed(1):'—'}</span>
                 <span style="font-size:22px;font-weight:700;color:#fff;margin-top:3px;line-height:1">°</span>
               </div>
-              <div style="font-size:9px;color:#fff;margin-top:5px;letter-spacing:.3px;font-weight:600">TEMPERATURA</div>
+              <div style="font-size:12px;color:#fff;margin-top:5px;letter-spacing:.3px;font-weight:900;text-transform:uppercase">TEMPERATURA</div>
             </div>
             ${hasHumG && heroHum!=null ? `
             <div style="flex:1;text-align:right">
@@ -448,7 +474,7 @@
                 <span ${numClass} style="font-size:58px;font-weight:900;color:${hCol};line-height:.95;letter-spacing:-2px">${Math.round(heroHum)}</span>
                 <span style="font-size:22px;font-weight:700;color:#fff;margin-top:3px;line-height:1">%</span>
               </div>
-              <div style="font-size:9px;color:#fff;margin-top:5px;letter-spacing:.3px;font-weight:600">UMIDITÀ</div>
+              <div style="font-size:12px;color:#fff;margin-top:5px;letter-spacing:.3px;font-weight:900;text-transform:uppercase">UMIDITÀ</div>
             </div>` : ''}
           </div>
         </div>
@@ -462,14 +488,14 @@
         ${advice.slice(0,2).map(a =>
           `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:7px">
             <span style="font-size:14px;flex-shrink:0;line-height:1.35">${a.ico}</span>
-            <span style="font-size:11px;color:#fff;line-height:1.5">${a.txt}</span>
+            <span style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;line-height:1.5">${a.txt}</span>
           </div>`
         ).join('')}
       </div>` : '';
 
     /* stanze */
     const roomHeader = multi
-      ? `<div style="font-size:9px;font-weight:700;color:#fff;letter-spacing:.8px;margin-bottom:8px;padding:0 2px">STANZE · ${ents.length}</div>`
+      ? `<div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;letter-spacing:.8px;margin-bottom:8px;padding:0 2px">STANZE · ${ents.length}</div>`
       : '';
 
     const roomRows = ents.map((e, idx) => {
@@ -500,7 +526,7 @@
       /* pannello valore: numero grande + sparkline affianco */
       const valPanel = (display, unit, color, pts, scaleMax, borderRight) => `
         <div style="padding:15px 12px 14px${borderRight ? ';border-right:1px solid rgba(255,255,255,.07)' : ''}">
-          <div style="font-size:8px;font-weight:700;color:#fff;letter-spacing:.5px;opacity:.6;margin-bottom:9px">${unit === '°C' ? 'TEMPERATURA' : 'UMIDITÀ'}</div>
+          <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;letter-spacing:.5px;margin-bottom:9px">${unit === '°C' ? 'TEMPERATURA' : 'UMIDITÀ'}</div>
           <div style="display:flex;align-items:center;gap:10px">
             <div style="flex-shrink:0">
               <div ${numClass} style="font-size:44px;font-weight:900;color:${color};line-height:1;letter-spacing:-2px">${display}</div>
@@ -520,8 +546,8 @@
             <div style="width:36px;height:36px;border-radius:10px;background:${hex2rgba(rc.color,.14)};border:1px solid ${hex2rgba(rc.color,.32)};display:flex;align-items:center;justify-content:center;flex-shrink:0">
               <span class="mdi mdi-${icon}" style="font-size:18px;color:${rc.color}"></span>
             </div>
-            <span style="flex:1;font-size:15px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(label)}</span>
-            <span style="font-size:9px;font-weight:800;padding:4px 11px;border-radius:20px;background:${hex2rgba(rc.color,.14)};border:1px solid ${hex2rgba(rc.color,.32)};color:${rc.color};flex-shrink:0;white-space:nowrap">${rc.emoji} ${rc.label}</span>
+            <span style="flex:1;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(label)}</span>
+            <span style="font-size:12px;font-weight:900;text-transform:uppercase;padding:4px 11px;border-radius:20px;background:${hex2rgba(rc.color,.14)};border:1px solid ${hex2rgba(rc.color,.32)};color:${rc.color};flex-shrink:0;white-space:nowrap">${rc.emoji} ${rc.label}</span>
           </div>
 
           <!-- valori + sparkline -->
@@ -534,7 +560,7 @@
           ${adv ? `
           <div style="display:flex;align-items:flex-start;gap:9px;padding:10px 15px 12px">
             <span style="font-size:16px;flex-shrink:0;line-height:1.3">${adv.ico}</span>
-            <span style="font-size:11.5px;color:#fff;line-height:1.55">${adv.txt}</span>
+            <span style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;line-height:1.55">${adv.txt}</span>
           </div>` : ''}
 
         </div>`;
@@ -858,7 +884,7 @@
     name: 'Gruppo Temperatura',
     icon: '🌡️',
     desc: 'Chip con media temp/umidità; popup weather-style con hero, consigli e righe stanza.',
-    version: '1.9.2',
+    version: '2.0',
     isDistintivo: true,
     defaultCfg: { label: 'Temperatura', color: '#38bdf8', avgTempEntity: '', avgHumEntity: '', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure, preview,
@@ -868,5 +894,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-temperatura v1.9.2'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-temperatura v2.0'); } catch(e) {}
 })();
