@@ -1,4 +1,4 @@
-/* frarik-version: 5.15 */
+/* frarik-version: 5.16 */
 /* v5.15: aggiunta anteprima live + slider dimensione card (altezza/larghezza)
    nel popup Impostazioni, stesso meccanismo di Meteo.js/posta-card
    (localStorage _frk_layout_ + evento frarik-card-layout); aggiunto
@@ -6,6 +6,10 @@
    (la card ha già il proprio pulsante "⚙ Impostazioni" interno). Popup
    e colori erano già allineati allo standard Frarik (niente giallo,
    chiusura anche cliccando fuori) — nessuna modifica necessaria lì. */
+/* v5.16: aggiunta icona ingranaggio nell'header della card (accanto al
+   pill di stato) — prima l'unico accesso alle impostazioni era il
+   pulsante testuale "⚙ Impostazioni" in fondo alla card, non un'icona
+   nell'header come le altre card Frarik (Meteo, posta-card). */
 ;(function () {
   'use strict';
 
@@ -210,6 +214,8 @@
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(' + ACC_RGB + ',.1);border:1px solid rgba(' + ACC_RGB + ',.2)}'
       + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
       + '#' + rid + ' .fc-hdr-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px}'
+      + '#' + rid + ' .fc-gear{width:26px;height:26px;border-radius:8px;border:none;background:rgba(255,255,255,.06);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;font-size:13px;transition:background .15s}'
+      + '#' + rid + ' .fc-gear:hover{background:rgba(255,255,255,.12)}'
       + '#' + rid + ' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:' + col + (hasPickup ? ';box-shadow:0 0 5px ' + ACC + ';animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
@@ -257,6 +263,7 @@
       + '<div class="fc-dot"></div>'
       + (hasPickup ? 'RACCOLTA' : 'NESSUN RITIRO')
       + '</div>'
+      + '<button class="fc-gear" data-sya="popup-imp" title="Impostazioni">⚙️</button>'
       + '</div>'
       + '<div class="fc-scroll">'
       + heroHtml
@@ -1033,7 +1040,7 @@ automation:
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.15',
+    version: '5.16',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',
