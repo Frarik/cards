@@ -1,9 +1,15 @@
-/* frarik-version: 2.0 */
+/* frarik-version: 2.1 */
 /**
- * GruppoScadenze.js — Distintivo FratechStore v2.0
+ * GruppoScadenze.js — Distintivo FratechStore v2.1
  * Soglie: ≤0gg=scaduto(rosso), 1-10gg=urgente(rosso/arancio), 11-30gg=in arrivo(arancio), >30gg=ok(verde)
  * Supporta: attributo giorni_mancanti (intero diretto), date ISO/IT in state, attributo costo_previsto
  * Chip: mostra giorni della scadenza più urgente ("SCADUTO", "OGGI", "DOMANI", "3gg")
+ * v2.1: stesso trattamento degli altri distintivi — chip con unico value maiuscolo/
+ *       grassetto invece di label separata a peso inferiore; righe scadenza rifatte a
+ *       stile "glass" (gradiente + alone) mantenendo la clessidra SVG animata; tutto
+ *       il testo del popup a dimensione unica (12px/900/maiuscolo); aggiunto il
+ *       titolo dell'header del popup bianco/maiuscolo/grassetto con la scadenza più
+ *       urgente (prima nascondeva solo il sottotitolo)
  */
 (function () {
   'use strict';
@@ -25,6 +31,12 @@
   function attrOf(h, id, k) { const s = h && h.states && h.states[id]; return (s && s.attributes && s.attributes[k]) ?? null; }
   function eh(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function liveH(r) { return H() || (r && r.states ? r : null); }
+  function hex2rgba(hex, a) {
+    let h = (hex||'').replace('#','');
+    if (h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    if (h.length!==6) return `rgba(255,255,255,${a})`;
+    return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`;
+  }
 
   /* ─── Parse giorni rimanenti ─── */
   function _parseDays(val) {
@@ -119,7 +131,8 @@
     const od   = c.warning_days != null ? +c.warning_days : DEF_ORANGE;
 
     const _fcr = window.FratechColorRules;
-    if (!ents.length || !h) return { icon: _chipSvg('#94a3b8'), label: c.label||'Scadenze', value:'—', color: (_fcr && _fcr.evalColor(cfg, {})) || '#94a3b8', borderColor: _fcr && _fcr.evalBorderColor(cfg, {}) };
+    const lbl = (c.label || 'Scadenze').toUpperCase();
+    if (!ents.length || !h) return { icon: _chipSvg('#94a3b8'), value: `${lbl}: —`, color: (_fcr && _fcr.evalColor(cfg, {})) || '#94a3b8', borderColor: _fcr && _fcr.evalBorderColor(cfg, {}) };
 
     let minDays = null, minStatus = 'unknown';
     ents.forEach(e => {
@@ -133,12 +146,11 @@
     const value = minDays === null ? '—'
       : minDays <= 0  ? 'SCADUTO'
       : minDays === 1 ? 'DOMANI'
-      : `tra ${minDays} gg`;
+      : `TRA ${minDays} GG`;
 
     return {
       icon:  _chipSvg(color),
-      label: c.label || 'Scadenze',
-      value,
+      value: `${lbl}: ${value}`,
       color: (_fcr && _fcr.evalColor(cfg, { expired: minDays !== null && minDays <= 0, urgent: minStatus === 'urgent', warning: minStatus === 'warning', ok: minStatus === 'ok' })) || color,
       borderColor: _fcr && _fcr.evalBorderColor(cfg, { expired: minDays !== null && minDays <= 0, urgent: minStatus === 'urgent', warning: minStatus === 'warning', ok: minStatus === 'ok' }),
     };
@@ -218,31 +230,28 @@
     const rows = sorted.map(({ e, days, status }, i) => {
       if (!e.entity) return '';
       const col    = _statusColor(status);
-      const stBg   = `${col}22`;
-      const stBdr  = `${col}55`;
       const name   = _entName(h, e);
       const cost   = attrOf(h, e.entity, 'costo_previsto');
       const costStr = cost !== null && !isNaN(parseFloat(cost)) && parseFloat(cost) > 0
         ? `${parseFloat(cost).toFixed(2)} €` : '';
       const dLabel = _daysLabel(days);
-      const rowBg  = status==='expired'||status==='urgent' ? 'background:rgba(248,113,113,.04)'
-                   : status==='warning' ? 'background:rgba(245,158,11,.03)' : '';
 
-      return `<div style="border-bottom:1px solid rgba(255,255,255,.06);${rowBg}">
-        <div style="display:flex;align-items:center;gap:12px;padding:11px 16px">
+      return `<div style="position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(155deg,${hex2rgba(col,.16)},${hex2rgba(col,.03)});border:1px solid ${hex2rgba(col,.35)};padding:11px 16px;margin:0 14px 8px">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(col,.18)},transparent 62%);pointer-events:none"></div>
+        <div style="position:relative;display:flex;align-items:center;gap:12px">
           <div style="flex-shrink:0">${_hourglassSvg(status, days, i)}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(name)}</div>
-            ${costStr ? `<div style="font-size:11px;color:#fff;margin-top:3px">💰 ${eh(costStr)}</div>` : ''}
+            <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(name)}</div>
+            ${costStr ? `<div style="font-size:12px;font-weight:900;color:#fff;margin-top:3px">💰 ${eh(costStr)}</div>` : ''}
           </div>
-          <div style="padding:4px 11px;border-radius:20px;background:${stBg};border:1px solid ${stBdr};font-size:10px;font-weight:700;color:${col};white-space:nowrap;flex-shrink:0;text-align:right">${eh(dLabel)}</div>
+          <div style="padding:4px 11px;border-radius:20px;background:${hex2rgba(col,.16)};border:1px solid ${hex2rgba(col,.4)};font-size:12px;font-weight:900;text-transform:uppercase;color:${col};white-space:nowrap;flex-shrink:0;text-align:right">${eh(dLabel)}</div>
         </div>
       </div>`;
     }).join('');
 
     const emptyMsg = !ents.length
-      ? '<div style="padding:36px 20px;text-align:center;color:#fff;font-size:13px">Nessuna scadenza configurata.<br><span style="font-size:11px;color:#fff">Clicca ✏️ sulla chip per configurare.</span></div>'
-      : '<div style="padding:36px 20px;text-align:center;color:#fff;font-size:13px">🎉 Nessuna scadenza nei prossimi 3 mesi!</div>';
+      ? '<div style="padding:36px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">Nessuna scadenza configurata<br><span style="font-size:12px;font-weight:900;text-transform:uppercase;opacity:.7">Clicca ✏️ sulla chip per configurare</span></div>'
+      : '<div style="padding:36px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">🎉 Nessuna scadenza nei prossimi 3 mesi</div>';
 
     return `<div id="gscad-popup-body">
       <div>${rows || emptyMsg}</div>
@@ -250,17 +259,34 @@
   }
 
   /* ─── mount ─── */
-  function _hideSubtitle(el) {
+  function _syncTitle(cfg, el) {
     try {
       const hdr = el.previousElementSibling; if (!hdr) return;
       const tw = hdr.children && hdr.children[1]; if (!tw) return;
-      const sub = tw.children && tw.children[1]; if (!sub) return;
-      sub.style.display = 'none';
+      const titleEl = tw.children && tw.children[0]; if (!titleEl) return;
+      const sub = tw.children && tw.children[1]; if (sub) sub.style.display = 'none';
+      const c = loadCfg(cfg);
+      const ents = Array.isArray(c.entities) ? c.entities : [];
+      const rd = c.urgent_days  != null ? +c.urgent_days  : DEF_RED;
+      const od = c.warning_days != null ? +c.warning_days : DEF_ORANGE;
+      const h = H();
+      let minDays = null, minStatus = 'unknown';
+      if (h) ents.forEach(e => {
+        const d = _getDays(h, e), st = _status(d, rd, od);
+        if (d === null) return;
+        if (minDays === null || d < minDays) { minDays = d; minStatus = st; }
+      });
+      titleEl.style.color = '#fff';
+      titleEl.style.fontWeight = '900';
+      titleEl.style.textTransform = 'uppercase';
+      titleEl.textContent = minDays === null ? 'Nessuna scadenza'
+        : minStatus === 'expired' ? 'Scaduta'
+        : _daysLabel(minDays);
     } catch(e) {}
   }
 
   function mount(cfg, rawHass, el) {
-    setTimeout(() => _hideSubtitle(el), 0);
+    setTimeout(() => _syncTitle(cfg, el), 0);
     if (el._gscPoll) return;
     el._gscPoll = setInterval(() => {
       if (!el.isConnected) { clearInterval(el._gscPoll); delete el._gscPoll; return; }
@@ -268,14 +294,14 @@
         const h = H(); if (!h) return;
         const sp = el.parentElement, st = sp ? sp.scrollTop : 0;
         el.innerHTML = render(cfg, h);
-        _hideSubtitle(el);
+        _syncTitle(cfg, el);
         if (sp && st > 0) sp.scrollTop = st;
       } catch(e) {}
     }, 60000);
   }
 
   function update(cfg, rawHass, el) {
-    try { el.innerHTML = render(cfg, rawHass || null); } catch(e) {}
+    try { el.innerHTML = render(cfg, rawHass || null); _syncTitle(cfg, el); } catch(e) {}
   }
 
   /* ─── configure() ─── */
@@ -456,7 +482,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Scadenze', icon: 'mdi:timer-sand',
     desc: 'Chip scadenze: giorni della più urgente + colore (rosso≤10gg, arancio≤30gg, verde). Clessidra animata. Supporta giorni_mancanti e costo_previsto.',
-    version: '2.0', isDistintivo: true,
+    version: '2.1', isDistintivo: true,
     defaultCfg: { label:'Scadenze', icon:'mdi:timer-sand', color:'#f59e0b', urgent_days:10, warning_days:30, entities:[], colorMode:'auto', colorRules:[] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -465,5 +491,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-scadenze v2.0'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-scadenze v2.1'); } catch(e) {}
 })();
