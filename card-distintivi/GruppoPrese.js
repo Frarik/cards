@@ -1,7 +1,16 @@
-/* frarik-version: 1.22 */
+/* frarik-version: 2.0 */
 /**
- * GruppoPrese.js — Distintivo FratechStore v1.15
+ * GruppoPrese.js — Distintivo FratechStore v2.0
  * Chip · riquadro riassuntivo · colori % · kWh giornalieri · timer · costo · standby
+ * v2.0: stesso trattamento degli altri distintivi — chip con unico value maiuscolo/
+ *       grassetto; "spenta" non è più rossa ma neutra (una presa spenta non è un
+ *       errore, come già in GruppoLuci), unificati i due rossi diversi di
+ *       unavailable/unknown in un solo rosso canonico; riquadro riassuntivo e righe
+ *       presa rifatti a stile "glass" (gradiente + alone), Accendi/Spegni tutte come
+ *       medaglioni circolari; automazione spostata da bottone con testo a pallino
+ *       nell'angolo (verde/rosso, senza scritte, icona robot); tutto il testo del
+ *       popup a dimensione unica (12px/900); titolo popup sempre bianco; fix
+ *       update() che scartava lo stato hass live ricevuto
  */
 (function () {
   'use strict';
@@ -74,19 +83,19 @@
     return rem > 0 ? `${hrs}h ${rem}m` : `${hrs}h`;
   }
 
-  const COL_ON    = '#4ade80'; // verde accesa
-  const COL_OFF   = '#ef4444'; // rosso spenta
-  const COL_UNAVL = '#ef4444'; // rosso unavailable
-  const COL_UNK   = '#f87171'; // rosso chiaro unknown
+  const COL_ON  = '#4ade80'; // verde accesa (canonico, come negli altri distintivi)
+  const COL_OFF = '#ffffff'; // spenta = neutro, non piu rosso (una presa spenta non è un errore,
+                              // stesso trattamento di "off" usato in GruppoLuci/Finestre/Porte)
+  const COL_ERR = '#f87171'; // rosso canonico per unavailable/unknown (prima erano due rossi diversi)
 
   /* ── stato presa: on / off / unavailable / unknown ── */
   function socketStatus(h, entityId) {
-    if (!h || !h.states) return { on:false, unavail:true, unknown:false, label:'Non disponibile', mainCol:COL_UNAVL, canToggle:false };
+    if (!h || !h.states) return { on:false, unavail:true, unknown:false, label:'Non disponibile', mainCol:COL_ERR, canToggle:false };
     const s = h.states[entityId];
-    if (!s) return { on:false, unavail:true, unknown:false, label:'Non disponibile', mainCol:COL_UNAVL, canToggle:false };
+    if (!s) return { on:false, unavail:true, unknown:false, label:'Non disponibile', mainCol:COL_ERR, canToggle:false };
     const st = (s.state||'').toLowerCase();
-    if (st==='unavailable') return { on:false, unavail:true,  unknown:false, label:'Non disponibile', mainCol:COL_UNAVL, canToggle:false };
-    if (st==='unknown')     return { on:false, unavail:false, unknown:true,  label:'Sconosciuta',     mainCol:COL_UNK,   canToggle:false };
+    if (st==='unavailable') return { on:false, unavail:true,  unknown:false, label:'Non disponibile', mainCol:COL_ERR, canToggle:false };
+    if (st==='unknown')     return { on:false, unavail:false, unknown:true,  label:'Sconosciuta',     mainCol:COL_ERR, canToggle:false };
     const on = ON_STATES.includes(st);
     return { on, unavail:false, unknown:false, label: on?'Accesa':'Spenta', mainCol: on?COL_ON:COL_OFF, canToggle:true };
   }
@@ -125,13 +134,18 @@
       });
       if (hasPwr) totalW=sum;
     }
-    const value = ents.length
+    const statusStr = ents.length
       ? (totalW!==null ? `${active}/${ents.length} · ${fmtW(totalW)}` : `${active}/${ents.length}`)
       : '—';
-    const chipCol = hasUnavail && active===0 ? COL_UNAVL : active>0 ? COL_ON : '#fff';
+    const chipCol = hasUnavail && active===0 ? COL_ERR : active>0 ? COL_ON : '#fff';
     const _fcr = window.FratechColorRules;
     const _cond = { any_on: active > 0, all_off: active === 0, watts_gt: v => totalW !== null && totalW > parseFloat(v||0), watts_lte: v => totalW !== null && totalW <= parseFloat(v||0) };
-    return { icon: iconHtml(c.icon||'🔌'), label: c.label||'Prese', value, color: (_fcr && _fcr.evalColor(cfg, _cond)) || chipCol, borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond) };
+    return {
+      icon: iconHtml(c.icon||'🔌'),
+      value: `${(c.label || 'Prese').toUpperCase()}: ${statusStr}`,
+      color: (_fcr && _fcr.evalColor(cfg, _cond)) || chipCol,
+      borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
+    };
   }
 
   function watchEntities(cfg) {
@@ -248,27 +262,28 @@
     const fCol = flowColor(totalW, maxW);
     const fSpd = flowSpeed(totalW);
 
-    /* ── riquadro riassuntivo in cima (sempre visibile) ── */
+    /* ── riquadro riassuntivo in cima (sempre visibile) — stesso stile "glass" degli altri distintivi ── */
     const allOff = totalActive === 0;
     const allOn  = ents.length > 0 && totalActive === ents.length;
+    const heroCol = allOff ? '#fff' : COL_ON;
     const statusLabel = allOff
-      ? `<span style="color:${COL_OFF}">Tutto spento</span>`
+      ? `<span style="color:#fff">TUTTO SPENTO</span>`
       : allOn
-        ? `<span style="color:${COL_ON}">Tutte accese</span>`
-        : `<span style="color:${COL_ON}">${totalActive}</span><span style="color:#fff"> / ${ents.length} accese</span>`;
+        ? `<span style="color:${COL_ON}">TUTTE ACCESE</span>`
+        : `<span style="color:${COL_ON}">${totalActive}</span><span style="color:#fff">/${ents.length} ACCESE</span>`;
 
     /* stat W: mostra solo se almeno una presa ha sensore watt */
     const statW = totalW!==null
-      ? `<div style="text-align:center;padding:0 8px;border-left:1px solid rgba(255,255,255,.07);border-right:1px solid rgba(255,255,255,.07)">
+      ? `<div style="text-align:center;padding:0 8px;border-left:1px solid rgba(255,255,255,.1);border-right:1px solid rgba(255,255,255,.1)">
            <div style="font-size:22px;font-weight:900;letter-spacing:-.5px;color:${fCol};line-height:1">${fmtW(totalW)}</div>
-           <div style="font-size:9px;color:#fff;margin-top:3px;text-transform:uppercase;letter-spacing:.5px">consumo</div>
+           <div style="font-size:12px;font-weight:900;color:#fff;margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Consumo</div>
          </div>`
       : '';
     const maxKwLabel = maxW >= 1000 ? (maxW/1000).toFixed(1).replace('.0','')+' kW' : maxW+' W';
     const statPct = totalPct!==null
       ? `<div style="text-align:center">
            <div style="font-size:22px;font-weight:900;color:${fCol};line-height:1">${totalPct}<span style="font-size:13px;font-weight:700">%</span></div>
-           <div style="font-size:9px;color:#fff;margin-top:3px;text-transform:uppercase;letter-spacing:.5px">di ${maxKwLabel}</div>
+           <div style="font-size:12px;font-weight:900;color:#fff;margin-top:3px;text-transform:uppercase;letter-spacing:.5px">di ${maxKwLabel}</div>
          </div>`
       : '';
 
@@ -283,25 +298,37 @@
 
     const hasTwoStats = statW && statPct;
     const statsRow = ents.length ? `
-      <div style="display:grid;grid-template-columns:${hasTwoStats?'1fr 1fr 1fr':'1fr'};gap:0;align-items:center;padding:4px 0 2px">
+      <div style="position:relative;display:grid;grid-template-columns:${hasTwoStats?'1fr 1fr 1fr':'1fr'};gap:0;align-items:center;padding:4px 0 2px">
         <div style="text-align:center">
-          <div style="font-size:22px;font-weight:900;line-height:1">${statusLabel}</div>
-          <div style="font-size:9px;color:#fff;margin-top:3px;text-transform:uppercase;letter-spacing:.5px">prese</div>
+          <div style="font-size:22px;font-weight:900;line-height:1;text-transform:uppercase">${statusLabel}</div>
+          <div style="font-size:12px;font-weight:900;color:#fff;margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Prese</div>
         </div>
         ${statW}
         ${statPct}
       </div>
       ${loadBar}` : '';
 
+    /* Accendi/Spegni tutte — stessi medaglioni circolari usati in GruppoLuci/GruppoTapparelle */
     const ctrlBtns = ents.length ? `
-      <div style="display:flex;gap:8px;margin-top:12px">
-        <button data-gp-all="on" style="flex:1;padding:7px 0;border-radius:8px;border:1px solid rgba(74,222,128,.4);background:rgba(74,222,128,.1);color:${COL_ON};font-size:11px;font-weight:700;cursor:pointer">⚡ Accendi tutte</button>
-        <button data-gp-all="off" style="flex:1;padding:7px 0;border-radius:8px;border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.07);color:${COL_OFF};font-size:11px;font-weight:700;cursor:pointer">⏻ Spegni tutte</button>
+      <div style="position:relative;display:flex;gap:20px;justify-content:center;margin-top:14px">
+        <button data-gp-all="on" style="background:none;border:none;padding:4px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;outline:none">
+          <span style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(155deg,${hex2rgba(COL_ON,.3)},${hex2rgba(COL_ON,.08)});border:1.5px solid ${hex2rgba(COL_ON,.55)};box-shadow:0 0 16px ${hex2rgba(COL_ON,.35)}">
+            <span style="font-size:19px;color:${COL_ON}">⚡</span>
+          </span>
+          <span style="white-space:nowrap;color:${COL_ON};text-transform:uppercase;font-weight:900;font-size:12px">Accendi tutte</span>
+        </button>
+        <button data-gp-all="off" style="background:none;border:none;padding:4px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;outline:none">
+          <span style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.12)">
+            <span style="font-size:19px;color:#fff">⏻</span>
+          </span>
+          <span style="white-space:nowrap;color:#fff;text-transform:uppercase;font-weight:900;font-size:12px">Spegni tutte</span>
+        </button>
       </div>` : '';
 
     const totalBar = ents.length ? `
       <div style="padding:12px 14px 10px">
-        <div style="border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);padding:14px">
+        <div style="position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(155deg,${hex2rgba(heroCol,.16)},${hex2rgba(heroCol,.04)});border:1px solid ${hex2rgba(heroCol,.32)};padding:16px 14px">
+          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 18% 15%,${hex2rgba(heroCol,.22)},transparent 62%);pointer-events:none"></div>
           ${statsRow}
           ${ctrlBtns}
         </div>
@@ -341,53 +368,53 @@
       /* ── cerchio stato (sinistra) ── */
       const isError = st.unavail || st.unknown;
       const blinkClass = isError ? ' class="gp-blink"' : '';
-      const circBg = isError ? `rgba(239,68,68,.15)` : st.on ? (standby?`rgba(74,222,128,.06)`:`rgba(74,222,128,.15)`) : `rgba(239,68,68,.1)`;
-      const circBorder = isError ? `2px solid ${mc}` : st.on ? (standby?`2px solid rgba(74,222,128,.3)`:`2px solid ${COL_ON}`) : `2px solid ${mc}`;
+      const circBg = isError ? hex2rgba(mc,.22) : st.on ? (standby?hex2rgba(COL_ON,.08):hex2rgba(COL_ON,.22)) : 'rgba(255,255,255,.06)';
+      const circBorder = isError ? `1px solid ${hex2rgba(mc,.5)}` : st.on ? (standby?`1px solid ${hex2rgba(COL_ON,.3)}`:`1px solid ${hex2rgba(COL_ON,.5)}`) : '1px solid rgba(255,255,255,.14)';
       const circIcon = st.unavail ? '⚠️' : st.unknown ? '❓' : iconHtml(e.icon||c.icon||'🔌', 18);
-      const circIconCol = st.on ? (standby?`rgba(74,222,128,.45)`:COL_ON) : mc;
+      const circIconCol = st.on ? (standby?hex2rgba(COL_ON,.6):COL_ON) : (isError ? mc : '#fff');
       const pulseRing = isError
         ? `<div class="gp-dot-ring" style="inset:-6px;border:2px solid ${mc};opacity:.55"></div>` : '';
 
       const dot = `<div style="position:relative;width:44px;height:44px;flex-shrink:0">
         ${pulseRing}
-        <div${blinkClass} style="position:absolute;inset:0;border-radius:50%;background:${circBg};border:${circBorder};display:flex;align-items:center;justify-content:center;color:${circIconCol}">
+        <div${blinkClass} style="position:absolute;inset:0;border-radius:50%;background:${circBg};border:${circBorder};display:flex;align-items:center;justify-content:center;color:${circIconCol};box-shadow:${st.on&&!standby?`0 0 12px ${hex2rgba(COL_ON,.3)}`:'none'}">
           ${circIcon}
         </div>
       </div>`;
 
-      /* ── testi stato + watt + kWh + timer (stesso peso visivo) ── */
+      /* ── testi stato + watt + kWh + timer (stessa dimensione, stesso peso) ── */
       const wattStr = w!==null ? fmtW(w) : null;
       const price = c.pricePerKwh ? parseFloat(c.pricePerKwh) : null;
       const timer = (h && st.on) ? _timeSince(h, e.entity) : null;
       let statusLine;
       if (st.unavail) {
-        statusLine = `<span class="gp-blink" style="font-size:12px;color:${COL_UNAVL};font-weight:800">⚡ Non disponibile</span>`;
+        statusLine = `<span class="gp-blink" style="font-size:12px;font-weight:900;text-transform:uppercase;color:${COL_ERR}">⚡ Non disponibile</span>`;
       } else if (st.unknown) {
-        statusLine = `<span class="gp-blink" style="font-size:12px;color:${COL_UNK};font-weight:800">❓ Sconosciuta</span>`;
+        statusLine = `<span class="gp-blink" style="font-size:12px;font-weight:900;text-transform:uppercase;color:${COL_ERR}">❓ Sconosciuta</span>`;
       } else if (st.on) {
-        const stCol = standby ? `rgba(74,222,128,.5)` : COL_ON;
-        const wPart = wattStr ? ` &nbsp;<strong style="font-size:14px;letter-spacing:-.3px">${wattStr}</strong>` : '';
+        const stCol = standby ? hex2rgba(COL_ON,.6) : COL_ON;
+        const wPart = wattStr ? ` &nbsp;<strong style="font-size:12px">${wattStr}</strong>` : '';
         const label = standby ? 'Standby' : `Accesa${wPart}`;
         const kwhPart = dailyKwh!==null
           ? (dailyKwh===0
-            ? ` &nbsp;<span style="font-size:13px;color:#fff;font-weight:700">📅 —</span>`
-            : ` &nbsp;<span style="font-size:13px;color:#fff;font-weight:700">📅 <strong style="font-size:14px;letter-spacing:-.3px">${dailyKwh.toFixed(2)} kWh</strong>${price&&price>0?` <strong style="font-size:14px;letter-spacing:-.3px;color:rgba(251,147,60,.95)">€${(dailyKwh*price).toFixed(2)}</strong>`:''}</span>`)
+            ? ` &nbsp;<span style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff">📅 —</span>`
+            : ` &nbsp;<span style="font-size:12px;font-weight:900;color:#fff">📅 <strong style="font-size:12px">${dailyKwh.toFixed(2)} kWh</strong>${price&&price>0?` <strong style="font-size:12px;color:${col}">€${(dailyKwh*price).toFixed(2)}</strong>`:''}</span>`)
           : '';
-        const timerPart = timer ? ` &nbsp;<strong style="font-size:14px;letter-spacing:-.3px;color:#fff">${timer}</strong>` : '';
-        statusLine = `<span style="font-size:13px;color:${stCol};font-weight:800">● ${label}</span>${kwhPart}${timerPart}`;
+        const timerPart = timer ? ` &nbsp;<strong style="font-size:12px;color:#fff">${timer}</strong>` : '';
+        statusLine = `<span style="font-size:12px;font-weight:900;text-transform:uppercase;color:${stCol}">● ${label}</span>${kwhPart}${timerPart}`;
       } else {
-        statusLine = `<span style="font-size:13px;color:${COL_OFF};font-weight:800">● Spenta</span>`;
+        statusLine = `<span style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff">● Spenta</span>`;
       }
 
       /* ── toggle ── */
-      const swBg = st.on ? COL_ON : 'rgba(255,255,255,.12)';
+      const swBg = st.on ? COL_ON : 'rgba(255,255,255,.14)';
       const thumbL = st.on ? '21px' : '2px';
       const toggle = st.canToggle
         ? `<button data-gp-toggle="${i}" style="width:46px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;background:${swBg};transition:background .2s;outline:none;flex-shrink:0">
             <div style="position:absolute;top:3px;left:${thumbL};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:left .18s;pointer-events:none"></div>
            </button>`
-        : `<div style="width:46px;height:26px;border-radius:13px;background:rgba(255,255,255,.05);border:1px solid ${mc}44;flex-shrink:0;display:flex;align-items:center;justify-content:center">
-            <span style="font-size:9px;color:#fff">N/D</span>
+        : `<div style="width:46px;height:26px;border-radius:13px;background:rgba(255,255,255,.05);border:1px solid ${hex2rgba(mc,.4)};flex-shrink:0;display:flex;align-items:center;justify-content:center">
+            <span style="font-size:9px;font-weight:900;text-transform:uppercase;color:#fff">N/D</span>
            </div>`;
 
       /* ── barra consumo per outlet (gradient animato, nessun elemento separato) ── */
@@ -398,36 +425,38 @@
           ? `repeating-linear-gradient(90deg,${fCol2}99 0,${fCol2} 20px,${fCol2}99 40px);background-size:40px 100%;animation:gpflow ${Math.max(500,Math.round(fSpd2/4))}ms linear infinite`
           : fCol2;
         powerBar = `
-          <div style="padding:4px 16px 10px">
+          <div style="position:relative;padding:10px 0 0">
             <div class="gp-flow-track">
               <div style="position:absolute;inset:0;width:${barPct}%;background:${_oFillBg};border-radius:4px;transition:width .5s"></div>
             </div>
           </div>`;
       }
 
-      /* ── automazione ── */
-      let autoBadge = '';
+      /* ── automazione: pallino nell'angolo, senza scritte (come gli altri distintivi) ── */
+      let autoDot = '';
       if (e.automation && h) {
         const autoOn = isOn(h, e.automation);
-        autoBadge = `<div style="padding:0 16px 10px"><button data-gp-auto="${i}" style="padding:4px 10px;border-radius:6px;border:1px solid ${autoOn?'rgba(74,222,128,.35)':'rgba(248,113,113,.35)'};background:${autoOn?'rgba(74,222,128,.08)':'rgba(248,113,113,.08)'};color:${autoOn?'#4ade80':'#f87171'};cursor:pointer;font-size:9px;font-weight:700">${autoOn?'🟢 Auto attiva':'🔴 Auto disattiva'}</button></div>`;
+        const aCol = autoOn ? '#4ade80' : '#f87171';
+        autoDot = `<button data-gp-auto="${i}" style="position:absolute;top:8px;right:8px;z-index:1;width:26px;height:26px;border-radius:50%;border:1.5px solid ${hex2rgba(aCol,.55)};background:linear-gradient(155deg,${hex2rgba(aCol,.4)},${hex2rgba(aCol,.12)});box-shadow:0 0 8px ${hex2rgba(aCol,.35)};display:flex;align-items:center;justify-content:center;cursor:pointer;outline:none;color:${aCol}">${iconHtml('mdi:robot', 13)}</button>`;
       }
 
-      return `<div style="border-bottom:1px solid rgba(255,255,255,.05)">
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px ${powerBar?'4px':'10px'}">
+      return `<div style="position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(155deg,${hex2rgba(mc,.16)},${hex2rgba(mc,.03)});border:1px solid ${hex2rgba(mc,.35)};padding:14px 16px;margin:0 14px 8px">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(mc,.18)},transparent 62%);pointer-events:none"></div>
+        ${autoDot}
+        <div style="position:relative;display:flex;align-items:center;gap:12px">
           ${dot}
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
+            <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
             <div style="margin-top:3px;display:flex;align-items:center;flex-wrap:wrap;gap:2px">${statusLine}</div>
           </div>
           ${toggle}
         </div>
         ${powerBar}
-        ${autoBadge}
       </div>`;
     }).join('');
 
-    const empty = `<div style="padding:32px 20px;text-align:center;color:#fff;font-size:12px">
-      Nessuna presa configurata.<br><span style="font-size:10px">Clicca ✏️ sulla chip per configurare.</span>
+    const empty = `<div style="padding:32px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">
+      Nessuna presa configurata<br><span style="font-size:12px;font-weight:900;text-transform:uppercase;opacity:.7">Clicca ✏️ sulla chip per configurare</span>
     </div>`;
 
     return `<div id="gp-popup-body" style="font-family:system-ui,sans-serif">
@@ -456,6 +485,11 @@
       if (auto) {
         const e = ents[parseInt(auto.dataset.gpAuto)]; if (!e||!e.automation) return;
         const autoOn = isOn(H(), e.automation);
+        const newCol = autoOn ? '#f87171' : '#4ade80';
+        auto.style.color = newCol;
+        auto.style.borderColor = hex2rgba(newCol, .55);
+        auto.style.background = `linear-gradient(155deg,${hex2rgba(newCol,.4)},${hex2rgba(newCol,.12)})`;
+        auto.style.boxShadow = `0 0 8px ${hex2rgba(newCol,.35)}`;
         callSvc('automation', autoOn?'turn_off':'turn_on', e.automation);
         ev.stopPropagation(); return;
       }
@@ -482,7 +516,9 @@
       const h = H(); if (!h) return;
       let active=0;
       ents.forEach(e=>{ const st=socketStatus(h,e.entity); if(st.on) active++; });
-      titleEl.style.color = active>0 ? COL_ON : COL_OFF;
+      titleEl.style.color = '#fff';
+      titleEl.style.fontWeight = '900';
+      titleEl.style.textTransform = 'uppercase';
       titleEl.textContent = active===0
         ? 'Tutte spente'
         : `${active} pres${active===1?'a':'e'} acces${active===1?'a':'e'}`;
@@ -533,7 +569,7 @@
   }
 
   function update(cfg, rawHass, el) {
-    try { el.innerHTML=render(cfg,null); _mountHandlers(cfg,el); } catch(e){}
+    try { el.innerHTML=render(cfg,rawHass); _mountHandlers(cfg,el); } catch(e){}
   }
 
   /* ── configure ── (stessa struttura v1.0, aggiunto campo maxW) */
@@ -845,7 +881,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.22', isDistintivo: true,
+    version: '2.0', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[], colorMode:'auto', colorRules:[] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -854,5 +890,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v1.22'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v2.0'); } catch(e) {}
 })();
