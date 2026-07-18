@@ -1,8 +1,10 @@
-/* frarik-version: 4.2 */
+/* frarik-version: 4.3 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v4.2
+ * GruppoAllarme.js — Distintivo FratechStore v4.3
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
+ * v4.3: righe sensori del popup config a stile "glass" (badge icona
+ *       rotondo, nome/entity-id distinti), come GruppoLuci
  * v4.2: tutti i campi extra (chip/entità/pin/modalità/sensori/sirena) in un
  *       unico riquadro con contorno bianco, suddiviso per tipologia; il
  *       riquadro "Colore chip" resta separato, contorno bianco anch'esso
@@ -676,13 +678,14 @@
       const sensorRows = sensors.map((s, i) => {
         const dc  = attrOf(h, s.entity, 'device_class') || 'door';
         const icoK = (DC_ICO[dc] || DC_DEFAULT).off;
-        return `<div style="display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
-          <span style="font-size:14px;flex-shrink:0;color:#fff">${mdi(icoK, 14)}</span>
+        const rc = '#f97316';
+        return `<div style="position:relative;overflow:hidden;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:linear-gradient(155deg,${hex2rgba(rc,.13)},${hex2rgba(rc,.03)});border:1px solid ${hex2rgba(rc,.28)}">
+          <div style="width:30px;height:30px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;background:${hex2rgba(rc,.18)};border:1px solid ${hex2rgba(rc,.35)};color:#fff">${mdi(icoK, 14)}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(s.label || nameOf(h, s.entity))}</div>
-            <div style="font-size:9px;color:#fff">${eh(s.entity)}</div>
+            <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(s.label || nameOf(h, s.entity))}</div>
+            <div style="font-size:10px;font-weight:700;color:#fff;opacity:.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">${eh(s.entity)}</div>
           </div>
-          <button data-ca-delsensor="${i}" style="width:22px;height:22px;border:none;border-radius:5px;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:11px;flex-shrink:0">✕</button>
+          <button data-ca-delsensor="${i}" style="width:26px;height:26px;flex-shrink:0;border:none;border-radius:50%;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:12px">✕</button>
         </div>`;
       }).join('');
 
@@ -722,7 +725,7 @@
             <div style="height:1px;background:rgba(255,255,255,.1);margin:12px 0"></div>
 
             <div style="${secL}">Sensori (${sensors.length})</div>
-            ${sensors.length ? `<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px">${sensorRows}</div>` : ''}
+            ${sensors.length ? `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">${sensorRows}</div>` : ''}
             <input id="cacfg-add-sensor" style="${sinp}" placeholder="🔍 Aggiungi binary_sensor…" autocomplete="off">
 
             <div style="height:1px;background:rgba(255,255,255,.1);margin:12px 0"></div>
@@ -811,7 +814,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '4.2', isDistintivo: true,
+    version: '4.3', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '', colorMode: 'auto', colorRules: [] },
     chip,
     watchEntities,
@@ -825,5 +828,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v4.2'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v4.3'); } catch (e) {}
 })();
