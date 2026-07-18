@@ -1,6 +1,6 @@
-/* frarik-version: 2.8 */
+/* frarik-version: 2.9 */
 /**
- * GruppoFinestre.js — Distintivo FratechStore v2.8
+ * GruppoFinestre.js — Distintivo FratechStore v2.9
  * Chip contatore finestre aperte + popup con sommario, finestra bianca SVG animata
  * v2.3: chip allineato al pattern di GruppoAllarme/GruppoLuci — "FINESTRE: N" è un unico
  *       value in maiuscolo/grassetto (solo n. finestre aperte, non più N/M). Popup rifatto
@@ -25,6 +25,7 @@
  * v2.8: il chip mostrava il colore personalizzato (o il verde-teal di default #34d399)
  *       quando una finestra era aperta, mentre il popup mostra rosso — ora il chip usa
  *       lo stesso rosso/verde canonico del popup (aperta=#f87171, chiusa=#4ade80)
+ * v2.9: titolo dell'header del popup sempre bianco (era rosso quando c'erano finestre aperte)
  */
 (function () {
   'use strict';
@@ -236,7 +237,7 @@
         const ents = Array.isArray(c.entities) ? c.entities : [];
         const h = H();
         const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
-        titleEl.style.color = active > 0 ? '#f87171' : '';
+        titleEl.style.color = '#fff';
         titleEl.style.fontWeight = '900';
         titleEl.style.textTransform = 'uppercase';
         titleEl.textContent = active === 1 ? '1 finestra aperta' : `${active} finestre aperte`;
@@ -538,7 +539,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Finestre', icon: '🪟',
     desc: 'Chip con contatore finestre aperte. Clic → stato Aperta/Chiusa per ogni finestra.',
-    version: '2.8', isDistintivo: true,
+    version: '2.9', isDistintivo: true,
     defaultCfg: { label: 'Finestre', icon: '🪟', color: '#34d399', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -547,5 +548,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-finestre v2.8'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-finestre v2.9'); } catch(e){}
 })();

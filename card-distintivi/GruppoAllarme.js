@@ -1,6 +1,6 @@
-/* frarik-version: 3.9 */
+/* frarik-version: 4.0 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v3.9
+ * GruppoAllarme.js — Distintivo FratechStore v4.0
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
  * v2.3: fix bypass — azzera solo sulla transizione armato→disarmato, non mentre è già disarmato
@@ -51,6 +51,9 @@
  *       (12px) invece di più livelli diversi — richiesta esplicita di uniformità
  *       assoluta; soglia della griglia sensori alzata (260px) per garantire 1 colonna
  *       su schermo da telefono invece di restare a 2 strette
+ * v4.0: aggiunto _syncTitle() al mount — mancava del tutto: il titolo dell'header del
+ *       popup (a differenza di Luci/Finestre) restava quello di default minuscolo/non
+ *       in grassetto. Ora mostra lo stato corrente in bianco/maiuscolo/grassetto
  */
 (function () {
   'use strict';
@@ -498,6 +501,24 @@
 
     _mountHandlers(cfg, el);
 
+    function _syncTitle() {
+      try {
+        const hdr = el.previousElementSibling; if (!hdr) return;
+        const textWrap = hdr.children?.[1]; if (!textWrap) return;
+        const titleEl = textWrap.firstElementChild; if (!titleEl) return;
+        const subEl = textWrap.children?.[1]; if (subEl) subEl.style.display = 'none';
+        const h = H();
+        const state = ae && h ? stateOf(h, ae) : 'unknown';
+        const def = alarmDef(state);
+        titleEl.style.color = '#fff';
+        titleEl.style.fontWeight = '900';
+        titleEl.style.textTransform = 'uppercase';
+        titleEl.textContent = def.lbl;
+      } catch (e) {}
+    }
+    el._caSyncTitle = _syncTitle;
+    setTimeout(_syncTitle, 0);
+
     const h0 = liveH(rawHass);
     if (h0) _updateOverlay(cfg, h0);
 
@@ -519,6 +540,7 @@
         const _sp=el.parentElement, _st=_sp?_sp.scrollTop:0;
         el.innerHTML = render(cfg, h, el._bypassed);
         _mountHandlers(cfg, el);
+        _syncTitle();
         if(_sp&&_st>0) _sp.scrollTop=_st;
       } catch (e) {}
     }, 1500);
@@ -537,6 +559,7 @@
       _updateOverlay(cfg, h);
       el.innerHTML = render(cfg, rawHass, el._bypassed || new Set());
       _mountHandlers(cfg, el);
+      if (el._caSyncTitle) el._caSyncTitle();
     } catch (e) {}
   }
 
@@ -773,7 +796,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '3.9', isDistintivo: true,
+    version: '4.0', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '', colorMode: 'auto', colorRules: [] },
     chip,
     watchEntities,
@@ -787,5 +810,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v3.9'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v4.0'); } catch (e) {}
 })();

@@ -1,6 +1,6 @@
-/* frarik-version: 2.8 */
+/* frarik-version: 2.9 */
 /**
- * GruppoLuci.js — Distintivo FratechStore v2.8
+ * GruppoLuci.js — Distintivo FratechStore v2.9
  * Fix: icona configurabile (preserve su re-render), sottotitolo popup nascosto
  * v1.9: testi maiuscolo+grassetto (chip e popup), layout popup a stile "glass"
  *       (hero riepilogo + tasti accendi/spegni a medaglione + righe luci glass)
@@ -31,6 +31,7 @@
  * v2.8: il pulsante "Accendi tutte" usava il colore personalizzato della luce invece del
  *       verde canonico (#4ade80) usato ovunque altrove per lo stato "on/positivo" —
  *       ora usa lo stesso verde del resto dell'app
+ * v2.9: titolo dell'header del popup sempre bianco (era colorato con l'accento della luce)
  */
 (function () {
   'use strict';
@@ -258,8 +259,7 @@
         const ents = Array.isArray(c.entities) ? c.entities : [];
         const h = H();
         const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
-        const col = c.color || '#fbbf24';
-        titleEl.style.color = active > 0 ? col : '';
+        titleEl.style.color = '#fff';
         titleEl.style.fontWeight = '900';
         titleEl.style.textTransform = 'uppercase';
         titleEl.textContent = active === 1 ? '1 luce accesa' : `${active} luci accese`;
@@ -602,7 +602,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Luci', icon: '💡',
     desc: 'Chip con contatore luci accese. Clic → pannello toggle + Accendi/Spegni tutte.',
-    version: '2.8', isDistintivo: true,
+    version: '2.9', isDistintivo: true,
     defaultCfg: { label: 'Luci', icon: '💡', color: '#fbbf24', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -611,5 +611,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v2.8'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v2.9'); } catch(e){}
 })();
