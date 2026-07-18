@@ -1,4 +1,4 @@
-/* frarik-version: 5.24 */
+/* frarik-version: 5.25 */
 /* v5.15: aggiunta anteprima live + slider dimensione card (altezza/larghezza)
    nel popup Impostazioni, stesso meccanismo di Meteo.js/posta-card
    (localStorage _frk_layout_ + evento frarik-card-layout); aggiunto
@@ -64,6 +64,9 @@
    arco, non decorativo). Riquadro "Questa sera/Domani" nella card
    diviso in due box separati con contorno, staccati dal bordo alto
    (padding-top aggiunto, colonna centrata verticalmente). */
+/* v5.25: bidoni ingranditi (90/70/56 → 140/108/84px), colonna immagine
+   più larga rispetto al testo (flex 1.3 invece di 1), simbolo di riciclo
+   più prominente (scala 0.85 → 1.05). */
 ;(function () {
   'use strict';
 
@@ -122,7 +125,7 @@
       + '<path d="M17,42 L83,42 L79,118 Q79,122 75,122 L25,122 Q21,122 21,118 Z" fill="url(#' + uid + 'bd)" stroke="' + dark + '" stroke-width="1.2"/>'
       + '<ellipse cx="50" cy="80" rx="24" ry="30" fill="' + dark + '" opacity=".18"/>'
       + '<rect x="41" y="112" width="18" height="7" rx="2.5" fill="#161616"/>'
-      + '<g fill="#fff" transform="translate(50,78) scale(0.85)">'
+      + '<g fill="#fff" transform="translate(50,78) scale(1.05)">'
       + '<path d="M 17,0 A 17 17 0 0 1 3.53,16.63 L 6.18,19.02 L -2.87,16.25 L 2.16,6.66 L 2.08,9.78 A 10 10 0 0 0 10,0 Z"/>'
       + '<path d="M -8.5,14.72 A 17 17 0 0 1 -16.17,-5.25 L -19.56,-4.16 L -12.64,-10.61 L -6.85,-1.46 L -9.51,-3.09 A 10 10 0 0 0 -5,8.66 Z"/>'
       + '<path d="M -8.5,-14.72 A 17 17 0 0 1 12.63,-11.38 L 13.38,-14.86 L 15.5,-5.64 L 4.68,-5.2 L 7.43,-6.69 A 10 10 0 0 0 -5,-8.66 Z"/>'
@@ -212,11 +215,11 @@
       : 'Nessuna';
 
     /* bidoni */
-    const binSz = todayWastes.length <= 1 ? 90 : todayWastes.length === 2 ? 70 : 56;
+    const binSz = todayWastes.length <= 1 ? 140 : todayWastes.length === 2 ? 108 : 84;
     var binsHtml = hasPickup
       ? '<div style="display:flex;align-items:flex-end;justify-content:center;gap:4px;height:100%;width:100%">'
           + todayWastes.map(function(id) { return binSvg(getClr(id), binSz); }).join('') + '</div>'
-      : emptyBinSvg(82);
+      : emptyBinSvg(120);
 
     /* riga rifiuto (colonna destra) */
     function wasteRow(id) {
@@ -244,7 +247,7 @@
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
-      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;max-height:160px}'
+      + '#' + rid + ' .fc-hero-img{flex:1.3;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;max-height:230px}'
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:10px;justify-content:center;min-width:0;padding-left:10px;padding-top:10px;overflow:hidden}'
       + '#' + rid + ' .fc-sec-box{padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09)}'
       + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:space-between;gap:6px}'
@@ -1073,7 +1076,7 @@ automation:
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.24',
+    version: '5.25',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',
