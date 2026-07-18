@@ -1202,6 +1202,11 @@ function loadCfg(){
       if(!p.font)  p.font='Inter';
       if(!p.footerBar) p.footerBar={enabled:false,buttons:[]};
       if(!p.hdrBar) p.hdrBar={left:[{id:uid(),type:'clock'}],center:[],right:[]};
+      // Migra i vecchi chip statici type:'sos' nella barra orologio al nuovo distintivo live sos-card
+      ['left','center','right'].forEach(z=>{
+        const arr=p.hdrBar[z]; if(!Array.isArray(arr)) return;
+        arr.forEach((it,i)=>{ if(it&&it.type==='sos') arr[i]={id:it.id||uid(),type:'jsd',jsCardId:'sos-card',cfg:{}}; });
+      });
       return p;
     }
   }catch(e){}
@@ -2801,23 +2806,41 @@ function _ghStoreRenderPredefinite(q){
   const hdr=`<div style="margin-bottom:14px;padding:12px 14px;border-radius:12px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.22);font-size:11px;color:rgba(255,255,255,.7);line-height:1.6"><b style="color:#c4b5fd">🛡️ Card Predefinite</b> — card integrate nel sistema Frarik, sempre disponibili e protette da licenza.<br><span style="opacity:.7">Non possono essere eliminate senza la chiave amministratore.</span></div>`;
   if(!items.length){ list.innerHTML=hdr+`<div class="ghs-empty">${q?`Nessun risultato per "${eh(q)}"`: 'Nessuna card predefinita disponibile.'}</div>`; return; }
   const _cpCards=(curPage()||{cards:[]}).cards||[];
+  const usedInPillRow=new Set();
+  ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInPillRow.add(b.jsCardId); });
+  const usedInClockBar=new Set();
+  const _hbP=cfg.hdrBar||{};
+  [...(_hbP.left||[]),...(_hbP.center||[]),...(_hbP.right||[])].forEach(it=>{ if(it&&it.type==='jsd'&&it.jsCardId) usedInClockBar.add(it.jsCardId); });
   const usedInCurPage=new Set();
   _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)&&!(window.FratechCardRegistry?.[c.jsCardId]?.allowMultiple)) usedInCurPage.add(c.jsCardId); });
-  ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
   list.innerHTML=hdr+'<div class="ghc-grid">'+items.map(i=>{
     const m=i.meta||{}; const id=m.id||'';
     const reg=id?window.FratechCardRegistry?.[id]:null;
+    const isDist=!!reg?.isDistintivo;
     const icon=m.icon||reg?.icon||'📦';
     const desc=m.desc||'';
-    const inPage=usedInCurPage.has(id);
+    const inPillRow=usedInPillRow.has(id);
+    const inClockBar=usedInClockBar.has(id);
+    const inPage=isDist?(inPillRow||inClockBar):usedInCurPage.has(id);
     const st=inPage?'ok':'new';
     const prevHtml=reg
       ?`<div class="ghc-prev-inner" data-prev-id="${eh(id)}"></div>`
       :`<div class="ghc-prev-inner">${_ghcPrevPh(icon,m.name||id)}</div>`;
     const bdg=`<span class="ghc-bdg" style="background:rgba(139,92,246,.2);color:#c4b5fd;border-color:rgba(139,92,246,.4)">🔐 Sistema</span>`;
-    const act=inPage
-      ?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`
-      :`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${id}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`;
+    let act;
+    if(isDist){
+      const dashPart=inPillRow
+        ?`<span class="ghc-indash" style="flex:1"><i class="mdi mdi-check-circle-outline"></i> Dashboard</span>`
+        :`<button class="ghc-btn ghc-btn-add" style="flex:1" data-action="_jsStoreAddToHeaderAndRefresh" data-action-args='["${id}"]'><i class="mdi mdi-view-dashboard-outline"></i> Dashboard</button>`;
+      const headerPart=inClockBar
+        ?`<span class="ghc-indash" style="flex:1"><i class="mdi mdi-check-circle-outline"></i> Header</span>`
+        :`<button class="ghc-btn ghc-btn-add" style="flex:1" data-action="_jsStoreAddToClockBarAndRefresh" data-action-args='["${id}"]'><i class="mdi mdi-flag-outline"></i> Header</button>`;
+      act=`<div style="display:flex;gap:6px;flex:1">${dashPart}${headerPart}</div>`;
+    } else {
+      act=inPage
+        ?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`
+        :`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${id}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`;
+    }
     const del=id==='sos-card'
       ?`<button class="ghc-btn-del" title="Rimuovi dallo Store (richiede chiave admin)" data-action="_sosStoreRemove"><i class="mdi mdi-delete-outline"></i></button>`
       :`<button class="ghc-btn-del" title="Protetta da licenza" style="opacity:.35;cursor:default"><i class="mdi mdi-lock-outline"></i></button>`;
@@ -5617,12 +5640,6 @@ function hbarInner(card){
       return `<div class="hbar-clk" data-clk="${cfgAttr}"><span class="hbar-clk-time" style="${timeStyle}">${p.timeHTML}</span>${showDate?`<span class="hbar-clk-date">${p.dateText}</span>`:''}</div>`;
     }
     if(item.type==='sep') return `<div class="hbar-sep"></div>`;
-    if(item.type==='sos'){
-      const lbl=item.label||'SOS';
-      const ic=item.icon||'mdi:alarm-light';
-      const shapeR={pill:'20px',rounded:'10px',square:'6px'}[item.shape||'pill']||'20px';
-      return `<span class="hbar-chip hbar-sos-chip tap" style="--hbr:${shapeR}" data-action="openSOS">${_renderIcon(ic,13,'#fff')} <span style="font-weight:900;letter-spacing:.5px">${eh(lbl)}</span></span>`;
-    }
     if(item.type==='kiosk'){
       const isK=document.body.classList.contains('kiosk');
       const lbl=item.label||(isK?'Esci Kiosk':'Kiosk');
@@ -8754,14 +8771,14 @@ function _hbCreateModal(){
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:12px">
           <button class="sect-align-btn on" id="hbft-entity" data-action="hbSelType" data-action-arg="entity" style="font-size:11px;padding:10px 4px">📦<br><span style="font-size:8px">Entità HA</span></button>
           <button class="sect-align-btn"    id="hbft-clock"  data-action="hbSelType" data-action-arg="clock"  style="font-size:11px;padding:10px 4px">⏰<br><span style="font-size:8px">Orologio</span></button>
-          <button class="sect-align-btn"    id="hbft-sos"    data-action="hbSelType" data-action-arg="sos"    style="font-size:11px;padding:10px 4px;color:#f87171;border-color:rgba(248,113,113,.4)">🆘<br><span style="font-size:8px">SOS</span></button>
           <button class="sect-align-btn"    id="hbft-store"  data-action="hbSelType" data-action-arg="store"  style="font-size:11px;padding:10px 4px;color:#fbbf24;border-color:rgba(251,191,36,.4)">📦<br><span style="font-size:8px">Store</span></button>
         </div>
-        <!-- Campi nascosti per compatibilità con tipi rimossi -->
+        <!-- Campi nascosti per compatibilità con tipi rimossi (SOS ora è il distintivo sos-card, vedi tipo "store") -->
         <input type="hidden" id="hbft-text-val">
         <input type="hidden" id="hbft-sep-val">
         <input type="hidden" id="hbft-kiosk-val">
         <input type="hidden" id="hbft-conn-val">
+        <input type="hidden" id="hbft-sos-val">
 
         <!-- ENTITÀ -->
         <div id="hbf-entity-row">
@@ -9158,7 +9175,6 @@ function _hbDnDMove(tgtZone, tgtIdx){
 function _hbChipPreview(item){
   if(item.type==='clock') return `<span class="hb-chip-prev" style="background:rgba(255,255,255,.1);color:#fff">⏰ Orologio</span>`;
   if(item.type==='sep') return `<span style="font-size:10px;opacity:.5">│ Separatore</span>`;
-  if(item.type==='sos')   return `<span class="hb-chip-prev" style="background:rgba(239,68,68,.3);border-color:rgba(248,113,113,.6);color:#fff">🆘 ${item.label||'SOS'}</span>`;
   if(item.type==='kiosk') return `<span class="hb-chip-prev" style="background:rgba(99,102,241,.25);border-color:rgba(129,140,248,.5);color:#a5b4fc">⛶ ${item.label||'Kiosk'}</span>`;
   if(item.type==='conn')  return `<span class="hb-chip-prev" style="background:rgba(74,222,128,.2);border-color:rgba(74,222,128,.4);color:#4ade80">📶 Stato connessione</span>`;
   if(item.type==='jsd'){
@@ -9271,15 +9287,14 @@ function hbEditChip(zone,i){
 }
 
 function hbSelType(t){
-  ['entity','text','clock','sep','sos','kiosk','conn','store'].forEach(x=>document.getElementById('hbft-'+x)?.classList.toggle('on',x===t));
+  ['entity','text','clock','sep','kiosk','conn','store'].forEach(x=>document.getElementById('hbft-'+x)?.classList.toggle('on',x===t));
   const sf=(id,v)=>{const e=document.getElementById(id);if(e)e.style.display=v?'':'none';};
-  const isStore=t==='store', isSos=t==='sos', isSimple=isStore||isSos||t==='clock'||t==='sep';
+  const isStore=t==='store', isSimple=isStore||t==='clock'||t==='sep';
   sf('hbf-entity-row',       t==='entity');
   sf('hbf-text-row',         t==='text');
   sf('hbf-clock-row',        t==='clock');
   sf('hbf-store-row',        isStore);
-  sf('hbf-sos-row',          isSos);
-  if(isSos) _hbRenderSosPersons();
+  sf('hbf-sos-row',          false); // SOS ora è il distintivo sos-card, aggiunto dal tipo "store"
   if(t==='clock') _hbRenderClockColors();
   if(isStore) _hbRenderStoreList();
   // Chip row visibile solo per entity/text
@@ -9941,7 +9956,7 @@ function _hbSelBg(c){ _hbBg=c; document.getElementById('hbf-bg-custom').value=c;
 function _hbSelTxt(c){ _hbTxt=c; const el=document.getElementById('hbf-text-custom'); if(el) el.value=c; _hbRenderColorPickers(); }
 
 function hbSaveChip(){
-  const t=['entity','text','clock','sep','sos','kiosk','conn','store'].find(x=>document.getElementById('hbft-'+x)?.classList.contains('on'))||'entity';
+  const t=['entity','text','clock','sep','kiosk','conn','store'].find(x=>document.getElementById('hbft-'+x)?.classList.contains('on'))||'entity';
   // Tipo store: il picker mostra solo distintivi → crea un item "jsd" live (stesso motore chip() della riga distintivi)
   if(t==='store'){
     const sel=document.getElementById('hbf-store-selected');
@@ -10011,7 +10026,7 @@ function hbCancelChip(){ document.getElementById('hb-chip-form').style.display='
 /* ── Anteprima live chip nel form — usa lo stesso render di hbarInner ── */
 function _hbUpdatePreview(){
   const box=document.getElementById('hb-chip-preview-box'); if(!box) return;
-  const t=['entity','clock','sos'].find(x=>document.getElementById('hbft-'+x)?.classList.contains('on'))||'entity';
+  const t=['entity','clock'].find(x=>document.getElementById('hbft-'+x)?.classList.contains('on'))||'entity';
   const fakeItem={
     type:t,
     bg:document.getElementById('hbf-bg-custom')?.value||'',
@@ -12198,6 +12213,17 @@ async function _sosRequireLicense(onSuccess){
     try{ cel.hass=_haHassObj(); }catch(_){}
     host.appendChild(cel);
   };
+  // ── SOS come distintivo: stesso chip/popup/aggiungi degli altri distintivi ──
+  // Nessuna condizione sensata da valutare (non è legato a un'entità) → colore fisso,
+  // niente sezione "Colore chip". Configurazione: delega alla schermata SOS globale
+  // (Impostazioni → SOS), dato che i contatti/famiglia sono un'unica config condivisa,
+  // non per-istanza come negli altri distintivi.
+  if(_sr){
+    _sr.isDistintivo=true;
+    _sr.defaultCfg={};
+    _sr.chip=function(){ return { icon:'🆘', value:'SOS', color:'#ef4444' }; };
+    _sr.configure=function(){ openSOSCfgModal(); };
+  }
 })();
 
 
@@ -15268,7 +15294,11 @@ function sosAlertAll(){
 /* ── Config SOS nel pannello impostazioni — guida + card live + contatti ── */
 function renderSOSCfgList(){
   const el=document.getElementById('sos-cfg-list'); if(!el) return;
-  const _sosOnDash=(cfg.pages||[]).some(p=>(p.cards||[]).some(c=>c.type==='js-custom'&&c.jsCardId==='sos-card'));
+  const _hbSos=cfg.hdrBar||{};
+  const _sosInClockBar=[...(_hbSos.left||[]),...(_hbSos.center||[]),...(_hbSos.right||[])].some(it=>it&&it.type==='jsd'&&it.jsCardId==='sos-card');
+  const _sosInPillRow=(cfg.pages||[]).some(p=>(p.headerBadges||[]).some(b=>b.type==='jsd'&&b.jsCardId==='sos-card'));
+  const _sosInGridCard=(cfg.pages||[]).some(p=>(p.cards||[]).some(c=>c.type==='js-custom'&&c.jsCardId==='sos-card'));
+  const _sosOnDash=_sosInClockBar||_sosInPillRow||_sosInGridCard;
   const sc=_sosCfg();
   const family=sc.family||[];
 
@@ -15293,7 +15323,10 @@ function renderSOSCfgList(){
     <div style="padding:16px 22px">
       ${_sosOnDash
         ?`<div style="font-size:13px;color:#fff;opacity:.7">🔐 Protetta da licenza — non eliminabile senza chiave admin</div>`
-        :`<button onclick="window._addSosToDash&&window._addSosToDash()" style="padding:11px 22px;border-radius:12px;background:rgba(239,68,68,.35);border:1.5px solid rgba(239,68,68,.6);color:#fff;font-size:14px;font-weight:900;cursor:pointer;letter-spacing:.5px">➕ Aggiungi alla dashboard</button>`
+        :`<div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button onclick="window._jsStoreAddToHeaderAndRefresh&&window._jsStoreAddToHeaderAndRefresh('sos-card')" style="padding:11px 18px;border-radius:12px;background:rgba(239,68,68,.35);border:1.5px solid rgba(239,68,68,.6);color:#fff;font-size:13px;font-weight:900;cursor:pointer;letter-spacing:.5px">➕ Dashboard</button>
+            <button onclick="window._jsStoreAddToClockBarAndRefresh&&window._jsStoreAddToClockBarAndRefresh('sos-card')" style="padding:11px 18px;border-radius:12px;background:rgba(239,68,68,.35);border:1.5px solid rgba(239,68,68,.6);color:#fff;font-size:13px;font-weight:900;cursor:pointer;letter-spacing:.5px">➕ Header (vicino orologio)</button>
+          </div>`
       }
     </div>
   </div>`;

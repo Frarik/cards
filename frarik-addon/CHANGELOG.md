@@ -1,5 +1,30 @@
 # Changelog
 
+## 2.0.94 — 2026-07-18
+
+### feat: SOS ora è un distintivo come gli altri (invece del vecchio chip statico)
+
+- `sos-card` (il sistema SOS Emergenza, card di sistema protetta da licenza)
+  è ora marcata `isDistintivo:true` con un `chip()` proprio (🆘 SOS, rosso
+  fisso — non ha un'entità/condizione naturale da valutare, quindi niente
+  sezione "Colore chip"). Passa quindi dagli stessi due pulsanti
+  Dashboard/Header di tutti gli altri distintivi, sia nello store (tab
+  Predefinite) sia nella lista rapida del pannello di modifica.
+- **Rimosso del tutto il vecchio tipo "sos" hardcoded** nella barra
+  orologio: niente più pulsante dedicato "🆘 SOS" nel form della barra,
+  niente più chip statico non aggiornabile — al suo posto lo stesso
+  distintivo live già usato per gli altri (badge icona/colore/click che
+  aggiornano da soli).
+- **Migrazione automatica**: qualsiasi item `type:'sos'` già presente nella
+  barra orologio (`cfg.hdrBar`) viene convertito al volo nel nuovo item
+  `type:'jsd'` legato a `sos-card` al primo caricamento — nessuna azione
+  richiesta, il pulsante SOS esistente continua a funzionare.
+- Il `configure()` del distintivo apre la schermata globale Impostazioni →
+  SOS (famiglia/contatti/persone), dato che quei dati sono condivisi e non
+  per-istanza come negli altri distintivi. Aggiornato anche il banner guida
+  di quella schermata per riflettere le tre collocazioni possibili
+  (dashboard/header/card griglia) invece della sola vecchia dashboard.
+
 ## 2.0.93 — 2026-07-18
 
 ### fix: le due destinazioni dei distintivi erano scambiate + nuova destinazione "barra orologio/SOS" live
