@@ -1,6 +1,9 @@
-/* frarik-version: 2.0 */
+/* frarik-version: 2.1 */
 /**
- * GruppoPrese.js — Distintivo FratechStore v2.0
+ * GruppoPrese.js — Distintivo FratechStore v2.1
+ * v2.1: popup config — riquadro unico (Chip/Potenza-Prezzo/Prese/Aggiungi)
+ *       con contorno bianco; righe presa a stile "glass" (badge icona
+ *       rotondo, nome/entity-id distinti)
  * Chip · riquadro riassuntivo · colori % · kWh giornalieri · timer · costo · standby
  * v2.0: stesso trattamento degli altri distintivi — chip con unico value maiuscolo/
  *       grassetto; "spenta" non è più rossa ma neutra (una presa spenta non è un
@@ -709,18 +712,20 @@
             </div>
           </div>`:'';
         const outletIcon = e.icon ? iconHtml(e.icon, 15) : (st.unavail?'⚠️':st.unknown?'❓':'🔌');
-        return `<div style="padding:8px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid ${st.on?hex2rgba(col,.25):st.unavail?'rgba(239,68,68,.2)':st.unknown?'rgba(245,158,11,.2)':'rgba(255,255,255,.08)'};margin-bottom:6px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:15px;flex-shrink:0">${outletIcon}</span>
+        const rc = st.on ? col : (st.unavail ? '#ef4444' : st.unknown ? '#f59e0b' : '#7a7f8c');
+        return `<div style="position:relative;overflow:hidden;padding:12px;border-radius:14px;background:linear-gradient(155deg,${hex2rgba(rc,st.on?.16:.06)},${hex2rgba(rc,st.on?.03:.02)});border:1px solid ${hex2rgba(rc,st.on?.35:.18)};margin-bottom:10px">
+          ${st.on ? `<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(col,.16)},transparent 62%);pointer-events:none"></div>` : ''}
+          <div style="position:relative;display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;background:${hex2rgba(rc,st.on?.22:.1)};border:1px solid ${hex2rgba(rc,st.on?.4:.22)}">${outletIcon}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-              <div style="font-size:9px;color:${st.unavail?'#ef4444':st.unknown?'#f59e0b':'#fff'}">${eh(e.entity)}</div>
+              <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
+              <div style="font-size:10px;font-weight:700;color:${st.unavail?'#f87171':st.unknown?'#f59e0b':'#fff'};opacity:${st.unavail||st.unknown?1:.55};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">${eh(e.entity)}</div>
             </div>
-            <button data-expand="${i}" title="${exp?'Chiudi':'Icona / Automazione'}" style="width:26px;height:26px;border:none;border-radius:6px;background:${exp?hex2rgba(col,.18):'rgba(255,255,255,.07)'};color:${exp?col:'#fff'};cursor:pointer;font-size:12px;flex-shrink:0">${exp?'▲':'▾'}</button>
-            <button data-del="${i}" style="width:26px;height:26px;border:none;border-radius:6px;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:11px;flex-shrink:0">✕</button>
+            <button data-expand="${i}" title="${exp?'Chiudi':'Icona / Automazione'}" style="width:26px;height:26px;flex-shrink:0;border:none;border-radius:50%;background:${exp?hex2rgba(col,.2):'rgba(255,255,255,.08)'};color:${exp?col:'#fff'};cursor:pointer;font-size:12px">${exp?'▲':'▾'}</button>
+            <button data-del="${i}" style="width:26px;height:26px;flex-shrink:0;border:none;border-radius:50%;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:12px">✕</button>
           </div>
-          ${sensorsRow}
-          ${extraSection}
+          <div style="position:relative">${sensorsRow}</div>
+          <div style="position:relative">${extraSection}</div>
         </div>`;
       }).join('');
 
@@ -736,28 +741,40 @@
           <button id="gpcfg-close" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:14px">✕</button>
         </div>
         <div id="gpcfg-body" style="flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:14px 14px 4px">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Chip</div>
-          <div style="display:flex;gap:7px;margin-bottom:10px">
-            <div style="flex:1"><div style="font-size:9px;color:#fff;margin-bottom:3px">Nome</div><input id="gpcfg-label" class="gpcinp" placeholder="Prese" value="${eh(c.label||'Prese')}"></div>
-            <div style="flex:0 0 56px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Icona</div><button id="gpcfg-icon-btn" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;color:#fff">${iconHtml(c.icon||'🔌',22)}</button><input type="hidden" id="gpcfg-icon" value="${eh(c.icon||'🔌')}"></div>
-            <div style="flex:0 0 50px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Colore</div><input type="color" id="gpcfg-color" value="${(c.color||'#fb923c').match(/^#[0-9a-f]{6}$/i)?c.color:'#fb923c'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
-          </div>
-          <div style="display:flex;gap:7px;margin-bottom:14px">
-            <div style="flex:1">
-              <div style="font-size:9px;color:#fff;margin-bottom:3px">⚡ Potenza disponibile (kW) — es. 4.5 · 3 · 6</div>
-              <input id="gpcfg-maxw" class="gpcinp" type="number" step="0.1" min="0.5" placeholder="4.5" value="${eh(String(c.maxW ? (c.maxW/1000) : ''))}">
-              <div style="font-size:9px;color:#fff;margin-top:3px">Serve per % carico e colori</div>
+
+          <div style="margin:0 0 14px;padding:14px;background:rgba(255,255,255,.05);border-radius:12px;border:1px solid #fff">
+
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Chip</div>
+            <div style="display:flex;gap:7px">
+              <div style="flex:1"><div style="font-size:9px;color:#fff;margin-bottom:3px">Nome</div><input id="gpcfg-label" class="gpcinp" placeholder="Prese" value="${eh(c.label||'Prese')}"></div>
+              <div style="flex:0 0 56px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Icona</div><button id="gpcfg-icon-btn" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;color:#fff">${iconHtml(c.icon||'🔌',22)}</button><input type="hidden" id="gpcfg-icon" value="${eh(c.icon||'🔌')}"></div>
+              <div style="flex:0 0 50px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Colore</div><input type="color" id="gpcfg-color" value="${(c.color||'#fb923c').match(/^#[0-9a-f]{6}$/i)?c.color:'#fb923c'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
             </div>
-            <div style="flex:0 0 90px">
-              <div style="font-size:9px;color:#fff;margin-bottom:3px">💶 €/kWh (opz.)</div>
-              <input id="gpcfg-price" class="gpcinp" type="number" step="0.01" min="0" placeholder="0.25" value="${eh(String(c.pricePerKwh||''))}">
-              <div style="font-size:9px;color:#fff;margin-top:3px">Costo giornaliero</div>
+
+            <div style="height:1px;background:rgba(255,255,255,.1);margin:12px 0"></div>
+
+            <div style="display:flex;gap:7px">
+              <div style="flex:1">
+                <div style="font-size:9px;color:#fff;margin-bottom:3px">⚡ Potenza disponibile (kW) — es. 4.5 · 3 · 6</div>
+                <input id="gpcfg-maxw" class="gpcinp" type="number" step="0.1" min="0.5" placeholder="4.5" value="${eh(String(c.maxW ? (c.maxW/1000) : ''))}">
+                <div style="font-size:9px;color:#fff;margin-top:3px">Serve per % carico e colori</div>
+              </div>
+              <div style="flex:0 0 90px">
+                <div style="font-size:9px;color:#fff;margin-bottom:3px">💶 €/kWh (opz.)</div>
+                <input id="gpcfg-price" class="gpcinp" type="number" step="0.01" min="0" placeholder="0.25" value="${eh(String(c.pricePerKwh||''))}">
+                <div style="font-size:9px;color:#fff;margin-top:3px">Costo giornaliero</div>
+              </div>
             </div>
+
+            <div style="height:1px;background:rgba(255,255,255,.1);margin:12px 0"></div>
+
+            ${ents.length?`<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Prese (${ents.length}) <span style="font-size:8px;font-weight:400">▾ = icona + automazione · il kWh totale si somma automaticamente</span></div><div>${selRows}</div>`:''}
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Aggiungi presa</div>
+            <input id="gpcfg-add-entity" class="gpcinp" placeholder="🔍 Inizia a scrivere il nome della presa…" autocomplete="off">
+            <div style="font-size:9px;color:#fff;margin-top:5px">switch.* compaiono per prime · inserisci watt + sensore energia direttamente · ▾ = icona + automazione</div>
+
           </div>
-          ${ents.length?`<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Prese (${ents.length}) <span style="font-size:8px;font-weight:400">▾ = icona + automazione · il kWh totale si somma automaticamente</span></div><div>${selRows}</div>`:''}
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin:${ents.length?'12px':0} 0 6px">Aggiungi presa</div>
-          <input id="gpcfg-add-entity" class="gpcinp" placeholder="🔍 Inizia a scrivere il nome della presa…" autocomplete="off">
-          <div style="font-size:9px;color:#fff;margin-top:5px">switch.* compaiono per prime · inserisci watt + sensore energia direttamente · ▾ = icona + automazione</div>
+
           ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
           <div style="height:16px"></div>
         </div>
@@ -881,7 +898,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '2.0', isDistintivo: true,
+    version: '2.1', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[], colorMode:'auto', colorRules:[] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -890,5 +907,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v2.0'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v2.1'); } catch(e) {}
 })();
