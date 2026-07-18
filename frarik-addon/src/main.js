@@ -5632,15 +5632,9 @@ function hbarInner(card){
       return `<span class="hbar-chip" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.35);color:#fbbf24">${_renderIcon(ico,11,'#fbbf24')} <span style="font-weight:700">${eh(lbl)}</span></span>`;
     }
     if(item.type==='jsd'){
-      // distintivo live: stesso motore chip() del jsd nella riga distintivi, ma dentro la barra orologio/SOS
-      const def=(window.FratechCardRegistry||{})[item.jsCardId];
-      let chip={}; try{ if(def&&def.chip) chip=def.chip(item.cfg||{},{states:hs})||{}; }catch(e){}
-      const col=chip.color||'#818cf8';
-      const bbc=chip.borderColor||col;
-      const ico=chip.icon!=null?chip.icon:(def?.icon||'📦');
-      const lbl=chip.label?`<span class="badge-lbl">${eh(chip.label)}: </span>`:'';
-      const val=chip.value!=null?`<span class="badge-val" id="bgcnt-${item.id}">${chip.value}</span>`:'';
-      return `<span class="hbar-chip tap" id="bchip-${item.id}" style="--hbfs:14px;background:color-mix(in srgb, var(--bc) 18%, transparent);border-color:color-mix(in srgb, var(--bbc, var(--bc)) 55%, transparent);color:var(--bc);--bc:${col};--bbc:${bbc}" data-action="_badgeClick" data-action-arg="${item.id}"><span id="bgico-${item.id}">${ico}</span> ${lbl}${val}</span>`;
+      // distintivo live: stessa identica funzione di rendering della riga distintivi (classe .hbadge),
+      // così il chip è visivamente IDENTICO indipendentemente da dove viene mostrato
+      return _badgeItemHTML(item, 'hbadge');
     }
     if(item.type==='clock'){
       const style=item.clockStyle||'default';

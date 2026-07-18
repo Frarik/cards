@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.97 — 2026-07-18
+
+### fix: chip distintivo nella barra orologio ora identico a quello nella riga distintivi
+
+- Il tentativo precedente (v2.0.96) reimplementava lo stile a mano nella
+  barra orologio invece di riusare quello della riga distintivi, quindi
+  la resa restava diversa (sfondo colorato invece che neutro, dimensioni
+  leggermente diverse). Ora il chip nella barra orologio chiama la
+  stessa identica funzione di rendering (`_badgeItemHTML`, classe
+  `.hbadge`) usata per la riga distintivi — nessuna differenza visiva
+  possibile perché è letteralmente lo stesso codice.
+
 ## 2.0.96 — 2026-07-18
 
 ### fix: errore JS su "+ Header" al primo utilizzo + chip distintivo piccolo nella barra orologio
