@@ -1,4 +1,4 @@
-/* frarik-version: 5.17 */
+/* frarik-version: 5.18 */
 /* v5.15: aggiunta anteprima live + slider dimensione card (altezza/larghezza)
    nel popup Impostazioni, stesso meccanismo di Meteo.js/posta-card
    (localStorage _frk_layout_ + evento frarik-card-layout); aggiunto
@@ -18,6 +18,14 @@
    contorno bianco attorno alle sezioni "Rifiuti per giorno"/"Colori per
    tipo"/"Notifiche" nel popup Impostazioni; pulsante Salva ora blu #38bdf8
    come da standard Frarik (era verde, colore non universale). */
+/* v5.18: popup completamente allineati allo standard posta-card/Meteo —
+   stesso sfondo #0a0816 (era #060d14/#080f18 a seconda del popup), stessa
+   icona neutra (era colorata a tema per popup e wizard), rimosso il
+   sottotitolo sotto al titolo in tutti e 3 i popup (impostazioni/
+   settimana/wizard). Anteprima live nel popup impostazioni ora occupa
+   tutto lo spazio verticale disponibile (era forzata a 160×220px, minuscola
+   anche con colonna vuota). Testo maiuscolo/grassetto ovunque nella card
+   e nei popup: pill rifiuto, etichette colore, titoli toggle, "orario". */
 ;(function () {
   'use strict';
 
@@ -146,14 +154,14 @@
     return ov;
   }
   const POP_CSS = '<style>@keyframes fcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.fcpc{overflow-y:auto;scrollbar-width:none}.fcpc::-webkit-scrollbar{display:none}</style>';
-  function popShell(icon, rgb, title, sub, closeId, content) {
-    return POP_CSS + '<div style="width:100%;max-height:82vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba(' + rgb + ',.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
-      + '<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
-      + '<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(' + rgb + ',.15);border:1px solid rgba(' + rgb + ',.3)">' + icon + '</div>'
-      + '<div><div style="font-size:14px;font-weight:800;color:#fff">' + title + '</div><div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:1px">' + sub + '</div></div>'
-      + '<button id="' + closeId + '" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
+  function popShell(icon, title, closeId, content) {
+    return POP_CSS + '<div style="width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
+      + '<div style="display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">'
+      + '<div style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;flex-shrink:0">' + icon + '</div>'
+      + '<div style="flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">' + title + '</div>'
+      + '<button id="' + closeId + '" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18)">✕</button>'
       + '</div>'
-      + '<div class="fcpc" style="flex:1;overflow-y:auto;padding:13px 15px;display:flex;flex-direction:column;gap:0">' + content + '</div>'
+      + '<div class="fcpc" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:0">' + content + '</div>'
       + '</div>';
   }
   function sttl(t) {
@@ -231,7 +239,7 @@
       + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;max-height:160px}'
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:5px;justify-content:flex-start;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
       + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:space-between;gap:6px}'
-      + '#' + rid + ' .fc-met-lbl{font-size:12px;font-weight:700;color:#fff;flex-shrink:0}'
+      + '#' + rid + ' .fc-met-lbl{font-size:12px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px;flex-shrink:0}'
       + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:10px 14px 12px;margin-top:14px;border-top:1px solid rgba(255,255,255,.07)}'
       + '#' + rid + ' .fc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s}'
       + '#' + rid + ' .fc-btn:hover{background:rgba(' + ACC_RGB + ',.12);border-color:rgba(' + ACC_RGB + ',.3);color:' + ACC + '}'
@@ -319,17 +327,17 @@
             var t = TIPI.find(function(x) { return x.id === id; }), c = getClr(id);
             return '<div style="display:flex;align-items:center;gap:5px">'
               + '<div style="width:8px;height:8px;border-radius:50%;background:' + c + ';box-shadow:0 0 4px ' + c + '88;flex-shrink:0"></div>'
-              + '<span style="font-size:12px;font-weight:700;color:#fff">' + (t ? t.label : id) + '</span>'
+              + '<span style="font-size:12px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">' + (t ? t.label : id) + '</span>'
               + '</div>';
           }).join('')
-        : '<span style="font-size:12px;font-weight:700;color:#fff">Nessun ritiro</span>';
+        : '<span style="font-size:12px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">Nessun ritiro</span>';
       return '<div style="padding:10px;border-radius:10px;border:1px solid ' + (isToday ? '#4ade80' : '#fff') + ';background:' + (isToday ? 'rgba(74,222,128,.05)' : 'rgba(255,255,255,.02)') + ';margin-bottom:6px">'
         + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:' + (isToday ? '#4ade80' : '#fff') + ';margin-bottom:6px">'
         + DFULL[i] + (isToday ? ' — OGGI' : '') + '</div>'
         + '<div style="display:flex;flex-wrap:wrap;gap:8px">' + dots + '</div>'
         + '</div>';
     }).join('');
-    mkOv(popShell('📅', '74,222,128', 'Rifiuti della settimana', 'Panoramica raccolta settimanale', 'ds-close', content), 'ds-close');
+    mkOv(popShell('📅', 'Rifiuti della settimana', 'ds-close', content), 'ds-close');
   }
 
   /* ── POPUP IMPOSTAZIONI ── */
@@ -364,7 +372,7 @@
           var border = sel ? c : 'rgba(255,255,255,.1)';
           var bg     = sel ? 'rgba(0,0,0,.25)' : 'rgba(255,255,255,.03)';
           var dot    = '<div style="width:8px;height:8px;border-radius:50%;background:' + (sel ? c : 'rgba(255,255,255,.2)') + ';flex-shrink:0"></div>';
-          return '<button data-di="' + d + '" data-ti="' + t.id + '" style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1.5px solid ' + border + ';background:' + bg + ';color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:system-ui;transition:all .15s">'
+          return '<button data-di="' + d + '" data-ti="' + t.id + '" style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1.5px solid ' + border + ';background:' + bg + ';color:#fff;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.3px;cursor:pointer;font-family:system-ui;transition:all .15s">'
             + dot + t.label + '</button>';
         }).join('');
         var dayColor = '#fff';
@@ -386,7 +394,7 @@
         }).join('');
         return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
           + '<div style="width:30px;height:30px;border-radius:9px;background:' + cur + ';flex-shrink:0;border:2px solid rgba(255,255,255,.18)"></div>'
-          + '<div style="font-size:12px;font-weight:700;color:#fff;width:56px;flex-shrink:0">' + t.label + '</div>'
+          + '<div style="font-size:12px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px;width:56px;flex-shrink:0">' + t.label + '</div>'
           + '<div style="display:flex;gap:4px;flex-wrap:wrap;flex:1;align-items:center">'
           + sws
           + '<input type="color" data-ci="' + t.id + '" value="' + cur + '" style="width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.15);cursor:pointer;padding:0;background:none;flex-shrink:0" title="Colore libero">'
@@ -400,7 +408,7 @@
       var bg   = on ? '#22c55e' : 'rgba(255,255,255,.12)';
       var knob = on ? 'left:22px' : 'left:3px';
       return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
-        + '<div><div style="font-size:13px;font-weight:700;color:#fff">' + lbl + '</div>'
+        + '<div><div style="font-size:13px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">' + lbl + '</div>'
         + '<div style="font-size:10px;color:#fff;opacity:.6;margin-top:1px">' + sub + '</div></div>'
         + '<div data-tg="' + id + '" style="width:44px;height:26px;border-radius:13px;background:' + bg + ';cursor:pointer;position:relative;flex-shrink:0;transition:background .18s">'
         + '<div style="position:absolute;top:3px;' + knob + ';width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:left .18s"></div>'
@@ -432,7 +440,7 @@
       + tog('alexa',  alexaOn,  '🗣 Alexa',  'Annuncio vocale Alexa')
       + tog('google', googleOn, '🔊 Google', 'Annuncio vocale Google')
       + '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0">'
-      + '<div><div style="font-size:13px;font-weight:700;color:#fff">⏰ Orario</div>'
+      + '<div><div style="font-size:13px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">⏰ Orario</div>'
       + '<div style="font-size:10px;color:#fff;opacity:.6;margin-top:1px">Il giorno della raccolta</div></div>'
       + '<input type="time" id="dd-time" value="' + notifT + '" style="height:32px;padding:0 10px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;font-size:13px;font-family:system-ui">'
       + '</div>'
@@ -440,7 +448,7 @@
       + saveBtn;
 
     const previewHtml = '<div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:#fff;opacity:.6">Anteprima live</div>'
-      + '<div id="dd-prev-wrap" style="border-radius:14px;overflow:hidden;background:rgba(255,255,255,.02);margin-top:8px;min-height:240px;display:flex;justify-content:center;align-items:center"></div>'
+      + '<div id="dd-prev-wrap" style="border-radius:14px;overflow:hidden;background:rgba(255,255,255,.02);margin-top:8px;flex:1;min-height:420px;display:flex"></div>'
       + '<div style="margin-top:14px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)">'
       + '<div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:#fff;opacity:.6">Dimensione card</div>'
       + layoutRow('Altezza', 'dd-scale', tScale)
@@ -452,7 +460,7 @@
       + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;padding-left:16px;border-left:1px solid rgba(255,255,255,.07)">' + previewHtml + '</div>'
       + '</div>';
 
-    var ov = mkOv(popShell('♻️', '74,222,128', 'Raccolta Differenziata', 'Configura giorni, colori e notifiche', 'dd-close', content), 'dd-close');
+    var ov = mkOv(popShell('♻️', 'Raccolta Differenziata', 'dd-close', content), 'dd-close');
 
     /* anteprima live — stessa render() della card reale, scalata */
     function updatePreview() {
@@ -460,9 +468,7 @@
       try { wrap.innerHTML = render({ id: '__diffprev__' }); } catch(e) {}
       var el = wrap.querySelector('#frd__diffprev__');
       if (el) {
-        el.style.width = '160px';
-        el.style.minHeight = '0';
-        el.style.height = '220px';
+        el.style.width = '100%';
         el.style.zoom = tScale < 100 ? tScale + '%' : '';
       }
     }
@@ -921,13 +927,12 @@ automation:
       sr.innerHTML = '<style>'
         + ':host{all:initial;font-family:system-ui,sans-serif}'
         + '.wd-bd{position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-end}'
-        + '.wd-panel{width:100%;max-height:88vh;display:flex;flex-direction:column;background:#080f18;border:1px solid rgba(56,189,248,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:wUp .22s cubic-bezier(.32,1.12,.56,1)}'
+        + '.wd-panel{width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;overflow:hidden;animation:wUp .22s cubic-bezier(.32,1.12,.56,1)}'
         + '@keyframes wUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
-        + '.wd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}'
-        + '.wd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);flex-shrink:0}'
-        + '.wd-tit{font-size:14px;font-weight:800}'
-        + '.wd-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}'
-        + '.wd-x{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none}'
+        + '.wd-hdr{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}'
+        + '.wd-ico{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;flex-shrink:0}'
+        + '.wd-tit{flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px}'
+        + '.wd-x{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18)}'
         + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}'
         + '.wd-body::-webkit-scrollbar{display:none}'
         + '.wd-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.18);margin-bottom:10px}'
@@ -949,7 +954,7 @@ automation:
         + '<div class="wd-bd" id="wd-bd">'
         + '<div class="wd-panel">'
         + '<div class="wd-hdr"><div class="wd-ico">♻️</div>'
-        + '<div><div class="wd-tit">' + (isUpdate ? 'Aggiorna PKG Differenziata' : 'Installa PKG Differenziata') + '</div><div class="wd-sub">frarik_differenziata.yaml → config/packages/</div></div>'
+        + '<div class="wd-tit">' + (isUpdate ? 'Aggiorna PKG Differenziata' : 'Installa PKG Differenziata') + '</div>'
         + '<button class="wd-x" id="wd-x">✕</button></div>'
         + '<div class="wd-body">'
 
@@ -1051,7 +1056,7 @@ automation:
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.17',
+    version: '5.18',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',

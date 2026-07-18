@@ -1,5 +1,10 @@
-/* frarik-version: 5.3 */
+/* frarik-version: 5.4 */
 /* Centro Controllo Posta — Frarik card standalone */
+/* v5.4: uniformati i 3 popup interni (impostazioni/conferma reset/wizard
+   pkg) — stesso padding header, stessa dimensione icona (40px) e titolo
+   (16px/900/maiuscolo), rimossa la sottotitolo del wizard (nessun testo
+   sotto al titolo, come le altre card). Etichette toggle notifiche nel
+   popup impostazioni ora maiuscole/grassetto (erano peso 700 non uniforme). */
 /* v4.4: aggiunta icona ingranaggio interna (la card non ne aveva una) e
    frarik_no_edit per nascondere la matita esterna in modifica; eliminato
    ogni accento giallo/ambra da tutti i popup interni (impostazioni, conferma
@@ -902,9 +907,9 @@ if(!customElements.get('posta-card')){
         .ov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.65);backdrop-filter:blur(6px)}
         .mo{width:100%;background:#0a0816;border:1px solid rgba(239,68,68,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:su .2s cubic-bezier(.32,1.12,.56,1)}
         @keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
-        .mhdr{display:flex;align-items:center;gap:10px;padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,.07)}
-        .mico{width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-        .mtit{flex:1;font-size:15px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px;font-family:system-ui,sans-serif}
+        .mhdr{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+        .mico{width:40px;height:40px;border-radius:12px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+        .mtit{flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px;font-family:system-ui,sans-serif}
         .mxbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
         p{font-family:system-ui,sans-serif;font-size:13px;font-weight:600;color:#fff;line-height:1.7;padding:14px 18px 8px}
         .btns{display:flex;gap:10px;padding:8px 18px 28px}
@@ -969,7 +974,7 @@ if(!customElements.get('posta-card')){
         .fsave{width:100%;padding:14px;border-radius:13px;background:#38bdf8;border:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:system-ui,sans-serif}
         .sensbox{padding:14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid #fff}
         .stgl-row{display:flex;align-items:center;gap:9px;padding:8px 0}
-        .stgl-lbl{flex:1;font-size:12px;font-weight:700;color:#fff}
+        .stgl-lbl{flex:1;font-size:12px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px}
         .stgl{width:40px;height:24px;border-radius:12px;background:rgba(255,255,255,.12);position:relative;transition:background .2s;flex-shrink:0;cursor:pointer}
         .stgl.on{background:#38bdf8}
         .stgl-k{width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .18s;box-shadow:0 2px 4px rgba(0,0,0,.4)}
@@ -1230,10 +1235,9 @@ PostaCard.openWizard=function(hass,onDone,_tpl,opts){
     .ov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(6px)}
     .mo{width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
     @keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
-    .mhdr{display:flex;align-items:center;gap:12px;padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
+    .mhdr{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
     .mico{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:#fff}
-    .mtxt{flex:1}.mtit{font-size:15px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px;font-family:system-ui,sans-serif}
-    .msub{font-size:11px;font-weight:700;color:#fff;opacity:.55;font-family:system-ui,sans-serif;margin-top:2px}
+    .mtit{flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px;font-family:system-ui,sans-serif}
     .mxbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
     .mbody{flex:1;overflow-y:auto;padding:16px 18px 4px;scrollbar-width:none}
     .mbody::-webkit-scrollbar{display:none}
@@ -1265,10 +1269,7 @@ PostaCard.openWizard=function(hass,onDone,_tpl,opts){
   <div class="ov"><div class="mo" id="wiz_mo">
     <div class="mhdr">
       <div class="mico">📦</div>
-      <div class="mtxt">
-        <div class="mtit">${isUpdate?'Aggiorna Package Posta':'Configura Package Posta'}</div>
-        <div class="msub">Inserisci i tuoi sensori e dispositivi</div>
-      </div>
+      <div class="mtit" style="flex:1">${isUpdate?'Aggiorna Package Posta':'Configura Package Posta'}</div>
       <button class="mxbtn" id="wiz_close">✕</button>
     </div>
     <div class="mbody">
