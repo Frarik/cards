@@ -1,4 +1,4 @@
-/* frarik-version: 2.2 */
+/* frarik-version: 2.3 */
 /* v2.2: allineata allo standard Frarik (posta-card/Meteo/Differenziata).
    Popup unificati: stesso sfondo #0a0816, icona neutra (era colorata a
    tema), titolo maiuscolo 16px/900, rimossa la sottotitolo sotto al
@@ -10,6 +10,8 @@
    card (stesso meccanismo _frk_layout_ di Meteo/posta-card/Differenziata).
    Bagliore radiale della card allineato (era ambrato/dosaggio diverso a
    seconda del colore scelto, ora blu fisso .16 come le altre card). */
+/* v2.3: rimossa la linea verticale tra la copertina/vinile e le info
+   brano a destra. */
 (function () {
   'use strict';
 
@@ -249,7 +251,7 @@
       +'#'+rid+' .fc-art{width:100%;max-width:110px;aspect-ratio:1;border-radius:13px;overflow:hidden;flex-shrink:0;position:relative;'
       +(isPlaying?'box-shadow:0 0 0 2px '+col+',0 4px 20px rgba('+rgb+',.4);':'box-shadow:0 4px 14px rgba(0,0,0,.5);')
       +'background:linear-gradient(135deg,rgba('+rgb+',.18),rgba('+rgb+',.05))}'
-      +'#'+rid+' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:4px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
+      +'#'+rid+' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:4px;justify-content:center;min-width:0;padding-left:10px;overflow:hidden}'
       +'#'+rid+' .fc-sep{height:1px;background:rgba(255,255,255,.06);margin:0 14px;flex-shrink:0}'
       +'#'+rid+' [data-axa]:active{opacity:.72}'
       +'#'+rid+' #axtts-'+rid+'::placeholder{color:rgba(255,255,255,.5)}'
@@ -608,7 +610,7 @@
 
   /* ── REGISTRATION ── */
   var CARD={
-    id:'alexa-card',name:'Alexa Media',icon:'🔊',version:'2.2',
+    id:'alexa-card',name:'Alexa Media',icon:'🔊',version:'2.3',
     desc:'Alexa: album art, equalizzatore, sorgente, preset volume, timer countdown, TTS inline.',
     colSpan:2,rowSpan:3,frarik_no_edit:true,
     render:function(card){return render(card);},
