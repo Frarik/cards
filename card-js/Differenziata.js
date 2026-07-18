@@ -1,4 +1,11 @@
-/* frarik-version: 5.14 */
+/* frarik-version: 5.15 */
+/* v5.15: aggiunta anteprima live + slider dimensione card (altezza/larghezza)
+   nel popup Impostazioni, stesso meccanismo di Meteo.js/posta-card
+   (localStorage _frk_layout_ + evento frarik-card-layout); aggiunto
+   frarik_no_edit per nascondere la matita esterna in modifica dashboard
+   (la card ha già il proprio pulsante "⚙ Impostazioni" interno). Popup
+   e colori erano già allineati allo standard Frarik (niente giallo,
+   chiusura anche cliccando fuori) — nessuna modifica necessaria lì. */
 ;(function () {
   'use strict';
 
@@ -314,6 +321,13 @@
   /* ── POPUP IMPOSTAZIONI ── */
   function openImpostazioni(card) {
     const h = H();
+    const cardId = (card && card.id) || '';
+
+    /* dimensione card — letta da localStorage, stesso meccanismo di Meteo/Posta */
+    var _ll = {};
+    try { _ll = JSON.parse(localStorage.getItem('_frk_layout_' + cardId) || '{}'); } catch(e) {}
+    var tScale = _ll.cardScale != null ? _ll.cardScale : 100;
+    var tW     = _ll.cardW     != null ? _ll.cardW     : 100;
 
     /* stato locale giorni */
     const dayState = {};
@@ -383,7 +397,16 @@
 
     const saveBtn = '<button id="dd-save" style="width:100%;margin-top:16px;padding:14px;border-radius:13px;background:#22c55e;border:none;color:#060d14;font-size:14px;font-weight:900;cursor:pointer;font-family:system-ui;letter-spacing:.01em">💾 Salva impostazioni</button>';
 
-    const content = sttl('📅 Rifiuti per giorno')
+    function layoutRow(lbl, id, val) {
+      var vLbl = val >= 100 ? 'Auto (100%)' : val + '%';
+      return '<div style="display:flex;align-items:center;gap:8px;margin-top:10px">'
+        + '<span style="font-size:12px;font-weight:900;color:#fff;width:72px;flex-shrink:0">' + lbl + '</span>'
+        + '<input type="range" id="' + id + '" min="20" max="100" step="5" value="' + val + '" style="flex:1;accent-color:#fff;cursor:pointer">'
+        + '<span id="' + id + '-lbl" style="font-size:12px;font-weight:900;color:#fff;width:54px;text-align:right;flex-shrink:0">' + vLbl + '</span>'
+        + '</div>';
+    }
+
+    const settingsHtml = sttl('📅 Rifiuti per giorno')
       + '<div id="dd-giorni">' + renderGiorni() + '</div>'
       + sttl('🎨 Colori per tipo')
       + '<div id="dd-colori">' + renderColori() + '</div>'
@@ -398,7 +421,45 @@
       + '</div>'
       + saveBtn;
 
+    const previewHtml = '<div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:#fff;opacity:.6">Anteprima live</div>'
+      + '<div id="dd-prev-wrap" style="border-radius:14px;overflow:hidden;background:rgba(255,255,255,.02);margin-top:8px;min-height:240px;display:flex;justify-content:center;align-items:center"></div>'
+      + '<div style="margin-top:14px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)">'
+      + '<div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:#fff;opacity:.6">Dimensione card</div>'
+      + layoutRow('Altezza', 'dd-scale', tScale)
+      + layoutRow('Larghezza', 'dd-w', tW)
+      + '</div>';
+
+    const content = '<div style="display:flex;gap:16px;align-items:stretch">'
+      + '<div style="flex:1;min-width:0;display:flex;flex-direction:column">' + settingsHtml + '</div>'
+      + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;padding-left:16px;border-left:1px solid rgba(255,255,255,.07)">' + previewHtml + '</div>'
+      + '</div>';
+
     var ov = mkOv(popShell('♻️', '34,197,94', 'Raccolta Differenziata', 'Configura giorni, colori e notifiche', 'dd-close', content), 'dd-close');
+
+    /* anteprima live — stessa render() della card reale, scalata */
+    function updatePreview() {
+      var wrap = ov.querySelector('#dd-prev-wrap'); if (!wrap) return;
+      try { wrap.innerHTML = render({ id: '__diffprev__' }); } catch(e) {}
+      var el = wrap.querySelector('#frd__diffprev__');
+      if (el) {
+        el.style.width = '160px';
+        el.style.minHeight = '0';
+        el.style.height = '220px';
+        el.style.zoom = tScale < 100 ? tScale + '%' : '';
+      }
+    }
+    updatePreview();
+
+    /* dimensione card */
+    ov.querySelector('#dd-scale').addEventListener('input', function(e) {
+      tScale = Math.max(20, Math.min(100, parseInt(e.target.value, 10) || 100));
+      var lbl = ov.querySelector('#dd-scale-lbl'); if (lbl) lbl.textContent = tScale >= 100 ? 'Auto (100%)' : tScale + '%';
+      updatePreview();
+    });
+    ov.querySelector('#dd-w').addEventListener('input', function(e) {
+      tW = Math.max(20, Math.min(100, parseInt(e.target.value, 10) || 100));
+      var lbl = ov.querySelector('#dd-w-lbl'); if (lbl) lbl.textContent = tW >= 100 ? 'Auto (100%)' : tW + '%';
+    });
 
     /* pill click */
     ov.querySelector('#dd-giorni').addEventListener('click', function(e) {
@@ -414,12 +475,14 @@
       saveClr(sw.dataset.ci, sw.dataset.cv);
       ov.querySelector('#dd-colori').innerHTML = renderColori();
       ov.querySelector('#dd-giorni').innerHTML = renderGiorni();
+      updatePreview();
     });
     ov.querySelector('#dd-colori').addEventListener('input', function(e) {
       var inp = e.target.closest('input[type="color"][data-ci]'); if (!inp) return;
       saveClr(inp.dataset.ci, inp.value);
       ov.querySelector('#dd-colori').innerHTML = renderColori();
       ov.querySelector('#dd-giorni').innerHTML = renderGiorni();
+      updatePreview();
     });
 
     /* toggle click */
@@ -443,6 +506,10 @@
       });
       var tv = ov.querySelector('#dd-time');
       if (tv && tv.value) callSvc('input_datetime', 'set_datetime', { entity_id: 'input_datetime.frarik_differenziata_orario_notifica', time: tv.value + ':00' });
+      if (cardId) {
+        try { localStorage.setItem('_frk_layout_' + cardId, JSON.stringify({ cardScale: tScale, cardW: tW })); } catch(e) {}
+        document.dispatchEvent(new CustomEvent('frarik-card-layout', { bubbles: true, detail: { cardId: cardId, cardScale: tScale, cardW: tW } }));
+      }
       var sb = ov.querySelector('#dd-save');
       sb.textContent = '✅ Salvato!'; sb.style.background = 'rgba(34,197,94,.5)';
       setTimeout(function() { sb.textContent = '💾 Salva impostazioni'; sb.style.background = '#22c55e'; }, 2000);
@@ -966,10 +1033,11 @@ automation:
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.13',
+    version: '5.15',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',
+    frarik_no_edit: true,
     render:  render,
     mount:   mount,
     update:  update,
