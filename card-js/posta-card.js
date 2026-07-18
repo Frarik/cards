@@ -1,5 +1,9 @@
-/* frarik-version: 5.4 */
+/* frarik-version: 5.5 */
 /* Centro Controllo Posta — Frarik card standalone */
+/* v5.5: ultimo giro di rifiniture testo — sottotitolo installazione
+   pacchetto riuscita e testo "package non installato" ora bianco pieno
+   con opacità gestita separatamente (era rgba incorporata), coerente con
+   il resto della card. */
 /* v5.4: uniformati i 3 popup interni (impostazioni/conferma reset/wizard
    pkg) — stesso padding header, stessa dimensione icona (40px) e titolo
    (16px/900/maiuscolo), rimossa la sottotitolo del wizard (nessun testo
@@ -1208,7 +1212,7 @@ if(!customElements.get('posta-card')){
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:26px 18px}
 .ni-env{width:96px;height:104px;opacity:.4}
 .ni-title{font-size:16px;font-weight:900;color:#fff}
-.ni-sub{font-size:12px;color:rgba(255,255,255,.4);line-height:1.8;max-width:240px}
+.ni-sub{font-size:12px;color:#fff;opacity:.6;line-height:1.8;max-width:240px}
 .ni-sub strong{color:#38bdf8;opacity:1}
 `;}
   };
@@ -1394,7 +1398,7 @@ PostaCard.openWizard=function(hass,onDone,_tpl,opts){
           <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 20px;gap:16px;text-align:center">
             <div style="font-size:52px">✅</div>
             <div style="font-size:16px;font-weight:900;color:#fff;font-family:system-ui,sans-serif">Package installato!</div>
-            <div style="font-size:13px;color:rgba(255,255,255,.6);font-family:system-ui,sans-serif;line-height:1.8">
+            <div style="font-size:13px;color:#fff;opacity:.6;font-family:system-ui,sans-serif;line-height:1.8">
               Riavvia <strong style="color:#fff;opacity:1">Home Assistant</strong> per attivare le entità.<br>
               Poi torna nello Store e aggiungi la card alla dashboard.
             </div>

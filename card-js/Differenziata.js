@@ -1,4 +1,4 @@
-/* frarik-version: 5.19 */
+/* frarik-version: 5.20 */
 /* v5.15: aggiunta anteprima live + slider dimensione card (altezza/larghezza)
    nel popup Impostazioni, stesso meccanismo di Meteo.js/posta-card
    (localStorage _frk_layout_ + evento frarik-card-layout); aggiunto
@@ -31,6 +31,15 @@
    riquadro centrato che segue la dimensione naturale della card, non
    forzata a riempire lo spazio). Rimossa la linea verticale che divideva
    l'illustrazione dei bidoni dal testo "Questa sera/Domani" nella card. */
+/* v5.20: sfondo card ora identico a posta-card (gradiente #060d14→#080f18,
+   era un blu piatto #070d18 diverso). Rimosse le ultime linee divisorie
+   residue (sotto "Questa sera/Domani", sopra il pulsante Settimana).
+   Popup Settimana riscritto con un unico riquadro (bordo bianco) invece
+   di un box separato per ogni giorno, come lo standard posta-card.
+   Rimossa la mini-chip "RACCOLTA/NESSUN RITIRO" accanto all'ingranaggio
+   nell'header (duplicava l'informazione già visibile nella card).
+   Ultimo giro testi: etichette e testo del wizard installazione (erano
+   grigio #94a3b8/#e2e8f0, non rgba bianca) ora bianco pieno. */
 ;(function () {
   'use strict';
 
@@ -186,7 +195,6 @@
     const tmrWastes   = parseWastes(S(h, 'input_text.frarik_differenziata_rifiuto_' + DAYS[tmrI]) || '');
     const hasPickup   = todayWastes.length > 0;
     const col         = hasPickup ? ACC : '#64748b';
-    const colRgb      = hasPickup ? ACC_RGB : '100,116,139';
 
     /* conteggio settimana */
     var weekCount = 0;
@@ -229,15 +237,13 @@
       : '<div class="fc-met"><span class="fc-met-lbl">Nessun ritiro</span></div>';
 
     const css = '<style>'
-      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block;background:#070d18;border-radius:var(--card-r,20px);overflow:hidden}'
+      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:var(--card-r,20px);overflow:hidden}'
       + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:transparent;border-radius:0;overflow:hidden;position:relative}'
       + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(' + ACC_RGB + ',.1);border:1px solid rgba(' + ACC_RGB + ',.2)}'
       + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
-      + '#' + rid + ' .fc-hdr-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px}'
       + '#' + rid + ' .fc-gear{width:26px;height:26px;border-radius:8px;border:none;background:rgba(255,255,255,.06);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;font-size:13px;transition:background .15s}'
       + '#' + rid + ' .fc-gear:hover{background:rgba(255,255,255,.12)}'
-      + '#' + rid + ' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:' + col + (hasPickup ? ';box-shadow:0 0 5px ' + ACC + ';animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
@@ -245,7 +251,7 @@
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:5px;justify-content:flex-start;min-width:0;padding-left:10px;overflow:hidden}'
       + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:space-between;gap:6px}'
       + '#' + rid + ' .fc-met-lbl{font-size:12px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px;flex-shrink:0}'
-      + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:10px 14px 12px;margin-top:14px;border-top:1px solid rgba(255,255,255,.07)}'
+      + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:10px 14px 12px;margin-top:14px}'
       + '#' + rid + ' .fc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s}'
       + '#' + rid + ' .fc-btn:hover{background:rgba(' + ACC_RGB + ',.12);border-color:rgba(' + ACC_RGB + ',.3);color:' + ACC + '}'
       + '#' + rid + ' [data-sya]{cursor:pointer}'
@@ -263,7 +269,7 @@
       + '<div class="fc-hero-r">'
       + secHdr('Questa sera', col)
       + tonightRows
-      + '<div style="border-top:1px solid rgba(255,255,255,.07);margin:8px 0 6px"></div>'
+      + '<div style="margin:8px 0 6px"></div>'
       + secHdr('Domani — ' + DFULL[tmrI].slice(0,3), null)
       + tmrRows
       + '</div>'
@@ -279,10 +285,6 @@
       + '<div class="fc-hdr">'
       + '<div class="fc-hdr-iw">♻️</div>'
       + '<div class="fc-hdr-tit">Raccolta Differenziata</div>'
-      + '<div class="fc-hdr-pill" style="background:rgba(' + colRgb + ',.1);border:1px solid rgba(' + colRgb + ',.28);color:' + col + '">'
-      + '<div class="fc-dot"></div>'
-      + (hasPickup ? 'RACCOLTA' : 'NESSUN RITIRO')
-      + '</div>'
       + '<button class="fc-gear" data-sya="popup-imp" title="Impostazioni">⚙️</button>'
       + '</div>'
       + '<div class="fc-scroll">'
@@ -324,9 +326,10 @@
   function openSettimana(card) {
     const h  = H();
     const ti = todayIdx();
-    const content = DAYS.map(function(d, i) {
+    const rows = DAYS.map(function(d, i) {
       var ws = parseWastes(S(h, 'input_text.frarik_differenziata_rifiuto_' + d) || '');
       var isToday = i === ti;
+      var isLast = i === DAYS.length - 1;
       var dots = ws.length
         ? ws.map(function(id) {
             var t = TIPI.find(function(x) { return x.id === id; }), c = getClr(id);
@@ -336,12 +339,13 @@
               + '</div>';
           }).join('')
         : '<span style="font-size:12px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">Nessun ritiro</span>';
-      return '<div style="padding:10px;border-radius:10px;border:1px solid ' + (isToday ? '#4ade80' : '#fff') + ';background:' + (isToday ? 'rgba(74,222,128,.05)' : 'rgba(255,255,255,.02)') + ';margin-bottom:6px">'
+      return '<div style="padding:10px 0' + (isLast ? '' : ';border-bottom:1px solid rgba(255,255,255,.06)') + '">'
         + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:' + (isToday ? '#4ade80' : '#fff') + ';margin-bottom:6px">'
         + DFULL[i] + (isToday ? ' — OGGI' : '') + '</div>'
         + '<div style="display:flex;flex-wrap:wrap;gap:8px">' + dots + '</div>'
         + '</div>';
     }).join('');
+    const content = '<div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid #fff">' + rows + '</div>';
     mkOv(popShell('📅', 'Rifiuti della settimana', 'ds-close', content), 'ds-close');
   }
 
@@ -941,16 +945,16 @@ automation:
         + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}'
         + '.wd-body::-webkit-scrollbar{display:none}'
         + '.wd-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.18);margin-bottom:10px}'
-        + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}'
-        + '.wd-inp{width:100%;padding:9px 11px;border-radius:10px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none}'
+        + '.wd-lbl{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:3px}'
+        + '.wd-inp{width:100%;padding:9px 11px;border-radius:10px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none}'
         + '.wd-inp:focus{border-color:rgba(56,189,248,.5)}'
         + '.wd-drop{position:absolute;left:0;right:0;top:100%;z-index:10;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 9px 9px;display:none}'
-        + '.wd-item{padding:5px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0}'
+        + '.wd-item{padding:5px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#fff}'
         + '.wd-push-row{display:flex;gap:6px;margin-bottom:6px}'
         + '.wd-push-row .wd-inp{flex:1}'
         + '.wd-rm{width:30px;height:38px;border-radius:8px;background:rgba(255,255,255,.07);border:none;color:#fff;cursor:pointer;font-size:14px;flex-shrink:0}'
         + '.wd-add{padding:6px 12px;border-radius:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer}'
-        + '.wd-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:0 0 10px}'
+        + '.wd-note{font-size:11px;color:#fff;opacity:.6;line-height:1.5;margin:0 0 10px}'
         + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
         + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
         + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#060d14}'
@@ -1061,7 +1065,7 @@ automation:
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.19',
+    version: '5.20',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',
