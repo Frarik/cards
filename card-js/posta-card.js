@@ -1,4 +1,4 @@
-/* frarik-version: 4.7 */
+/* frarik-version: 4.8 */
 /* Centro Controllo Posta — Frarik card standalone */
 /* v4.4: aggiunta icona ingranaggio interna (la card non ne aveva una) e
    frarik_no_edit per nascondere la matita esterna in modifica; eliminato
@@ -18,12 +18,14 @@
    orari, reset) perché duplicato — le stesse impostazioni sono ora
    raggiungibili solo dal popup dell'ingranaggio; ripulito il codice morto
    collegato (stato _drawerOpen, handler onChange, CSS del drawer). */
-/* v4.7: nuova mascotte animata "Mailbox Buddy" al posto della vecchia busta
-   piatta statica — cassetta con occhi/faccia che reagisce allo stato reale:
-   addormentata quando vuota, sveglia con bandierina su e busta che sbircia
-   quando arriva posta, felice con sorriso e luce verde quando la cassetta
-   è aperta; bagliore di sfondo pulsante e scintille animate negli stati
-   attivi. Sostituita _svgEnvelope con _svgMailbox. */
+/* v4.8: cassetta postale ridisegnata in stile realistico (niente faccia/
+   occhi) — corpo in metallo con sfumature, scritta "POSTA" incisa, viti,
+   bandierina rossa che si alza quando c'è posta, spia LED di stato (blu =
+   posta in arrivo, verde = cassetta aperta), busta di carta che sbircia
+   dalla fessura. Layout della card completamente rifatto: banner a tutta
+   larghezza con numero consegne in overlay (al posto di immagine+numero
+   affiancati), orari di oggi come chip in fila (al posto della timeline
+   verticale a puntini), statistiche settimana/mese come tile con icona. */
 (function(){
 'use strict';
 
@@ -577,59 +579,67 @@ function _acShow(inputEl,hass,domain){
 function _acHide(){ document.getElementById('__frk_posta_ac__')?.remove(); }
 
 /* ══════════════════════════════════════════════════════════════
-   PostaCard v4.7 — Mailbox Buddy design (mascotte animata)
+   PostaCard v4.8 — cassetta postale realistica (nessuna faccia)
    ══════════════════════════════════════════════════════════════ */
 
 function _svgMailbox(count, isOpen){
   const active=isOpen||count>0;
-  const acc=isOpen?'#34d399':count>0?'#38bdf8':'rgba(255,255,255,.18)';
-  const bg=isOpen?'rgba(52,211,153,.10)':count>0?'rgba(56,189,248,.07)':'rgba(255,255,255,.03)';
-  const badge=count>0?`<circle cx="86" cy="10" r="11" fill="#38bdf8"/><text x="86" y="14" text-anchor="middle" fill="#060d14" font-size="${count>9?'9':'11'}" font-weight="900" font-family="system-ui,sans-serif">${count>99?'99+':count}</text>`:'';
+  const led=isOpen?'#34d399':count>0?'#38bdf8':'rgba(255,255,255,.15)';
 
-  /* espressione: sportello aperto = felice, posta in arrivo = sveglio/curioso, vuota = addormentata */
-  let eyes,mouth;
-  if(isOpen){
-    eyes=`<circle cx="38" cy="29" r="4.2" fill="#060d14"/><circle cx="39.4" cy="27.5" r="1.3" fill="#fff"/>
-          <circle cx="62" cy="29" r="4.2" fill="#060d14"/><circle cx="63.4" cy="27.5" r="1.3" fill="#fff"/>`;
-    mouth=`<path d="M35 36 Q50 45 65 36" stroke="#060d14" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
-  } else if(count>0){
-    eyes=`<circle cx="38" cy="29" r="3.6" fill="#060d14"/><circle cx="39" cy="27.8" r="1.1" fill="#fff"/>
-          <circle cx="62" cy="29" r="3.6" fill="#060d14"/><circle cx="63" cy="27.8" r="1.1" fill="#fff"/>`;
-    mouth=`<path d="M43 36.5 Q50 40 57 36.5" stroke="#060d14" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
-  } else {
-    eyes=`<path d="M34 29 Q38 32 42 29" stroke="rgba(255,255,255,.4)" stroke-width="2" fill="none" stroke-linecap="round"/>
-          <path d="M58 29 Q62 32 66 29" stroke="rgba(255,255,255,.4)" stroke-width="2" fill="none" stroke-linecap="round"/>`;
-    mouth='';
-  }
-
-  const envelope=count>0?`<g class="mbx-env">
-      <rect x="42" y="2" width="16" height="11" rx="1.5" fill="#fff" fill-opacity=".92" stroke="${acc}" stroke-width="1"/>
-      <path d="M42 3 L50 9 L58 3" stroke="${acc}" stroke-width="1" fill="none" stroke-linejoin="round"/>
+  const envelope=count>0?`<g class="mbx-env" style="transform-origin:147px 14px">
+      <rect x="139" y="2" width="16" height="13" rx="1" fill="#f8fafc" stroke="#cbd5e1" stroke-width=".8" transform="rotate(-6 147 8)"/>
+      <path d="M139 3 L147 9 L155 3" stroke="#cbd5e1" stroke-width=".8" fill="none" transform="rotate(-6 147 8)"/>
     </g>`:'';
 
-  const sparkles=active?`<g class="mbx-sparkles">
-      <circle class="mbx-spark s1" cx="20" cy="18" r="1.6" fill="${acc}"/>
-      <circle class="mbx-spark s2" cx="80" cy="14" r="1.3" fill="${acc}"/>
-      <circle class="mbx-spark s3" cx="72" cy="22" r="1.1" fill="${acc}"/>
-    </g>`:'';
+  const ajarGap=isOpen?`<rect x="134" y="17" width="1.6" height="48" fill="#0f172a" opacity=".55"/>`:'';
 
-  return `<svg viewBox="0 0 100 76" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible">
-    <defs><filter id="mbx-blur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="5"/></filter></defs>
-    <ellipse class="mbx-glow${active?' active':''}" cx="50" cy="32" rx="34" ry="20" fill="${acc}" opacity="${active?'.22':'.06'}" filter="url(#mbx-blur)"/>
-    <ellipse cx="50" cy="70" rx="26" ry="3.2" fill="#000" opacity=".28"/>
-    <rect x="45" y="44" width="10" height="20" rx="2.5" fill="rgba(255,255,255,.14)"/>
-    <rect x="30" y="42" width="40" height="6" rx="2" fill="${acc}" fill-opacity=".18"/>
-    <g class="mbx-flag${count>0?' up':' down'}" style="transform-origin:22.5px 44px">
-      <rect x="21" y="18" width="2.4" height="26" rx="1.2" fill="${acc}"/>
-      <path d="M23.4 16 L34 20.5 L23.4 25 Z" fill="${acc}"/>
+  return `<svg viewBox="0 0 200 110" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible">
+    <defs>
+      <linearGradient id="mbxBody" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#94a3b8"/>
+        <stop offset="45%" stop-color="#64748b"/>
+        <stop offset="100%" stop-color="#334155"/>
+      </linearGradient>
+      <linearGradient id="mbxPost" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#3f4a5c"/>
+        <stop offset="50%" stop-color="#5b6b82"/>
+        <stop offset="100%" stop-color="#2b3444"/>
+      </linearGradient>
+      <path id="mbxTextPath" d="M 58 38 A 55 55 0 0 1 142 38" fill="none"/>
+      <filter id="mbx-ledblur" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="2.4"/></filter>
+    </defs>
+
+    <ellipse cx="100" cy="100" rx="52" ry="6" fill="#000" opacity=".32"/>
+
+    <rect x="93" y="64" width="14" height="32" rx="3" fill="url(#mbxPost)"/>
+    <rect x="64" y="60" width="72" height="7" rx="2.5" fill="#2b3444"/>
+
+    <rect x="42" y="16" width="116" height="50" rx="25" fill="url(#mbxBody)" stroke="#1e2634" stroke-width="1.4"/>
+    <rect x="54" y="20" width="92" height="5" rx="2.5" fill="#fff" opacity=".16"/>
+
+    <text font-family="Georgia,serif" font-size="9" font-weight="700" fill="#1e2634" opacity=".5" letter-spacing="2">
+      <textPath href="#mbxTextPath" startOffset="50%" text-anchor="middle">POSTA</textPath>
+    </text>
+
+    <path d="M136 18 A 24 24 0 0 1 136 64" stroke="#1e2634" stroke-width="1.2" opacity=".35" fill="none"/>
+    ${ajarGap}
+
+    <circle cx="46" cy="20" r="1.3" fill="#1e2634" opacity=".5"/>
+    <circle cx="46" cy="62" r="1.3" fill="#1e2634" opacity=".5"/>
+    <circle cx="154" cy="20" r="1.3" fill="#1e2634" opacity=".5"/>
+    <circle cx="154" cy="62" r="1.3" fill="#1e2634" opacity=".5"/>
+
+    <g class="mbx-flag${count>0?' up':' down'}" style="transform-origin:96.6px 64px">
+      <rect x="95.4" y="38" width="2.4" height="26" rx="1.2" fill="#1e2634"/>
+      <path d="M97.8 36 L114 42 L97.8 48 Z" fill="#dc2626"/>
+      <path d="M97.8 36 L114 42 L97.8 42 Z" fill="#dc2626" opacity=".35"/>
     </g>
-    <rect x="14" y="12" width="72" height="32" rx="16" fill="${bg}" stroke="${acc}" stroke-width="1.6" stroke-opacity=".55"/>
-    <rect x="40" y="12" width="20" height="4" rx="2" fill="#060d14" fill-opacity=".55"/>
-    <g class="mbx-eyes" style="transform-origin:50px 29px">${eyes}</g>
-    ${mouth}
+
+    <rect x="140" y="14" width="14" height="3" rx="1" fill="#1e2634" opacity=".6"/>
     ${envelope}
-    ${sparkles}
-    ${badge}
+
+    <circle cx="150" cy="41" r="5" fill="${led}" opacity=".22" filter="url(#mbx-ledblur)"/>
+    <circle class="mbx-led${active?' active':''}" cx="150" cy="41" r="2.6" fill="${led}"/>
   </svg>`;
 }
 
@@ -747,16 +757,12 @@ if(!customElements.get('posta-card')){
       const orari=this._orariOggi();
       const acc=isOpen?'#34d399':today>0?'#38bdf8':'rgba(255,255,255,.2)';
 
-      /* timeline orari */
+      /* consegne di oggi — chip strip */
       let orariHtml='';
       if(orari.length){
-        orariHtml=`<div class="tl">`+orari.map((t,i)=>{
+        orariHtml=`<div class="chip-row">`+orari.map((t,i)=>{
           const isLast=i===orari.length-1;
-          return `<div class="tl-row${isLast?' tl-last':''}">
-            <div class="tl-line-wrap"><div class="tl-dot${isLast?' tl-dot-last':''}"></div>${i<orari.length-1?'<div class="tl-line"></div>':''}</div>
-            <div class="tl-time">${t}</div>
-            ${isLast?'<div class="tl-badge">ultima</div>':''}
-          </div>`;
+          return `<div class="chip${isLast?' last':''}"><span class="chip-dot"></span>${t}</div>`;
         }).join('')+`</div>`;
       } else {
         orariHtml=`<div class="tl-empty">Nessuna consegna registrata oggi</div>`;
@@ -774,14 +780,13 @@ if(!customElements.get('posta-card')){
 
         <div class="bscroll">
 
-          <div class="hero">
-            <div class="hero-env">${_svgMailbox(today,isOpen)}</div>
-            <div class="hero-info">
-              <div class="hero-n${today>0?' hero-n-act':''}${isOpen?' hero-n-open':''}">${today}</div>
-              <div class="hero-lbl">consegn${today===1?'a':'e'} oggi</div>
-              ${last?`<div class="hero-last"><svg viewBox="0 0 16 16" fill="none" style="width:10px;height:10px;flex-shrink:0"><circle cx="8" cy="8" r="6.5" stroke="rgba(255,255,255,.35)" stroke-width="1.3"/><path d="M8 5v3.2l2 1.3" stroke="rgba(255,255,255,.45)" stroke-width="1.3" stroke-linecap="round"/></svg><span>${last}</span></div>`:''}
-              ${isOpen?`<div class="open-pill">Cassetta aperta</div>`:''}
+          <div class="banner">
+            <div class="banner-scene">${_svgMailbox(today,isOpen)}</div>
+            <div class="banner-badge">
+              <span class="banner-badge-n${today>0?' act':''}${isOpen?' open':''}">${today}</span>
+              <span class="banner-badge-lbl">consegn${today===1?'a':'e'} oggi</span>
             </div>
+            ${isOpen?`<div class="banner-open">Cassetta aperta</div>`:last?`<div class="banner-last"><svg viewBox="0 0 16 16" fill="none" style="width:10px;height:10px;flex-shrink:0"><circle cx="8" cy="8" r="6.5" stroke="rgba(255,255,255,.35)" stroke-width="1.3"/><path d="M8 5v3.2l2 1.3" stroke="rgba(255,255,255,.45)" stroke-width="1.3" stroke-linecap="round"/></svg><span>${last}</span></div>`:''}
           </div>
 
           <div class="sec">
@@ -789,10 +794,9 @@ if(!customElements.get('posta-card')){
             ${orariHtml}
           </div>
 
-          <div class="stats">
-            <div class="stat-box"><span class="stat-n">${week}</span><span class="stat-l">Settimana</span></div>
-            <div class="stat-sep"></div>
-            <div class="stat-box"><span class="stat-n">${month}</span><span class="stat-l">Mese</span></div>
+          <div class="stat-grid">
+            <div class="stat-tile"><div class="stat-ic">📅</div><div class="stat-tx"><span class="stat-n">${week}</span><span class="stat-l">Settimana</span></div></div>
+            <div class="stat-tile"><div class="stat-ic">🗓️</div><div class="stat-tx"><span class="stat-n">${month}</span><span class="stat-l">Mese</span></div></div>
           </div>
 
         </div>
@@ -1086,61 +1090,51 @@ if(!customElements.get('posta-card')){
 .bscroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}
 .bscroll::-webkit-scrollbar{display:none}
 
-/* hero */
-.hero{display:flex;align-items:center;gap:14px;padding:14px 15px 12px}
-.hero-env{flex:0 0 42%;max-width:120px;aspect-ratio:100/76}
-.hero-info{flex:1;display:flex;flex-direction:column;gap:2px}
-.hero-n{font-size:54px;font-weight:900;color:rgba(255,255,255,.14);line-height:1;letter-spacing:-3px;transition:color .35s,text-shadow .35s}
-.hero-n.hero-n-act{color:#38bdf8;text-shadow:0 0 28px rgba(56,189,248,.35)}
-.hero-n.hero-n-open{color:#34d399;text-shadow:0 0 28px rgba(56,189,248,.35)}
-.hero-lbl{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.7px;margin-top:1px}
-.hero-last{display:flex;align-items:center;gap:5px;margin-top:8px;padding:5px 9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;font-size:11px;color:#fff;font-weight:600;line-height:1.3;animation:fade-up .2s ease}
-.open-pill{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:4px 9px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);border-radius:18px;font-size:10px;color:#34d399;font-weight:800;letter-spacing:.2px;animation:pulse 2.5s ease infinite}
+/* banner (illustrazione a tutta larghezza) */
+.banner{position:relative;margin:14px 15px 4px;border-radius:16px;overflow:hidden;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06)}
+.banner-scene{width:100%;aspect-ratio:200/110;display:block}
+.banner-badge{position:absolute;left:10px;bottom:10px;display:flex;align-items:baseline;gap:6px;padding:6px 12px;border-radius:12px;background:rgba(6,13,20,.72);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1)}
+.banner-badge-n{font-size:26px;font-weight:900;color:#fff;line-height:1}
+.banner-badge-n.act{color:#38bdf8}
+.banner-badge-n.open{color:#34d399}
+.banner-badge-lbl{font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.5px;opacity:.7}
+.banner-last{position:absolute;right:10px;top:10px;display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:8px;background:rgba(6,13,20,.72);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);font-size:10px;color:#fff;font-weight:600}
+.banner-open{position:absolute;right:10px;top:10px;display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:18px;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.35);font-size:10px;color:#34d399;font-weight:800;letter-spacing:.2px;animation:pulse 2.5s ease infinite}
 
-/* mailbox buddy */
-@keyframes mbx-glow-pulse{0%,100%{opacity:.22;transform:scale(1)}50%{opacity:.36;transform:scale(1.08)}}
-@keyframes mbx-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
-@keyframes mbx-blink{0%,90%,100%{transform:scaleY(1)}94%{transform:scaleY(.1)}}
+/* cassetta postale realistica */
+@keyframes mbx-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.6px)}}
 @keyframes mbx-flag-sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(4deg)}}
-@keyframes mbx-spark{0%{opacity:0;transform:translateY(0) scale(.6)}30%{opacity:1;transform:translateY(-3px) scale(1)}70%{opacity:.6}100%{opacity:0;transform:translateY(-9px) scale(.7)}}
-.mbx-glow.active{animation:mbx-glow-pulse 2.6s ease-in-out infinite;transform-origin:50px 32px}
-.mbx-env{animation:mbx-bob 2.2s ease-in-out infinite;transform-origin:50px 8px}
-.mbx-eyes{animation:mbx-blink 4.5s ease-in-out infinite}
+@keyframes mbx-led-pulse{0%,100%{opacity:1}50%{opacity:.55}}
+.mbx-env{animation:mbx-bob 2.6s ease-in-out infinite}
 .mbx-flag.down{transform:rotate(75deg)}
-.mbx-flag.up{transform:rotate(0deg);animation:mbx-flag-sway 3s ease-in-out infinite}
-.mbx-spark{opacity:0}
-.mbx-spark.s1{animation:mbx-spark 2.4s ease-in-out infinite}
-.mbx-spark.s2{animation:mbx-spark 2.4s ease-in-out infinite .8s}
-.mbx-spark.s3{animation:mbx-spark 2.4s ease-in-out infinite 1.5s}
+.mbx-flag.up{transform:rotate(0deg);animation:mbx-flag-sway 3.2s ease-in-out infinite}
+.mbx-led.active{animation:mbx-led-pulse 2.2s ease-in-out infinite}
 
 /* section */
-.sec{padding:0 15px 10px}
-.sec-hdr{display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.sec{padding:12px 15px 10px}
+.sec-hdr{display:flex;align-items:center;gap:7px;margin-bottom:10px}
 .sec-ln{flex:1;height:1px;background:rgba(255,255,255,.05)}
 .sec-lb{font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
 
-/* timeline */
-.tl{display:flex;flex-direction:column}
-.tl-row{display:flex;align-items:flex-start;gap:10px;padding:0 0 0 2px;animation:fade-up .18s ease both}
-.tl-line-wrap{display:flex;flex-direction:column;align-items:center;width:14px;flex-shrink:0;padding-top:3px}
-.tl-dot{width:8px;height:8px;border-radius:50%;background:rgba(56,189,248,.35);border:1.5px solid rgba(56,189,248,.55);flex-shrink:0;transition:all .3s}
-.tl-dot.tl-dot-last{background:#38bdf8;box-shadow:0 0 8px rgba(56,189,248,.6);border-color:#38bdf8;animation:pulse 2.5s ease infinite}
-.tl-line{flex:1;width:1.5px;background:linear-gradient(to bottom,rgba(56,189,248,.25),rgba(56,189,248,.08));min-height:14px;margin-top:2px}
-.tl-time{flex:1;font-size:17px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.5px;line-height:1;padding-top:2px;padding-bottom:14px}
-.tl-last .tl-time{color:#38bdf8;padding-bottom:6px}
-.tl-badge{align-self:flex-start;margin-top:3px;font-size:9px;font-weight:800;padding:2px 7px;border-radius:10px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.25);color:#38bdf8;text-transform:uppercase;letter-spacing:.5px}
-.tl-empty{padding:13px;text-align:center;font-size:11px;color:rgba(255,255,255,.2);background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.06);border-radius:10px}
+/* consegne di oggi — chip strip */
+.chip-row{display:flex;flex-wrap:wrap;gap:7px}
+.chip{display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);font-size:13px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;animation:fade-up .18s ease both}
+.chip.last{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.3);color:#38bdf8}
+.chip-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.3);flex-shrink:0}
+.chip.last .chip-dot{background:#38bdf8;box-shadow:0 0 6px rgba(56,189,248,.6)}
+.tl-empty{padding:13px;text-align:center;font-size:11px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.06);border-radius:10px}
 
-/* stats */
-.stats{display:flex;align-items:stretch;margin:0 15px 10px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden}
-.stat-box{flex:1;display:flex;flex-direction:column;align-items:center;padding:9px 6px;gap:2px}
-.stat-sep{width:1px;background:rgba(255,255,255,.06)}
-.stat-n{font-size:20px;font-weight:900;color:#fff;line-height:1}
-.stat-l{font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px}
+/* statistiche — tile con icona */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 15px 12px}
+.stat-tile{display:flex;align-items:center;gap:10px;padding:11px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px}
+.stat-ic{width:30px;height:30px;border-radius:9px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.22);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.stat-tx{display:flex;flex-direction:column;gap:1px}
+.stat-n{font-size:19px;font-weight:900;color:#fff;line-height:1}
+.stat-l{font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px;opacity:.6}
 
 /* not installed */
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:26px 18px}
-.ni-env{width:84px;height:64px;opacity:.4}
+.ni-env{width:110px;height:60px;opacity:.4}
 .ni-title{font-size:16px;font-weight:900;color:#fff}
 .ni-sub{font-size:12px;color:rgba(255,255,255,.4);line-height:1.8;max-width:240px}
 .ni-sub strong{color:#38bdf8;opacity:1}
