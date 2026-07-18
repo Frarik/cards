@@ -1,4 +1,4 @@
-/* frarik-version: 4.6 */
+/* frarik-version: 4.7 */
 /* Centro Controllo Posta — Frarik card standalone */
 /* v4.4: aggiunta icona ingranaggio interna (la card non ne aveva una) e
    frarik_no_edit per nascondere la matita esterna in modifica; eliminato
@@ -18,6 +18,12 @@
    orari, reset) perché duplicato — le stesse impostazioni sono ora
    raggiungibili solo dal popup dell'ingranaggio; ripulito il codice morto
    collegato (stato _drawerOpen, handler onChange, CSS del drawer). */
+/* v4.7: nuova mascotte animata "Mailbox Buddy" al posto della vecchia busta
+   piatta statica — cassetta con occhi/faccia che reagisce allo stato reale:
+   addormentata quando vuota, sveglia con bandierina su e busta che sbircia
+   quando arriva posta, felice con sorriso e luce verde quando la cassetta
+   è aperta; bagliore di sfondo pulsante e scintille animate negli stati
+   attivi. Sostituita _svgEnvelope con _svgMailbox. */
 (function(){
 'use strict';
 
@@ -571,21 +577,58 @@ function _acShow(inputEl,hass,domain){
 function _acHide(){ document.getElementById('__frk_posta_ac__')?.remove(); }
 
 /* ══════════════════════════════════════════════════════════════
-   PostaCard v4.0 — Midnight Envelope design
+   PostaCard v4.7 — Mailbox Buddy design (mascotte animata)
    ══════════════════════════════════════════════════════════════ */
 
-function _svgEnvelope(count, isOpen){
+function _svgMailbox(count, isOpen){
+  const active=isOpen||count>0;
   const acc=isOpen?'#34d399':count>0?'#38bdf8':'rgba(255,255,255,.18)';
-  const bg=isOpen?'rgba(56,189,248,.09)':count>0?'rgba(56,189,248,.07)':'rgba(255,255,255,.03)';
-  const flap=isOpen?`<path d="M2 2 L50 32 L98 2" fill="${acc}" fill-opacity=".18" stroke="${acc}" stroke-width="1.4" stroke-opacity=".7" stroke-linejoin="round"/>`:
-    `<path d="M2 5 L50 34 L98 5" stroke="${acc}" stroke-width="1.5" stroke-opacity=".6" fill="none" stroke-linejoin="round"/>`;
-  const badge=count>0?`<circle cx="82" cy="16" r="13" fill="${count>0?'#38bdf8':'rgba(255,255,255,.12)'}"/><text x="82" y="20" text-anchor="middle" fill="#060d14" font-size="${count>9?'9':'11'}" font-weight="900" font-family="system-ui,sans-serif">${count>99?'99+':count}</text>`:'';
-  return `<svg viewBox="0 0 100 68" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
-    <rect x="1" y="1" width="98" height="66" rx="8" fill="${bg}" stroke="${acc}" stroke-width="1.5" stroke-opacity=".5"/>
-    <path d="M1 8 L1 67 L37 40 Z" fill="${acc}" fill-opacity=".04"/>
-    <path d="M99 8 L99 67 L63 40 Z" fill="${acc}" fill-opacity=".04"/>
-    <path d="M1 67 L37 40 L50 49 L63 40 L99 67 Z" fill="${acc}" fill-opacity=".07" stroke="${acc}" stroke-width=".8" stroke-opacity=".3"/>
-    ${flap}
+  const bg=isOpen?'rgba(52,211,153,.10)':count>0?'rgba(56,189,248,.07)':'rgba(255,255,255,.03)';
+  const badge=count>0?`<circle cx="86" cy="10" r="11" fill="#38bdf8"/><text x="86" y="14" text-anchor="middle" fill="#060d14" font-size="${count>9?'9':'11'}" font-weight="900" font-family="system-ui,sans-serif">${count>99?'99+':count}</text>`:'';
+
+  /* espressione: sportello aperto = felice, posta in arrivo = sveglio/curioso, vuota = addormentata */
+  let eyes,mouth;
+  if(isOpen){
+    eyes=`<circle cx="38" cy="29" r="4.2" fill="#060d14"/><circle cx="39.4" cy="27.5" r="1.3" fill="#fff"/>
+          <circle cx="62" cy="29" r="4.2" fill="#060d14"/><circle cx="63.4" cy="27.5" r="1.3" fill="#fff"/>`;
+    mouth=`<path d="M35 36 Q50 45 65 36" stroke="#060d14" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+  } else if(count>0){
+    eyes=`<circle cx="38" cy="29" r="3.6" fill="#060d14"/><circle cx="39" cy="27.8" r="1.1" fill="#fff"/>
+          <circle cx="62" cy="29" r="3.6" fill="#060d14"/><circle cx="63" cy="27.8" r="1.1" fill="#fff"/>`;
+    mouth=`<path d="M43 36.5 Q50 40 57 36.5" stroke="#060d14" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+  } else {
+    eyes=`<path d="M34 29 Q38 32 42 29" stroke="rgba(255,255,255,.4)" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M58 29 Q62 32 66 29" stroke="rgba(255,255,255,.4)" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+    mouth='';
+  }
+
+  const envelope=count>0?`<g class="mbx-env">
+      <rect x="42" y="2" width="16" height="11" rx="1.5" fill="#fff" fill-opacity=".92" stroke="${acc}" stroke-width="1"/>
+      <path d="M42 3 L50 9 L58 3" stroke="${acc}" stroke-width="1" fill="none" stroke-linejoin="round"/>
+    </g>`:'';
+
+  const sparkles=active?`<g class="mbx-sparkles">
+      <circle class="mbx-spark s1" cx="20" cy="18" r="1.6" fill="${acc}"/>
+      <circle class="mbx-spark s2" cx="80" cy="14" r="1.3" fill="${acc}"/>
+      <circle class="mbx-spark s3" cx="72" cy="22" r="1.1" fill="${acc}"/>
+    </g>`:'';
+
+  return `<svg viewBox="0 0 100 76" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible">
+    <defs><filter id="mbx-blur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="5"/></filter></defs>
+    <ellipse class="mbx-glow${active?' active':''}" cx="50" cy="32" rx="34" ry="20" fill="${acc}" opacity="${active?'.22':'.06'}" filter="url(#mbx-blur)"/>
+    <ellipse cx="50" cy="70" rx="26" ry="3.2" fill="#000" opacity=".28"/>
+    <rect x="45" y="44" width="10" height="20" rx="2.5" fill="rgba(255,255,255,.14)"/>
+    <rect x="30" y="42" width="40" height="6" rx="2" fill="${acc}" fill-opacity=".18"/>
+    <g class="mbx-flag${count>0?' up':' down'}" style="transform-origin:22.5px 44px">
+      <rect x="21" y="18" width="2.4" height="26" rx="1.2" fill="${acc}"/>
+      <path d="M23.4 16 L34 20.5 L23.4 25 Z" fill="${acc}"/>
+    </g>
+    <rect x="14" y="12" width="72" height="32" rx="16" fill="${bg}" stroke="${acc}" stroke-width="1.6" stroke-opacity=".55"/>
+    <rect x="40" y="12" width="20" height="4" rx="2" fill="#060d14" fill-opacity=".55"/>
+    <g class="mbx-eyes" style="transform-origin:50px 29px">${eyes}</g>
+    ${mouth}
+    ${envelope}
+    ${sparkles}
     ${badge}
   </svg>`;
 }
@@ -690,7 +733,7 @@ if(!customElements.get('posta-card')){
           <div class="hdr-tit">${this._c.label||'Centro Posta'}</div>
         </div>
         <div class="ni">
-          <div class="ni-env">${_svgEnvelope(0,false)}</div>
+          <div class="ni-env">${_svgMailbox(0,false)}</div>
           <div class="ni-title">Package non installato</div>
           <div class="ni-sub">Installa il package dallo <strong>Store Frarik</strong>, poi riavvia Home Assistant per attivarlo.</div>
         </div>
@@ -732,7 +775,7 @@ if(!customElements.get('posta-card')){
         <div class="bscroll">
 
           <div class="hero">
-            <div class="hero-env">${_svgEnvelope(today,isOpen)}</div>
+            <div class="hero-env">${_svgMailbox(today,isOpen)}</div>
             <div class="hero-info">
               <div class="hero-n${today>0?' hero-n-act':''}${isOpen?' hero-n-open':''}">${today}</div>
               <div class="hero-lbl">consegn${today===1?'a':'e'} oggi</div>
@@ -1045,7 +1088,7 @@ if(!customElements.get('posta-card')){
 
 /* hero */
 .hero{display:flex;align-items:center;gap:14px;padding:14px 15px 12px}
-.hero-env{flex:0 0 42%;max-width:120px;aspect-ratio:100/68}
+.hero-env{flex:0 0 42%;max-width:120px;aspect-ratio:100/76}
 .hero-info{flex:1;display:flex;flex-direction:column;gap:2px}
 .hero-n{font-size:54px;font-weight:900;color:rgba(255,255,255,.14);line-height:1;letter-spacing:-3px;transition:color .35s,text-shadow .35s}
 .hero-n.hero-n-act{color:#38bdf8;text-shadow:0 0 28px rgba(56,189,248,.35)}
@@ -1053,6 +1096,22 @@ if(!customElements.get('posta-card')){
 .hero-lbl{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.7px;margin-top:1px}
 .hero-last{display:flex;align-items:center;gap:5px;margin-top:8px;padding:5px 9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;font-size:11px;color:#fff;font-weight:600;line-height:1.3;animation:fade-up .2s ease}
 .open-pill{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:4px 9px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);border-radius:18px;font-size:10px;color:#34d399;font-weight:800;letter-spacing:.2px;animation:pulse 2.5s ease infinite}
+
+/* mailbox buddy */
+@keyframes mbx-glow-pulse{0%,100%{opacity:.22;transform:scale(1)}50%{opacity:.36;transform:scale(1.08)}}
+@keyframes mbx-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+@keyframes mbx-blink{0%,90%,100%{transform:scaleY(1)}94%{transform:scaleY(.1)}}
+@keyframes mbx-flag-sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(4deg)}}
+@keyframes mbx-spark{0%{opacity:0;transform:translateY(0) scale(.6)}30%{opacity:1;transform:translateY(-3px) scale(1)}70%{opacity:.6}100%{opacity:0;transform:translateY(-9px) scale(.7)}}
+.mbx-glow.active{animation:mbx-glow-pulse 2.6s ease-in-out infinite;transform-origin:50px 32px}
+.mbx-env{animation:mbx-bob 2.2s ease-in-out infinite;transform-origin:50px 8px}
+.mbx-eyes{animation:mbx-blink 4.5s ease-in-out infinite}
+.mbx-flag.down{transform:rotate(75deg)}
+.mbx-flag.up{transform:rotate(0deg);animation:mbx-flag-sway 3s ease-in-out infinite}
+.mbx-spark{opacity:0}
+.mbx-spark.s1{animation:mbx-spark 2.4s ease-in-out infinite}
+.mbx-spark.s2{animation:mbx-spark 2.4s ease-in-out infinite .8s}
+.mbx-spark.s3{animation:mbx-spark 2.4s ease-in-out infinite 1.5s}
 
 /* section */
 .sec{padding:0 15px 10px}
@@ -1081,7 +1140,7 @@ if(!customElements.get('posta-card')){
 
 /* not installed */
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:26px 18px}
-.ni-env{width:80px;height:54px;opacity:.4}
+.ni-env{width:84px;height:64px;opacity:.4}
 .ni-title{font-size:16px;font-weight:900;color:#fff}
 .ni-sub{font-size:12px;color:rgba(255,255,255,.4);line-height:1.8;max-width:240px}
 .ni-sub strong{color:#38bdf8;opacity:1}
