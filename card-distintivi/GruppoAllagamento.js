@@ -1,6 +1,9 @@
-/* frarik-version: 2.0 */
+/* frarik-version: 2.1 */
 /**
- * GruppoAllagamento.js — Distintivo FratechStore v2.0
+ * GruppoAllagamento.js — Distintivo FratechStore v2.1
+ * v2.1: popup config — riquadro unico (Chip/Gruppo principale/Sensori) con
+ *       contorno bianco; righe sensore e box gruppo a stile "glass"; il
+ *       riquadro "Colore chip" spostato alla fine come negli altri distintivi
  * Chip sensori allagamento/umidità — verde/blu se asciutto, rosso animato se allagamento
  * v2.0: stesso trattamento degli altri distintivi — chip con unico value maiuscolo/
  *       grassetto invece di label separata a peso inferiore; righe sensore rifatte a
@@ -437,14 +440,16 @@
       const selRows = ents.map((e, i) => {
         const lbl = e.label || nameOf(h, e.entity);
         const wet = h ? isOn(h, e.entity) : false;
-        return `<div style="padding:8px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid ${wet?'rgba(248,113,113,.35)':'rgba(255,255,255,.08)'};margin-bottom:6px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:15px;flex-shrink:0">${wet?'🚨':'💧'}</span>
+        const rc = wet ? '#f87171' : '#7a7f8c';
+        return `<div style="position:relative;overflow:hidden;padding:12px;border-radius:14px;background:linear-gradient(155deg,${hex2rgba(rc,wet?.16:.06)},${hex2rgba(rc,wet?.03:.02)});border:1px solid ${hex2rgba(rc,wet?.4:.16)};margin-bottom:10px">
+          ${wet ? `<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(rc,.18)},transparent 62%);pointer-events:none"></div>` : ''}
+          <div style="position:relative;display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;background:${hex2rgba(rc,wet?.22:.1)};border:1px solid ${hex2rgba(rc,wet?.4:.2)}">${wet?'🚨':'💧'}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-              <div style="font-size:9px;color:rgba(255,255,255,.5)">${eh(e.entity)}</div>
+              <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
+              <div style="font-size:10px;font-weight:700;color:#fff;opacity:.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">${eh(e.entity)}</div>
             </div>
-            <button data-del="${i}" style="width:22px;height:22px;border:none;border-radius:5px;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:11px;flex-shrink:0">✕</button>
+            <button data-del="${i}" style="width:26px;height:26px;flex-shrink:0;border:none;border-radius:50%;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:12px">✕</button>
           </div>
         </div>`;
       }).join('');
@@ -469,35 +474,46 @@
 
         <div id="gaacfg-body" style="flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:14px 14px 4px">
 
-          <!-- nome e colore chip -->
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);margin-bottom:6px">Chip</div>
-          <div style="display:flex;gap:7px;margin-bottom:16px">
-            <div style="flex:1"><div style="font-size:9px;color:rgba(255,255,255,.6);margin-bottom:3px">Nome</div><input id="gaacfg-label" class="gaainp" placeholder="Allagamento" value="${eh(c.label||'Allagamento')}"></div>
-            <div style="flex:0 0 50px"><div style="font-size:9px;color:rgba(255,255,255,.6);margin-bottom:3px">Colore</div><input type="color" id="gaacfg-color" value="${(c.color||'#38bdf8').match(/^#[0-9a-f]{6}$/i)?c.color:'#38bdf8'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
-          </div>
+          <div style="margin:0 0 14px;padding:14px;background:rgba(255,255,255,.05);border-radius:12px;border:1px solid #fff">
 
-          <!-- sensore gruppo principale -->
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);margin-bottom:6px">Sensore gruppo principale</div>
-          ${pkGroup ? `
-            <div style="padding:9px 11px;border-radius:9px;background:rgba(56,189,248,.06);border:1px solid ${pkGroupWet?'rgba(248,113,113,.4)':'rgba(56,189,248,.25)'};margin-bottom:8px;display:flex;align-items:center;gap:8px">
-              <span style="font-size:16px">${pkGroupWet?'🚨':'🔗'}</span>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(pkGroupName||pkGroup)}</div>
-                <div style="font-size:9px;color:rgba(255,255,255,.5)">${eh(pkGroup)}</div>
-              </div>
-              <button id="gaacfg-del-group" style="width:22px;height:22px;border:none;border-radius:5px;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:11px;flex-shrink:0">✕</button>
+            <!-- nome e colore chip -->
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Chip</div>
+            <div style="display:flex;gap:7px">
+              <div style="flex:1"><div style="font-size:9px;color:#fff;margin-bottom:3px">Nome</div><input id="gaacfg-label" class="gaainp" placeholder="Allagamento" value="${eh(c.label||'Allagamento')}"></div>
+              <div style="flex:0 0 50px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Colore</div><input type="color" id="gaacfg-color" value="${(c.color||'#38bdf8').match(/^#[0-9a-f]{6}$/i)?c.color:'#38bdf8'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
             </div>
-          ` : ''}
-          <input id="gaacfg-add-group" class="gaainp" placeholder="🔍 Cerca group.* o binary_sensor.*…" autocomplete="off" value="${pkGroup&&!pkGroup?eh(pkGroup):''}">
-          <div style="margin-top:5px;margin-bottom:16px;padding:7px 10px;border-radius:8px;background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.14);font-size:10px;color:rgba(255,255,255,.7)">
-            💡 Seleziona il <strong style="color:#38bdf8">group binary_sensor</strong> che aggrega tutti i sensori allagamento
+
+            <div style="height:1px;background:rgba(255,255,255,.1);margin:12px 0"></div>
+
+            <!-- sensore gruppo principale -->
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Sensore gruppo principale</div>
+            ${pkGroup ? `
+              <div style="position:relative;overflow:hidden;padding:12px;border-radius:14px;background:linear-gradient(155deg,${hex2rgba(pkGroupWet?'#f87171':'#38bdf8',pkGroupWet?.16:.13)},${hex2rgba(pkGroupWet?'#f87171':'#38bdf8',.03)});border:1px solid ${hex2rgba(pkGroupWet?'#f87171':'#38bdf8',pkGroupWet?.4:.28)};margin-bottom:8px">
+                <div style="position:relative;display:flex;align-items:center;gap:10px">
+                  <div style="width:32px;height:32px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;background:${hex2rgba(pkGroupWet?'#f87171':'#38bdf8',.2)};border:1px solid ${hex2rgba(pkGroupWet?'#f87171':'#38bdf8',.4)}">${pkGroupWet?'🚨':'🔗'}</div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(pkGroupName||pkGroup)}</div>
+                    <div style="font-size:10px;font-weight:700;color:#fff;opacity:.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">${eh(pkGroup)}</div>
+                  </div>
+                  <button id="gaacfg-del-group" style="width:26px;height:26px;flex-shrink:0;border:none;border-radius:50%;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:12px">✕</button>
+                </div>
+              </div>
+            ` : ''}
+            <input id="gaacfg-add-group" class="gaainp" placeholder="🔍 Cerca group.* o binary_sensor.*…" autocomplete="off" value="${pkGroup&&!pkGroup?eh(pkGroup):''}">
+            <div style="margin-top:5px;padding:7px 10px;border-radius:8px;background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.14);font-size:10px;color:#fff">
+              💡 Seleziona il <strong style="color:#38bdf8">group binary_sensor</strong> che aggrega tutti i sensori allagamento
+            </div>
+
+            <div style="height:1px;background:rgba(255,255,255,.1);margin:12px 0"></div>
+
+            <!-- sensori individuali -->
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Sensori individuali${ents.length ? ` (${ents.length})` : ''}</div>
+            ${ents.length ? `<div>${selRows}</div>` : ''}
+            <input id="gaacfg-add-entity" class="gaainp" placeholder="🔍 Cerca binary_sensor.*…" autocomplete="off">
+
           </div>
 
           ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
-          <!-- sensori individuali -->
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);margin-bottom:6px">Sensori individuali${ents.length ? ` (${ents.length})` : ''}</div>
-          ${ents.length ? `<div style="margin-bottom:10px">${selRows}</div>` : ''}
-          <input id="gaacfg-add-entity" class="gaainp" placeholder="🔍 Cerca binary_sensor.*…" autocomplete="off">
           <div style="height:18px"></div>
         </div>
 
@@ -572,7 +588,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allagamento', icon: 'mdi:water-alert',
     desc: 'Chip sensori allagamento. Chip blu/verde = asciutto, rosso pulsante = allarme. Popup con vista gruppo + sensori individuali.',
-    version: '2.0', isDistintivo: true,
+    version: '2.1', isDistintivo: true,
     defaultCfg: { label: 'Allagamento', icon: 'mdi:water-alert', color: '#38bdf8', pk_group: '', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -581,5 +597,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allagamento v2.0'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allagamento v2.1'); } catch(e) {}
 })();
