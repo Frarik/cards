@@ -1,6 +1,6 @@
-/* frarik-version: 3.6 */
+/* frarik-version: 3.7 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v3.6
+ * GruppoAllarme.js — Distintivo FratechStore v3.7
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
  * v2.3: fix bypass — azzera solo sulla transizione armato→disarmato, non mentre è già disarmato
@@ -40,6 +40,9 @@
  * v3.6: sirena — separata chiaramente dai sensori: divisore sopra + più spazio, tile
  *       ingrandita con lo stesso stile vetro, icona diversa (altoparlante) e label
  *       "🔊 Sirena" per non sembrare "un sensore in più"
+ * v3.7: uniformata la dimensione dei testi del popup a quella di GruppoLuci (icona hero
+ *       26px/titolo 19px, nome tile 14.5px/stato tile 10.5px, label sezione 10px, testi
+ *       secondari 10-12px) — prima erano leggermente più piccoli
  */
 (function () {
   'use strict';
@@ -244,9 +247,9 @@
     bypassed = bypassed instanceof Set ? bypassed : new Set();
 
     if (!c.alarmEntity) {
-      return `<div style="padding:40px 20px;text-align:center;color:#fff;font-size:13px;font-weight:900;text-transform:uppercase;font-family:system-ui,sans-serif">
+      return `<div style="padding:40px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase;font-family:system-ui,sans-serif">
         Nessuna entità allarme configurata.<br>
-        <span style="font-size:11px;">Clicca ✏️ sulla chip per configurare.</span>
+        <span style="font-size:10px;">Clicca ✏️ sulla chip per configurare.</span>
       </div>`;
     }
 
@@ -267,7 +270,7 @@
     }).length;
     const bypassedCount = bypassed.size;
 
-    const secLbl = 'font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:8px';
+    const secLbl = 'font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:8px';
 
     /* griglia 2 colonne, tile basse e larghe (non quadrate): icona+nome+stato in riga,
        2 affiancate a riempire la larghezza del popup. Click = attiva/disattiva l'esclusione */
@@ -292,8 +295,8 @@
         <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(sIcoCol,.22)},transparent 62%);pointer-events:none"></div>
         <span style="position:relative;width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(sIcoCol,.22)};border:1px solid ${hex2rgba(sIcoCol,.5)};box-shadow:0 0 12px ${hex2rgba(sIcoCol,.3)};color:${sIcoCol}">${mdi(sIco, 20)}</span>
         <span style="position:relative;flex:1;min-width:0;text-align:left">
-          <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sLbl)}</span>
-          <span style="display:block;font-size:9.5px;font-weight:900;text-transform:uppercase;color:${sIcoCol};letter-spacing:.3px;margin-top:2px">${statusTxt}</span>
+          <span style="display:block;font-size:14.5px;font-weight:900;text-transform:uppercase;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sLbl)}</span>
+          <span style="display:block;font-size:10.5px;font-weight:900;text-transform:uppercase;color:${sIcoCol};letter-spacing:.3px;margin-top:2px">${statusTxt}</span>
         </span>
         ${bypassBtn}
       </div>`;
@@ -341,8 +344,8 @@
           <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(sirenCol,.2)},transparent 62%);pointer-events:none"></div>
           <span style="position:relative;width:42px;height:42px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(sirenCol,.22)};border:1px solid ${hex2rgba(sirenCol,.5)};box-shadow:0 0 12px ${hex2rgba(sirenCol,.3)};color:${sirenCol}">${mdi('mdi:bullhorn-outline', 21)}</span>
           <span style="position:relative;flex:1;min-width:0">
-            <span style="display:block;font-size:13px;font-weight:900;text-transform:uppercase;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sName)}</span>
-            <span style="display:block;font-size:9.5px;font-weight:900;text-transform:uppercase;color:${sirenCol};letter-spacing:.3px;margin-top:2px">${sirenOn ? 'ATTIVA' : 'SPENTA'}</span>
+            <span style="display:block;font-size:14.5px;font-weight:900;text-transform:uppercase;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sName)}</span>
+            <span style="display:block;font-size:10.5px;font-weight:900;text-transform:uppercase;color:${sirenCol};letter-spacing:.3px;margin-top:2px">${sirenOn ? 'ATTIVA' : 'SPENTA'}</span>
           </span>
           ${sirenOn ? `<button data-ca-siren-off style="position:relative;flex-shrink:0;padding:8px 12px;border-radius:10px;border:1px solid rgba(248,113,113,.42);background:rgba(248,113,113,.14);color:#f87171;cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;outline:none">Spegni</button>` : ''}
         </div>
@@ -358,11 +361,11 @@
       <div class="${def.pulse ? 'cc-alm-pulse' : ''}" style="position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;padding:16px;border-radius:18px;background:linear-gradient(155deg,${hex2rgba(col,.16)},${hex2rgba(col,.04)});border:1px solid ${hex2rgba(col,.32)};margin-bottom:14px">
         <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 18% 15%,${hex2rgba(col,.22)},transparent 62%);pointer-events:none"></div>
         <div style="position:relative;width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(col,.18)};border:1.5px solid ${hex2rgba(col,.45)};box-shadow:0 0 18px ${hex2rgba(col,.35)}">
-          <span style="font-size:28px;color:${col}">${mdi(def.ico, 28)}</span>
+          <span style="font-size:26px;color:${col}">${mdi(def.ico, 26)}</span>
         </div>
         <div style="position:relative;flex:1;min-width:0">
-          <div style="font-size:20px;font-weight:900;color:${col};letter-spacing:.3px;text-transform:uppercase">${def.lbl}</div>
-          ${bypassedCount > 0 && armed ? `<div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#facc15;margin-top:3px">🛡 ${bypassedCount} sensore${bypassedCount>1?'i esclusi':' escluso'}</div>` : ''}
+          <div style="font-size:19px;font-weight:900;color:${col};letter-spacing:.3px;text-transform:uppercase">${def.lbl}</div>
+          ${bypassedCount > 0 && armed ? `<div style="font-size:10.5px;font-weight:900;text-transform:uppercase;color:#facc15;margin-top:3px">🛡 ${bypassedCount} sensore${bypassedCount>1?'i esclusi':' escluso'}</div>` : ''}
         </div>
       </div>
 
@@ -762,7 +765,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '3.6', isDistintivo: true,
+    version: '3.7', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '', colorMode: 'auto', colorRules: [] },
     chip,
     watchEntities,
@@ -776,5 +779,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v3.6'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v3.7'); } catch (e) {}
 })();
