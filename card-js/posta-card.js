@@ -1,4 +1,4 @@
-/* frarik-version: 5.2 */
+/* frarik-version: 5.3 */
 /* Centro Controllo Posta — Frarik card standalone */
 /* v4.4: aggiunta icona ingranaggio interna (la card non ne aveva una) e
    frarik_no_edit per nascondere la matita esterna in modifica; eliminato
@@ -53,14 +53,35 @@
    di stato, busta che sbircia dalla fessura del coperchio con leggero
    movimento, spia LED che pulsa; il coperchio si solleva leggermente
    quando la cassetta risulta aperta. */
+/* v5.3: due bug corretti.
+   (1) Le impostazioni della card (etichetta, sensore, dimensione) non
+   venivano ritrovate dopo un ricaricamento pagina: setConfig() leggeva
+   da una chiave localStorage diversa da quella usata da _save() quando
+   non è impostato uno storageKey esplicito — ora usano la stessa chiave.
+   (2) I pulsanti di reset "Settimana"/"Mese" (e in parte anche "Oggi")
+   non funzionavano perché il package YAML non era mai stato allineato
+   alla card: mancava del tutto counter.frarik_posta_mese, esisteva un
+   solo script "frarik_posta_reset" mentre la card ne chiama tre distinti.
+   Aggiornato il package (v2.1): counter mensile, tre script di reset
+   separati, reset automatico mensile, finestre orarie push/media separate
+   — chi ha già il package installato riceverà la notifica di aggiornamento
+   pacchetto e dovrà reinstallarlo dallo Store per ottenere le nuove entità. */
 (function(){
 'use strict';
 
 /* ══════════════════════════════════════════════════════════════
-   PKG YAML v1.2
-   - Aggiunge input_text.frarik_posta_oggi_orari (orari consegne giornalieri)
-   - Corregge indentazione choose (reset sett/mese ora funziona)
-   - Aggiunge script separati per reset manuale sett/mese
+   PKG YAML v2.1
+   - Aggiunge counter.frarik_posta_mese (mancava del tutto — per questo
+     il reset "Mese" e la statistica mensile non hanno mai funzionato)
+   - Script di reset manuale separati per davvero: frarik_posta_reset_oggi/
+     _settimana/_mese (prima esisteva solo un unico script "frarik_posta_reset"
+     mentre la card ne chiamava tre diversi mai definiti nel pkg)
+   - Automazione di reset a mezzanotte ora azzera anche il contatore mensile
+     (il primo del mese)
+   - Finestre orarie separate: frarik_posta_notifiche_media_inizio/fine
+     (Google/Alexa, rinominate dalle vecchie _inizio/_fine) e le nuove
+     frarik_posta_notifiche_push_inizio/fine (push smartphone, prima le
+     notifiche push non rispettavano nessuna finestra oraria)
    ══════════════════════════════════════════════════════════════ */
 const _PKG_YAML = `###############################################################
 #                                                             #
@@ -72,7 +93,7 @@ const _PKG_YAML = `#############################################################
 #   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
 #                                                             #
 #   Package: Centro Controllo Posta                           #
-#   Versione: 2.0  |  Frarik / Fratech                       #
+#   Versione: 2.1  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
 #
@@ -82,14 +103,16 @@ const _PKG_YAML = `#############################################################
 #
 #  ▸ Contatore consegne giornaliero (reset a mezzanotte)
 #  ▸ Contatore consegne settimanale (reset ogni lunedì)
+#  ▸ Contatore consegne mensile (reset il primo del mese)
 #  ▸ Data e ora dell'ultima consegna ricevuta
 #  ▸ Storico testuale delle ultime consegne
 #  ▸ Notifiche push su smartphone (richissime di info)
 #  ▸ Annunci vocali Google Home / Nest
 #  ▸ Annunci vocali Amazon Alexa / Echo
-#  ▸ Finestra oraria per TTS (evita annunci di notte)
+#  ▸ Finestre orarie separate per push e annunci vocali
 #  ▸ Interruttore master per silenziare tutto
 #  ▸ Protezione anti-rimbalzo sul sensore fisico
+#  ▸ Reset manuali separati (oggi/settimana/mese)
 #
 ###############################################################
 #
@@ -135,16 +158,17 @@ const _PKG_YAML = `#############################################################
 #  binary_sensor.frarik_posta_ricevuta_oggi  ← posta oggi?
 #  counter.frarik_posta_oggi                 ← consegne oggi
 #  counter.frarik_posta_settimana            ← consegne settimana
+#  counter.frarik_posta_mese                 ← consegne mese
 #  input_datetime.frarik_posta_ultima_consegna
-#  input_datetime.frarik_posta_notifiche_inizio
-#  input_datetime.frarik_posta_notifiche_fine
+#  input_datetime.frarik_posta_notifiche_media_inizio/fine  (Google/Alexa)
+#  input_datetime.frarik_posta_notifiche_push_inizio/fine   (push smartphone)
 #  input_boolean.frarik_posta_notifiche_attive  ← master switch
 #  input_boolean.frarik_posta_notifica_push
 #  input_boolean.frarik_posta_notifica_google
 #  input_boolean.frarik_posta_notifica_alexa
 #  input_text.frarik_posta_storico           ← ultime consegne
 #  notify.frarik_posta                       ← gruppo push
-#  script.frarik_posta_reset                 ← reset manuale
+#  script.frarik_posta_reset_oggi/_settimana/_mese  ← reset manuali
 #  automation: Frarik — Posta (eventi)
 #  automation: Frarik — Posta (reset)
 #
@@ -164,7 +188,7 @@ homeassistant:
       customize: &customize
         package: 'Frarik — Centro Controllo Posta'
         author: 'Frarik / Fratech'
-        version: '2.0'
+        version: '2.1'
 
       setting:
 
@@ -242,6 +266,10 @@ counter:
     name: "Posta — Consegne Settimana"
     icon: mdi:calendar-week
 
+  frarik_posta_mese:
+    name: "Posta — Consegne Mese"
+    icon: mdi:calendar-month
+
 
 ####################################################
 #                                                  #
@@ -256,16 +284,32 @@ input_datetime:
     has_time: true
     icon: mdi:clock-check-outline
 
-  frarik_posta_notifiche_inizio:
-    name: "Posta — Inizio Notifiche TTS"
+  frarik_posta_notifiche_media_inizio:
+    name: "Posta — Inizio Notifiche Google/Alexa"
     has_date: false
     has_time: true
+    initial: "08:00:00"
     icon: mdi:bell-ring-outline
 
-  frarik_posta_notifiche_fine:
-    name: "Posta — Fine Notifiche TTS"
+  frarik_posta_notifiche_media_fine:
+    name: "Posta — Fine Notifiche Google/Alexa"
     has_date: false
     has_time: true
+    initial: "22:00:00"
+    icon: mdi:bell-off-outline
+
+  frarik_posta_notifiche_push_inizio:
+    name: "Posta — Inizio Notifiche Push"
+    has_date: false
+    has_time: true
+    initial: "07:00:00"
+    icon: mdi:bell-ring-outline
+
+  frarik_posta_notifiche_push_fine:
+    name: "Posta — Fine Notifiche Push"
+    has_date: false
+    has_time: true
+    initial: "23:00:00"
     icon: mdi:bell-off-outline
 
 
@@ -316,7 +360,7 @@ template:
   - sensor:
       - name: "Frarik Posta Versione"
         unique_id: frarik_posta_versione
-        state: "2.0"
+        state: "2.1"
         icon: mdi:package-variant-closed
 
   - binary_sensor:
@@ -334,8 +378,8 @@ template:
 ####################################################
 
 script:
-  frarik_posta_reset:
-    alias: "Frarik — Reset Contatore Posta"
+  frarik_posta_reset_oggi:
+    alias: "Frarik — Reset Contatore Posta (oggi)"
     icon: mdi:restart
     sequence:
       - service: counter.reset
@@ -346,6 +390,22 @@ script:
           entity_id: input_text.frarik_posta_storico
         data:
           value: ""
+
+  frarik_posta_reset_settimana:
+    alias: "Frarik — Reset Contatore Posta (settimana)"
+    icon: mdi:restart
+    sequence:
+      - service: counter.reset
+        target:
+          entity_id: counter.frarik_posta_settimana
+
+  frarik_posta_reset_mese:
+    alias: "Frarik — Reset Contatore Posta (mese)"
+    icon: mdi:restart
+    sequence:
+      - service: counter.reset
+        target:
+          entity_id: counter.frarik_posta_mese
 
 
 ####################################################
@@ -393,6 +453,11 @@ automation:
         target:
           entity_id: counter.frarik_posta_settimana
 
+      # Aggiorna contatore mensile
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_posta_mese
+
       # Salva data e ora ultima consegna
       - service: input_datetime.set_datetime
         target:
@@ -428,6 +493,9 @@ automation:
               - condition: state
                 entity_id: input_boolean.frarik_posta_notifica_push
                 state: 'on'
+              - condition: time
+                after: input_datetime.frarik_posta_notifiche_push_inizio
+                before: input_datetime.frarik_posta_notifiche_push_fine
               sequence:
               - repeat:
                   for_each: *push
@@ -449,8 +517,8 @@ automation:
                 entity_id: input_boolean.frarik_posta_notifica_google
                 state: 'on'
               - condition: time
-                after: input_datetime.frarik_posta_notifiche_inizio
-                before: input_datetime.frarik_posta_notifiche_fine
+                after: input_datetime.frarik_posta_notifiche_media_inizio
+                before: input_datetime.frarik_posta_notifiche_media_fine
               sequence:
               - service: tts.google_translate_say
                 data:
@@ -469,8 +537,8 @@ automation:
                 entity_id: input_boolean.frarik_posta_notifica_alexa
                 state: 'on'
               - condition: time
-                after: input_datetime.frarik_posta_notifiche_inizio
-                before: input_datetime.frarik_posta_notifiche_fine
+                after: input_datetime.frarik_posta_notifiche_media_inizio
+                before: input_datetime.frarik_posta_notifiche_media_fine
               sequence:
               - service: notify.alexa_media
                 data:
@@ -489,7 +557,7 @@ automation:
 
   - alias: "Frarik — Posta (reset)"
     id: frarik_posta_reset
-    description: "Reset giornaliero e settimanale dei contatori posta"
+    description: "Reset giornaliero, settimanale e mensile dei contatori posta"
     mode: single
 
     trigger:
@@ -515,8 +583,18 @@ automation:
             target:
               entity_id: counter.frarik_posta_settimana
 
+      # Reset mensile — solo il primo del mese
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: "{{ now().day == 1 }}"
+          sequence:
+          - service: counter.reset
+            target:
+              entity_id: counter.frarik_posta_mese
+
 ###############################################################
-#  Fine package — Frarik Centro Controllo Posta v2.0
+#  Fine package — Frarik Centro Controllo Posta v2.1
 ###############################################################
 `;
 
@@ -683,7 +761,6 @@ if(!customElements.get('posta-card')){
         h?.states?.['counter.frarik_posta_settimana']?.state,
         h?.states?.['counter.frarik_posta_mese']?.state,
         h?.states?.['input_datetime.frarik_posta_ultima_consegna']?.state,
-        h?.states?.['input_text.frarik_posta_oggi_orari']?.state,
         this._c.sensorEntity?h?.states?.[this._c.sensorEntity]?.state:'',
       ].join('|');
       if(sig===this._prevSig) return;
@@ -694,7 +771,7 @@ if(!customElements.get('posta-card')){
     setConfig(cfg){
       const sk=cfg.storageKey||'';
       let stored={};
-      try{ stored=JSON.parse(localStorage.getItem('posta-card:'+sk)||'{}'); }catch(_){}
+      try{ stored=JSON.parse(localStorage.getItem('posta-card:'+(sk||'default'))||'{}'); }catch(_){}
       this._c={storageKey:sk,label:'Centro Posta',sensorEntity:'',cardScale:100,cardW:100,...stored};
       this._build();
     }
@@ -1357,6 +1434,6 @@ PostaCard._buildPkgFromConfig=function(cfg,_tpl){
 /* ── registrazione customCards ── */
 const _ccArr=(window.customCards=window.customCards||[]);
 const _ccIdx=_ccArr.findIndex(c=>c&&c.type==='posta-card');
-const _ccEntry={type:'posta-card',name:'Centro Controllo Posta',description:'Monitora la cassetta postale: consegne giornaliere con orari, storico, notifiche push/Google/Alexa.',icon:'mdi:mailbox',frarik_pkg_check:'sensor.frarik_posta_versione',frarik_pkg_id:'frarik_posta',frarik_pkg_version:'2.0',frarik_no_edit:true};
+const _ccEntry={type:'posta-card',name:'Centro Controllo Posta',description:'Monitora la cassetta postale: consegne giornaliere con orari, storico, notifiche push/Google/Alexa.',icon:'mdi:mailbox',frarik_pkg_check:'sensor.frarik_posta_versione',frarik_pkg_id:'frarik_posta',frarik_pkg_version:'2.1',frarik_no_edit:true};
 if(_ccIdx>=0) _ccArr[_ccIdx]=_ccEntry; else _ccArr.push(_ccEntry);
 })();
