@@ -1,4 +1,4 @@
-/* frarik-version: 5.20 */
+/* frarik-version: 5.21 */
 /* v5.15: aggiunta anteprima live + slider dimensione card (altezza/larghezza)
    nel popup Impostazioni, stesso meccanismo di Meteo.js/posta-card
    (localStorage _frk_layout_ + evento frarik-card-layout); aggiunto
@@ -40,6 +40,9 @@
    nell'header (duplicava l'informazione già visibile nella card).
    Ultimo giro testi: etichette e testo del wizard installazione (erano
    grigio #94a3b8/#e2e8f0, non rgba bianca) ora bianco pieno. */
+/* v5.21: riquadro del popup Settimana ingrandito — righe più spaziose
+   (padding 16px invece di 10px), testo giorno/rifiuto più grande (14px
+   invece di 12px), pallino colore più grande (10px invece di 8px). */
 ;(function () {
   'use strict';
 
@@ -333,19 +336,19 @@
       var dots = ws.length
         ? ws.map(function(id) {
             var t = TIPI.find(function(x) { return x.id === id; }), c = getClr(id);
-            return '<div style="display:flex;align-items:center;gap:5px">'
-              + '<div style="width:8px;height:8px;border-radius:50%;background:' + c + ';box-shadow:0 0 4px ' + c + '88;flex-shrink:0"></div>'
-              + '<span style="font-size:12px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">' + (t ? t.label : id) + '</span>'
+            return '<div style="display:flex;align-items:center;gap:7px">'
+              + '<div style="width:10px;height:10px;border-radius:50%;background:' + c + ';box-shadow:0 0 5px ' + c + '88;flex-shrink:0"></div>'
+              + '<span style="font-size:14px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">' + (t ? t.label : id) + '</span>'
               + '</div>';
           }).join('')
-        : '<span style="font-size:12px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">Nessun ritiro</span>';
-      return '<div style="padding:10px 0' + (isLast ? '' : ';border-bottom:1px solid rgba(255,255,255,.06)') + '">'
-        + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:' + (isToday ? '#4ade80' : '#fff') + ';margin-bottom:6px">'
+        : '<span style="font-size:14px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">Nessun ritiro</span>';
+      return '<div style="padding:16px 0' + (isLast ? '' : ';border-bottom:1px solid rgba(255,255,255,.06)') + '">'
+        + '<div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:' + (isToday ? '#4ade80' : '#fff') + ';margin-bottom:10px">'
         + DFULL[i] + (isToday ? ' — OGGI' : '') + '</div>'
-        + '<div style="display:flex;flex-wrap:wrap;gap:8px">' + dots + '</div>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:14px">' + dots + '</div>'
         + '</div>';
     }).join('');
-    const content = '<div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid #fff">' + rows + '</div>';
+    const content = '<div style="padding:6px 18px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid #fff">' + rows + '</div>';
     mkOv(popShell('📅', 'Rifiuti della settimana', 'ds-close', content), 'ds-close');
   }
 
@@ -1065,7 +1068,7 @@ automation:
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.20',
+    version: '5.21',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',
