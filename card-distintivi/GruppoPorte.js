@@ -1,7 +1,14 @@
-/* frarik-version: 2.2 */
+/* frarik-version: 3.0 */
 /**
- * GruppoPorte.js — Distintivo FratechStore v2.2
- * Chip contatore porte aperte + popup con sommario, porta bianca SVG animata, tempo da/fa
+ * GruppoPorte.js — Distintivo FratechStore v3.0
+ * Chip contatore porte aperte + popup con sommario, porta bianca SVG animata
+ * v3.0: stesso trattamento di GruppoAllarme/GruppoLuci/GruppoFinestre — chip "PORTE: N"
+ *       (solo numero aperte, maiuscolo/grassetto, colore rosso/verde canonico); popup
+ *       rifatto a stile "glass" con hero riepilogo, riquadri a griglia responsive
+ *       (2 colonne, 1 su telefono) con la porta SVG animata, automazione come badge
+ *       nell'angolo (verde/rosso, senza scritte, icona robot); rimosso il testo
+ *       "aperta/chiusa da X"; titolo popup bianco/maiuscolo/grassetto; tutto il testo
+ *       a dimensione unica (12px); fix update() che scartava lo stato hass live
  */
 (function () {
   'use strict';
@@ -83,33 +90,21 @@
       </svg>`;
   }
 
-  function _timeAgo(isoStr) {
-    if (!isoStr) return '';
-    const diff = Date.now() - new Date(isoStr).getTime();
-    if (diff < 60000) return 'adesso';
-    const mins = Math.floor(diff / 60000);
-    if (mins < 60) return mins + ' min';
-    const hrs = Math.floor(mins / 60);
-    const rem = mins % 60;
-    if (hrs < 24) return rem > 0 ? hrs + 'h ' + rem + 'min' : hrs + 'h';
-    return Math.floor(hrs / 24) + 'g';
-  }
-
   /* ── chip ── */
   function chip(cfg, rawHass) {
     const c = loadCfg(cfg);
     const h = liveH(rawHass);
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
-    const col = c.color || '#fb923c';
     const anyOpen = active > 0;
     const _fcr = window.FratechColorRules;
     const _cond = { any_open: active > 0, all_closed: active === 0 };
     return {
       icon: iconHtml(_dynIcon(c.icon||'🚪', anyOpen)),
-      label: c.label || 'Porte',
-      value: ents.length ? `${active}/${ents.length}` : '—',
-      color: (_fcr && _fcr.evalColor(cfg, _cond)) || (active > 0 ? col : '#fff'),
+      value: `${(c.label || 'Porte').toUpperCase()}: ${ents.length ? active : '—'}`,
+      // stesso rosso/verde canonico del popup (aperta=rosso, chiusa=verde), non l'accento
+      // configurabile — altrimenti il chip mostrava un colore diverso dal popup
+      color: (_fcr && _fcr.evalColor(cfg, _cond)) || (anyOpen ? '#f87171' : '#4ade80'),
       borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
     };
   }
@@ -127,74 +122,55 @@
     const c = loadCfg(cfg);
     const h = liveH(rawHass);
     const ents = Array.isArray(c.entities) ? c.entities : [];
-    const col = c.color || '#fb923c';
 
-    const openCount   = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
-    const closedCount = ents.length - openCount;
+    const openCount = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
+    const anyOpen = openCount > 0;
+    const heroCol = anyOpen ? '#f87171' : '#4ade80';
+    const heroTxt = !ents.length ? 'NESSUNA PORTA'
+      : openCount === 0 ? 'TUTTE CHIUSE'
+      : openCount === ents.length ? 'TUTTE APERTE'
+      : `${openCount}/${ents.length} APERTE`;
 
-    let summary = '';
-    if (ents.length) {
-      if (openCount === 0) {
-        summary = `<div style="padding:10px 16px 6px">
-          <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.22)">
-            <span style="font-size:14px">🔒</span>
-            <span style="font-size:12px;font-weight:700;color:#4ade80">Tutte chiuse</span>
-          </div>
-        </div>`;
-      } else {
-        summary = `<div style="display:flex;gap:7px;padding:10px 16px 6px;flex-wrap:wrap">
-          <div style="display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:20px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.28)">
-            <span style="font-size:11px">🔓</span>
-            <span style="font-size:12px;font-weight:700;color:#f87171">${openCount} ${openCount===1?'aperta':'aperte'}</span>
-          </div>
-          ${closedCount ? `<div style="display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:20px;background:rgba(74,222,128,.09);border:1px solid rgba(74,222,128,.2)">
-            <span style="font-size:12px;font-weight:700;color:#4ade80">✓ ${closedCount} ${closedCount===1?'chiusa':'chiuse'}</span>
-          </div>` : ''}
-        </div>`;
-      }
-    }
+    const hero = `<div style="position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;padding:16px;border-radius:18px;background:linear-gradient(155deg,${hex2rgba(heroCol,.16)},${hex2rgba(heroCol,.04)});border:1px solid ${hex2rgba(heroCol,.32)};margin:0 14px 14px">
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 18% 15%,${hex2rgba(heroCol,.22)},transparent 62%);pointer-events:none"></div>
+      <div style="position:relative;width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(heroCol,.18)};border:1.5px solid ${hex2rgba(heroCol,.45)};box-shadow:0 0 18px ${hex2rgba(heroCol,.35)}">
+        <span style="font-size:26px;color:${heroCol}">${iconHtml(_dynIcon(c.icon||'🚪', anyOpen), 26)}</span>
+      </div>
+      <div style="position:relative;flex:1;min-width:0">
+        <div style="font-size:19px;font-weight:900;color:${heroCol};letter-spacing:.3px;text-transform:uppercase">${heroTxt}</div>
+      </div>
+    </div>`;
 
-    const rows = ents.map((e, i) => {
+    const tiles = ents.map((e, i) => {
       if (!e.entity) return '';
-      const on    = h ? isOn(h, e.entity) : false;
-      const lbl   = e.label || nameOf(h, e.entity);
-      const stLbl = on ? 'Aperta' : 'Chiusa';
-      const stCol = on ? '#f87171' : '#4ade80';
-      const stBg  = on ? 'rgba(248,113,113,.14)' : 'rgba(74,222,128,.12)';
-      const stBdr = on ? 'rgba(248,113,113,.32)' : 'rgba(74,222,128,.28)';
-      const lastChanged = h?.states?.[e.entity]?.last_changed;
-      const timeStr   = h && lastChanged ? _timeAgo(lastChanged) : '';
-      const timeLabel = on
-        ? (timeStr === 'adesso' ? 'Appena aperta' : `Aperta da ${timeStr}`)
-        : (timeStr ? `Chiusa da ${timeStr}` : '');
-      const timeColor = on ? 'rgba(248,113,113,.75)' : 'rgba(255,255,255,.42)';
+      const on   = h ? isOn(h, e.entity) : false;
+      const lbl  = e.label || nameOf(h, e.entity);
+      const rCol = on ? '#f87171' : '#4ade80';
 
-      let autoBadge = '';
+      // pallino automazione — piccolo badge nell'angolo del riquadro, senza scritte: solo colore stato
+      let autoDot = '';
       if (e.automation) {
         const autoOn = h ? isOn(h, e.automation) : false;
-        const aBg  = autoOn ? 'rgba(74,222,128,.13)'  : 'rgba(248,113,113,.13)';
-        const aBdr = autoOn ? 'rgba(74,222,128,.38)'  : 'rgba(248,113,113,.38)';
-        const aCol = autoOn ? '#4ade80'               : '#f87171';
-        const aTxt = autoOn ? '🟢 Attiva'             : '🔴 Disattiva';
-        autoBadge = `<button data-gp-auto="${i}" style="margin-top:5px;padding:3px 9px;border-radius:6px;border:1px solid ${aBdr};background:${aBg};color:${aCol};cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;outline:none">${aTxt}</button>`;
+        const aCol = autoOn ? '#4ade80' : '#f87171';
+        autoDot = `<button data-gp-auto="${i}" style="position:absolute;top:8px;right:8px;z-index:1;width:26px;height:26px;border-radius:50%;border:1.5px solid ${hex2rgba(aCol,.55)};background:linear-gradient(155deg,${hex2rgba(aCol,.4)},${hex2rgba(aCol,.12)});box-shadow:0 0 8px ${hex2rgba(aCol,.35)};display:flex;align-items:center;justify-content:center;cursor:pointer;outline:none;color:${aCol}">${iconHtml('mdi:robot', 13)}</button>`;
       }
 
-      return `<div style="border-bottom:1px solid rgba(255,255,255,.04)">
-        <div style="display:flex;align-items:center;gap:12px;padding:10px 16px">
-          <div style="flex-shrink:0">${_doorSvg(on, i)}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-            ${timeLabel ? `<div style="font-size:10px;color:${timeColor};margin-top:2px">${eh(timeLabel)}</div>` : ''}
-            ${autoBadge}
-          </div>
-          <div style="padding:4px 12px;border-radius:20px;background:${stBg};border:1px solid ${stBdr};font-size:11px;font-weight:700;color:${stCol};white-space:nowrap;flex-shrink:0">${stLbl}</div>
-        </div>
+      return `<div style="position:relative;overflow:hidden;display:flex;align-items:center;gap:12px;border-radius:18px;background:linear-gradient(155deg,${hex2rgba(rCol,.18)},${hex2rgba(rCol,.03)});border:1px solid ${hex2rgba(rCol,.4)};padding:16px">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(rCol,.2)},transparent 62%);pointer-events:none"></div>
+        ${autoDot}
+        <span style="position:relative;flex-shrink:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center">
+          <span style="display:block;width:52px;height:72px;transform:scale(.611);transform-origin:center">${_doorSvg(on, i)}</span>
+        </span>
+        <span style="position:relative;flex:1;min-width:0">
+          <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</span>
+          <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:${rCol};letter-spacing:.3px;margin-top:2px">${on ? 'Aperta' : 'Chiusa'}</span>
+        </span>
       </div>`;
     }).join('');
 
     return `<div id="gpor-popup-body">
-      ${summary}
-      <div>${rows||'<div style="padding:32px 20px;text-align:center;color:#fff;font-size:12px">Nessuna porta configurata.<br><span style="font-size:10px;">Clicca ✏️ sulla chip per configurare.</span></div>'}</div>
+      ${hero}
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;margin:0 14px 8px">${tiles||'<div style="grid-column:1/-1;padding:32px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">Nessuna porta configurata<br><span style="font-size:12px;font-weight:900;text-transform:uppercase;opacity:.7">Clicca ✏️ sulla chip per configurare</span></div>'}</div>
     </div>`;
   }
 
@@ -210,10 +186,10 @@
         const autoOn = isOn(H(), e.automation);
         const nextOn = !autoOn;
         const newCol = nextOn ? '#4ade80' : '#f87171';
-        const newBdr = nextOn ? 'rgba(74,222,128,.38)' : 'rgba(248,113,113,.38)';
-        const newBg  = nextOn ? 'rgba(74,222,128,.13)' : 'rgba(248,113,113,.13)';
-        auto.textContent = nextOn ? '🟢 Attiva' : '🔴 Disattiva';
-        auto.style.color = newCol; auto.style.borderColor = newBdr; auto.style.background = newBg;
+        auto.style.color = newCol;
+        auto.style.borderColor = hex2rgba(newCol, .55);
+        auto.style.background = `linear-gradient(155deg,${hex2rgba(newCol,.4)},${hex2rgba(newCol,.12)})`;
+        auto.style.boxShadow = `0 0 8px ${hex2rgba(newCol,.35)}`;
         callSvc('automation', autoOn ? 'turn_off' : 'turn_on', e.automation);
         ev.stopPropagation(); return;
       }
@@ -236,8 +212,9 @@
         const ents = Array.isArray(c.entities) ? c.entities : [];
         const h = H();
         const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
-        const col = c.color || '#fb923c';
-        titleEl.style.color = active > 0 ? col : '';
+        titleEl.style.color = '#fff';
+        titleEl.style.fontWeight = '900';
+        titleEl.style.textTransform = 'uppercase';
         titleEl.textContent = active === 1 ? '1 porta aperta' : `${active} porte aperte`;
       } catch(e) {}
     }
@@ -259,7 +236,7 @@
   }
 
   function update(cfg, rawHass, el) {
-    try { el.innerHTML = render(cfg, null); _mountHandlers(cfg, el); } catch(e){}
+    try { el.innerHTML = render(cfg, rawHass); _mountHandlers(cfg, el); } catch(e){}
   }
 
   /* ── configure ── */
@@ -537,7 +514,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Porte', icon: '🚪',
     desc: 'Chip con contatore porte aperte. Clic → stato Aperta/Chiusa per ogni porta.',
-    version: '2.2', isDistintivo: true,
+    version: '3.0', isDistintivo: true,
     defaultCfg: { label: 'Porte', icon: '🚪', color: '#fb923c', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -546,5 +523,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-porte v2.2'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-porte v3.0'); } catch(e){}
 })();
