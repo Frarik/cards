@@ -1,5 +1,11 @@
-﻿/* frarik-version: 1.42 */
-/* v1.42: matita esterna in modifica rimossa (frarik_no_edit, resta solo l'ingranaggio
+﻿/* frarik-version: 1.43 */
+/* v1.43: eliminato ogni accento giallo/ambra nel popup impostazioni (icona
+   ingranaggio, slider dimensioni, opzione selezionata, pulsanti +aggiungi,
+   toggle sfondo/stazione) — ora tutto bianco/neutro; sezione "Sensori" (tile
+   swipe) racchiusa in riquadro con contorno; le due colonne del popup sono
+   ora identiche al 50%. Le altre finestre (storico, stazione meteo, dettaglio
+   giorno) restano invariate, fuori dallo scope di questa richiesta.
+   v1.42: matita esterna in modifica rimossa (frarik_no_edit, resta solo l'ingranaggio
    interno); popup impostazioni riallineato allo standard dei distintivi — testi
    bianchi, 12px/900 uniforme su etichette/nomi entità, riquadro con contorno neutro,
    pulsante Salva blu. Anteprima live e controlli dimensione card invariati. */
@@ -294,17 +300,18 @@ button[data-a="gear"]{display:var(--fgear,none);}
 .scls{margin-left:auto;width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.07);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
 .scls:hover{background:rgba(255,255,255,.12);}
 .sov-2col{display:flex;flex:1;overflow:hidden;min-height:0;}
-.sbdy{width:400px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.06);scrollbar-width:none;-ms-overflow-style:none;}
+.sbdy{width:50%;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.06);scrollbar-width:none;-ms-overflow-style:none;}
 .sbdy::-webkit-scrollbar{display:none;}
-.sov-prev{flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none;-ms-overflow-style:none;}
+.sov-prev{width:50%;flex-shrink:0;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none;-ms-overflow-style:none;}
 .sov-prev::-webkit-scrollbar{display:none;}
 .prev-ttl{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:#fff;}
 .prev-wrap{border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08);}
 .lsect{padding-top:12px;border-top:1px solid rgba(255,255,255,.08);}
 .layout-row{display:flex;align-items:center;gap:8px;margin-top:10px;}
 .layout-lbl{font-size:12px;font-weight:900;color:#fff;width:72px;flex-shrink:0;}
-.layout-val{font-size:12px;font-weight:900;color:#fbbf24;width:54px;text-align:right;flex-shrink:0;}
-input[type=range].lslider{flex:1;cursor:pointer;accent-color:#fbbf24;height:4px;}
+.layout-val{font-size:12px;font-weight:900;color:#fff;width:54px;text-align:right;flex-shrink:0;}
+input[type=range].lslider{flex:1;cursor:pointer;accent-color:#fff;height:4px;}
+.sensbox{margin:8px 0 4px;padding:12px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid #fff;}
 @media(max-width:620px){.sov-2col{flex-direction:column!important;overflow-y:auto!important;overflow-x:hidden!important}.sbdy{width:100%!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,.07)!important;overflow-y:visible!important;flex-shrink:0!important}.sov-prev{min-width:0!important;overflow-y:visible!important}}
 .fl{font-size:12px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;margin-top:12px;}
 .fl:first-child{margin-top:0;}
@@ -320,7 +327,7 @@ input[type=range].lslider{flex:1;cursor:pointer;accent-color:#fbbf24;height:4px;
 .el::-webkit-scrollbar{display:none;}
 .eo{padding:8px 12px;cursor:pointer;font-size:12px;color:#fff;border-bottom:1px solid rgba(255,255,255,.06);}
 .eo:hover{background:rgba(255,255,255,.08);color:#fff;}
-.eo.sel{color:#fbbf24;font-weight:700;}
+.eo.sel{color:#fff;font-weight:900;background:rgba(255,255,255,.06);}
 .ci{width:100%;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#fff;font-size:13px;font-family:inherit;outline:none;}
 .ci:focus{border-color:#fff;}
 .ci::placeholder{color:#fff;}
@@ -373,7 +380,7 @@ const _STATION_CATS=[
      {f:'sPwHighApp0d', lbl:'PW Percepita Oggi'},
      {f:'sPwHighApp1d', lbl:'PW Percepita Domani'},
    ]},
-  {key:'pressure', icon:'📊', label:'Pressione',   color:'#fbbf24',
+  {key:'pressure', icon:'📊', label:'Pressione',   color:'#94a3b8',
    sensors:[
      {f:'sRelPres',      lbl:'Pressione Relativa'},
      {f:'sAbsPres',      lbl:'Pressione Assoluta'},
@@ -1144,9 +1151,9 @@ class MeteoCard extends HTMLElement {
         const sbgBtn=this._modalHost?.shadowRoot?.querySelector('#sbg-tog')
         if(sbgBtn){
           sbgBtn.textContent=this._tStaticBg?'Statico':'Animato'
-          sbgBtn.style.background=`rgba(251,191,36,${this._tStaticBg?.15:.06})`
-          sbgBtn.style.borderColor=`rgba(251,191,36,${this._tStaticBg?.4:.12})`
-          sbgBtn.style.color=this._tStaticBg?'#fbbf24':'rgba(255,255,255,.4)'
+          sbgBtn.style.background=`rgba(255,255,255,${this._tStaticBg?.15:.06})`
+          sbgBtn.style.borderColor=`rgba(255,255,255,${this._tStaticBg?.4:.12})`
+          sbgBtn.style.color=this._tStaticBg?'#fff':'rgba(255,255,255,.4)'
         }
         this._schedPrev()
         break
@@ -1159,9 +1166,9 @@ class MeteoCard extends HTMLElement {
         if(tog){
           tog.classList.toggle('on',this._tSt.stationEnabled)
           tog.textContent=this._tSt.stationEnabled?'Attiva':'Non attiva'
-          tog.style.background=`rgba(251,191,36,${this._tSt.stationEnabled?.15:.06})`
-          tog.style.borderColor=`rgba(251,191,36,${this._tSt.stationEnabled?.4:.12})`
-          tog.style.color=this._tSt.stationEnabled?'#fbbf24':'rgba(255,255,255,.4)'
+          tog.style.background=`rgba(255,255,255,${this._tSt.stationEnabled?.15:.06})`
+          tog.style.borderColor=`rgba(255,255,255,${this._tSt.stationEnabled?.4:.12})`
+          tog.style.color=this._tSt.stationEnabled?'#fff':'rgba(255,255,255,.4)'
         }
         break
       case 'scat-add':{
@@ -1499,7 +1506,7 @@ class MeteoCard extends HTMLElement {
           </div>
           ${!isFixed?`<div style="flex:1.5;"><div class="fl" style="margin:0 0 3px;font-size:10px;">Etichetta</div><input class="ci" type="text" value="${tile.lbl||''}" placeholder="Nome" data-f="tile-lbl-${i}"/></div>`:''}
           <div style="display:flex;gap:4px;padding-bottom:1px;">
-            <button data-a="tile-open" data-idx="${i}" style="background:rgba(251,191,36,${tile._open?.12:.06});border:1px solid rgba(251,191,36,${tile._open?.35:.15});color:${tile._open?'#fbbf24':'rgba(255,255,255,.45)'};border-radius:8px;padding:6px 8px;font-size:13px;cursor:pointer;flex-shrink:0;line-height:1;" title="Personalizza">
+            <button data-a="tile-open" data-idx="${i}" style="background:rgba(255,255,255,${tile._open?.14:.06});border:1px solid rgba(255,255,255,${tile._open?.35:.15});color:${tile._open?'#fff':'rgba(255,255,255,.45)'};border-radius:8px;padding:6px 8px;font-size:13px;cursor:pointer;flex-shrink:0;line-height:1;" title="Personalizza">
               ${icoIsMdi?`<span class="mdi mdi-${tile.ico.slice(4)}" style="color:inherit;font-size:15px;vertical-align:middle;pointer-events:none;"></span>`:emojiDisplay||icoPreview} ⚙</button>
             ${!isFixed?`<button data-a="tile-rm" data-idx="${i}" style="background:rgba(255,80,80,.1);border:1px solid rgba(255,80,80,.22);color:rgba(255,120,120,.85);border-radius:8px;padding:6px 9px;font-size:13px;cursor:pointer;flex-shrink:0;line-height:1;">✕</button>`:''}
           </div>
@@ -1508,7 +1515,7 @@ class MeteoCard extends HTMLElement {
       </div>`
     }).join('')+
     (this._tAllTiles.filter(t=>!t.isFixed).length<8
-      ?`<button data-a="tile-add" style="margin-top:10px;width:100%;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.22);color:#fbbf24;border-radius:10px;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;">＋ Aggiungi statistica</button>`:'')
+      ?`<button data-a="tile-add" style="margin-top:10px;width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);color:#fff;border-radius:10px;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;">＋ Aggiungi statistica</button>`:'')
   }
 
   _updateAllTilesSection(){
@@ -1772,7 +1779,7 @@ class MeteoCard extends HTMLElement {
           <button data-a="scat-rm" data-key="${cat.key}" data-idx="${idx}" style="flex-shrink:0;width:28px;height:32px;border-radius:7px;border:1px solid rgba(248,113,113,.25);background:rgba(248,113,113,.08);cursor:pointer;color:#f87171;font-size:13px;display:flex;align-items:center;justify-content:center;">✕</button>
         </div>
       `).join('')}
-      <button data-a="scat-add" data-key="${cat.key}" style="margin-top:7px;width:100%;height:29px;border-radius:7px;border:1px solid rgba(251,191,36,.2);background:rgba(251,191,36,.06);cursor:pointer;color:#fbbf24;font-size:11px;font-weight:600;">+ Aggiungi entità</button>
+      <button data-a="scat-add" data-key="${cat.key}" style="margin-top:7px;width:100%;height:29px;border-radius:7px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);cursor:pointer;color:#fff;font-size:11px;font-weight:600;">+ Aggiungi entità</button>
       `
     }).join('')
   }
@@ -1788,7 +1795,7 @@ class MeteoCard extends HTMLElement {
 <div class="sov open">
   <div class="sov-modal">
     <div class="shdr">
-      <div class="sico">${_IC.gear}</div>
+      <div class="sico" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);color:#fff;">${_IC.gear}</div>
       <div><div class="stit">Meteo + Previsioni</div><div class="ssub">Impostazioni card</div></div>
       <button class="scls" data-a="close">${_IC.x}</button>
     </div>
@@ -1818,8 +1825,8 @@ class MeteoCard extends HTMLElement {
         <input class="ci" type="number" min="1" max="10" value="${this._tdays}" data-f="days"/>
         <div class="ht">Quanti giorni mostrare nel pannello previsioni</div>
 
-        <div style="margin-top:16px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;">
-          <div class="fl" style="margin:0 0 2px;">📊 Tutte le tile swipe</div>
+        <div class="sensbox" style="margin-top:16px;">
+          <div class="fl" style="margin:0 0 2px;">📊 Sensori (tile swipe)</div>
           <div class="ht" style="margin-bottom:8px;">Le prime 4 sono fisse (usano attributo auto se il sensore è vuoto). Aggiungi fino a 8 statistiche extra. ⚙ per icona, colore e soglie.</div>
           <div id="all-tiles-container">${this._allTilesHTML()}</div>
         </div>
@@ -1841,14 +1848,14 @@ class MeteoCard extends HTMLElement {
 
         <div style="margin-top:14px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;display:flex;align-items:center;gap:10px;">
           <div class="fl" style="margin:0;flex:1;">🎨 Sfondo della card</div>
-          <button id="sbg-tog" data-a="staticbg" style="background:rgba(251,191,36,${this._tStaticBg?.15:.06});border:1px solid rgba(251,191,36,${this._tStaticBg?.4:.12});color:${this._tStaticBg?'#fbbf24':'rgba(255,255,255,.4)'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;">${this._tStaticBg?'Statico':'Animato'}</button>
+          <button id="sbg-tog" data-a="staticbg" style="background:rgba(255,255,255,${this._tStaticBg?.15:.06});border:1px solid rgba(255,255,255,${this._tStaticBg?.4:.12});color:${this._tStaticBg?'#fff':'rgba(255,255,255,.4)'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;">${this._tStaticBg?'Statico':'Animato'}</button>
         </div>
         <div class="ht">Statico: solo gradiente colore, senza animazioni né sole/luna</div>
 
         <div style="margin-top:20px;border-top:1px solid rgba(255,255,255,.08);padding-top:16px;">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
             <div class="fl" style="margin:0;flex:1;">🌡️ Stazione Meteo</div>
-            <button id="st-tog" data-a="sttoggle" style="background:rgba(251,191,36,${this._tSt.stationEnabled?.15:.06});border:1px solid rgba(251,191,36,${this._tSt.stationEnabled?.4:.12});color:${this._tSt.stationEnabled?'#fbbf24':'rgba(255,255,255,.4)'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;">${this._tSt.stationEnabled?'Attiva':'Non attiva'}</button>
+            <button id="st-tog" data-a="sttoggle" style="background:rgba(255,255,255,${this._tSt.stationEnabled?.15:.06});border:1px solid rgba(255,255,255,${this._tSt.stationEnabled?.4:.12});color:${this._tSt.stationEnabled?'#fff':'rgba(255,255,255,.4)'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;">${this._tSt.stationEnabled?'Attiva':'Non attiva'}</button>
           </div>
           <div class="ht">Abilita popup completo cliccando sullo sfondo della card</div>
 
