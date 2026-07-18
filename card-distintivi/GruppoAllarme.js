@@ -1,8 +1,9 @@
-/* frarik-version: 4.0 */
+/* frarik-version: 4.1 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v4.0
+ * GruppoAllarme.js — Distintivo FratechStore v4.1
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
+ * v4.1: sezione Sensori in riquadro separato nel popup di configurazione
  * v2.3: fix bypass — azzera solo sulla transizione armato→disarmato, non mentre è già disarmato
  * v2.4: bypass disponibile anche quando l'allarme è già armato; ri-arma Alarmo con il nuovo set
  * v2.5: chip e popup con testo maiuscolo e in grassetto (label, stato, sensori, sirena, pulsanti)
@@ -710,9 +711,11 @@
           <div style="${secL}">Modalità da mostrare</div>
           <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:14px">${modeChecks}</div>
 
-          <div style="${secL}">Sensori (${sensors.length})</div>
-          ${sensors.length ? `<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px">${sensorRows}</div>` : ''}
-          <input id="cacfg-add-sensor" style="${sinp};margin-bottom:14px" placeholder="🔍 Aggiungi binary_sensor…" autocomplete="off">
+          <div style="margin:0 0 14px;padding:12px;background:rgba(255,255,255,.05);border-radius:10px;border:1px solid rgba(255,255,255,.1)">
+            <div style="${secL}">Sensori (${sensors.length})</div>
+            ${sensors.length ? `<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px">${sensorRows}</div>` : ''}
+            <input id="cacfg-add-sensor" style="${sinp}" placeholder="🔍 Aggiungi binary_sensor…" autocomplete="off">
+          </div>
 
           <div style="${secL}">Sirena (opzionale)</div>
           <input id="cacfg-siren" style="${sinp};margin-bottom:14px" value="${eh(c.siren || '')}" placeholder="🔍 switch.sirena o siren.*…" autocomplete="off">
@@ -796,7 +799,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '4.0', isDistintivo: true,
+    version: '4.1', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '', colorMode: 'auto', colorRules: [] },
     chip,
     watchEntities,
@@ -810,5 +813,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v4.0'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v4.1'); } catch (e) {}
 })();

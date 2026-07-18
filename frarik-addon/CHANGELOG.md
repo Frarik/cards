@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.90 — 2026-07-18
+
+### fix: rimossa del tutto la sezione "Bordo" dal colore chip + riquadro Sensori
+
+- `main.js` (`FratechColorRules`): eliminata completamente la sezione "Bordo"
+  dal popup "🎨 Colore chip" (condiviso da tutti i 14 distintivi) — resta solo
+  "Contenuto (testo, icona, numeri)" a condizioni. `read()` ora forza sempre
+  `borderMode:'none'` (il bordo non è più configurabile da nessuna card).
+- `GruppoAllarme.js` (v4.1): la sezione "Sensori" nel popup di configurazione
+  è ora in un riquadro separato (stesso stile della sezione "Colore chip"),
+  invece di stare a contatto diretto con gli altri campi.
+
 ## 2.0.89 — 2026-07-18
 
 ### fix: rimosso "Nessuno/Fisso/Condizioni" anche dal colore del bordo chip

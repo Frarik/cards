@@ -19200,15 +19200,10 @@ if (!window.FratechColorRules) {
       if (mode === 'auto') mode = 'fixed';
       var fixed       = (colorCfg && colorCfg.fixed)       || '#60a5fa';
       var rules       = (colorCfg && Array.isArray(colorCfg.rules))       ? colorCfg.rules       : [];
-      var borderMode  = (colorCfg && colorCfg.borderMode)  || 'none';
-      var borderFixed = (colorCfg && colorCfg.borderFixed) || '#ffffff';
-      var borderRules = (colorCfg && Array.isArray(colorCfg.borderRules)) ? colorCfg.borderRules : [];
       var ps = Array.isArray(presets) ? presets : [];
       return '<div id="fcr-section" style="margin:8px 0;padding:12px;background:rgba(255,255,255,.05);border-radius:10px;border:1px solid rgba(255,255,255,.1)">'
         + '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.8px;margin-bottom:10px">🎨 COLORE CHIP</div>'
         + _secHtml('Contenuto (testo, icona, numeri)', 'fcr', mode, fixed, rules, ps, false, false)
-        + '<div style="height:1px;background:rgba(255,255,255,.08);margin:8px 0"></div>'
-        + _secHtml('Bordo', 'fcrb', borderMode, borderFixed, borderRules, ps, false, false)
         + '</div>';
     }
     function _attachSection(sec, pfx, ps, onChange) {
@@ -19255,8 +19250,7 @@ if (!window.FratechColorRules) {
           }
         }, true);
       }
-      _attachSection(sec, 'fcr',  ps, onChange);
-      _attachSection(sec, 'fcrb', ps, onChange);
+      _attachSection(sec, 'fcr', ps, onChange);
     }
     function _attachRule(sec, ruleEl, ps, onChange, pfx) {
       var ddWrap = ruleEl.querySelector('.fcr-dd-wrap');
@@ -19345,9 +19339,9 @@ if (!window.FratechColorRules) {
         colorMode:   mode,
         colorFixed:  (sec.querySelector('#fcr-fixed-inp')  || {}).value || '#60a5fa',
         colorRules:  _readRules(sec, 'fcr'),
-        borderMode:  _readMode(sec, 'fcrb'),
-        borderFixed: (sec.querySelector('#fcrb-fixed-inp') || {}).value || '#ffffff',
-        borderRules: _readRules(sec, 'fcrb'),
+        borderMode:  'none',
+        borderFixed: '#ffffff',
+        borderRules: [],
       };
     }
     function evalColor(cfg, condResults) {
