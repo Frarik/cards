@@ -1,5 +1,8 @@
-/* frarik-version: 5.6 */
+/* frarik-version: 5.7 */
 /* Centro Controllo Posta — Frarik card standalone */
+/* v5.7: bagliore radiale in alto a sinistra reso più visibile (opacità
+   .08 → .16) per essere riconoscibile a colpo d'occhio, stesso valore
+   ora usato anche dalla card Differenziata per restare identiche. */
 /* v5.6: rimossa ogni opacità residua dal testo della card e dei popup
    (num-l, last-lbl, ni-sub, fhint, fopt, prev-ttl, stime-sep, wsec-hint,
    wadd, testo post-installazione) — erano ancora rgba/opacity < 100%
@@ -1171,7 +1174,7 @@ if(!customElements.get('posta-card')){
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(.96)}}
 
 .card{height:100%;display:flex;flex-direction:column;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.08) 0%,transparent 65%);pointer-events:none}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.16) 0%,transparent 65%);pointer-events:none}
 
 /* header */
 .hdr{display:flex;align-items:center;gap:9px;padding:12px 15px 10px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}
