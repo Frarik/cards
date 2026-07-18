@@ -1,7 +1,13 @@
-/* frarik-version: 1.3 */
+/* frarik-version: 2.0 */
 /**
- * GruppoPresenza.js — Distintivo FratechStore v1.1
+ * GruppoPresenza.js — Distintivo FratechStore v2.0
  * Chip contatore sensori presenza/movimento attivi + popup con dettaglio e SVG animato
+ * v2.0: stesso trattamento degli altri distintivi — chip "PRESENZA: N" (solo numero
+ *       rilevati, non più X/Y, unico value maiuscolo/grassetto); righe sensore
+ *       rifatte a stile "glass" (gradiente + alone) mantenendo l'omino SVG animato;
+ *       tutto il testo del popup a dimensione unica (12px/900/maiuscolo); aggiunto
+ *       il titolo dell'header del popup bianco/maiuscolo/grassetto (prima nascondeva
+ *       solo il sottotitolo); fix update() che scartava lo stato hass live ricevuto
  */
 (function () {
   'use strict';
@@ -138,8 +144,7 @@
     const _cond = { any_detected: active > 0, none_detected: active === 0 };
     return {
       icon: iconHtml(c.icon || 'mdi:motion-sensor'),
-      label: c.label || 'Presenza',
-      value: ents.length ? `${active}/${ents.length}` : '—',
+      value: `${(c.label || 'Presenza').toUpperCase()}: ${ents.length ? active : '—'}`,
       color: (_fcr && _fcr.evalColor(cfg, _cond)) || (active > 0 ? col : '#fff'),
       borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
     };
@@ -162,37 +167,44 @@
       const on    = h ? isOn(h, e.entity) : false;
       const lbl   = e.label || nameOf(h, e.entity);
       const stLbl = on ? 'Rilevato' : 'Libero';
-      const stCol = on ? '#f59e0b' : '#4ade80';
-      const stBg  = on ? 'rgba(245,158,11,.14)' : 'rgba(74,222,128,.12)';
-      const stBdr = on ? 'rgba(245,158,11,.35)'  : 'rgba(74,222,128,.28)';
-      return `<div style="border-bottom:1px solid rgba(255,255,255,.04);${on ? 'background:rgba(245,158,11,.03)' : ''}">
-        <div style="display:flex;align-items:center;gap:12px;padding:10px 16px">
+      const rc    = on ? '#f59e0b' : '#4ade80';
+      return `<div style="position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(155deg,${hex2rgba(rc,.16)},${hex2rgba(rc,.03)});border:1px solid ${hex2rgba(rc,.35)};padding:10px 16px;margin:0 14px 8px">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(rc,.18)},transparent 62%);pointer-events:none"></div>
+        <div style="position:relative;display:flex;align-items:center;gap:12px">
           <div style="flex-shrink:0">${_presenceSvg(on, i)}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
+            <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
           </div>
-          <div style="padding:4px 12px;border-radius:20px;background:${stBg};border:1px solid ${stBdr};font-size:11px;font-weight:700;color:${stCol};white-space:nowrap;flex-shrink:0">${stLbl}</div>
+          <div style="padding:4px 12px;border-radius:20px;background:${hex2rgba(rc,on?.16:.14)};border:1px solid ${hex2rgba(rc,.35)};font-size:12px;font-weight:900;text-transform:uppercase;color:${rc};white-space:nowrap;flex-shrink:0">${stLbl}</div>
         </div>
       </div>`;
     }).join('');
 
     return `<div id="gppre-popup-body">
-      <div>${rows || '<div style="padding:36px 20px;text-align:center;color:#fff;font-size:12px">Nessun sensore configurato.<br><span style="font-size:10px;color:rgba(255,255,255,.5)">Clicca ✏️ sulla chip per configurare.</span></div>'}</div>
+      <div>${rows || '<div style="padding:36px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">Nessun sensore configurato<br><span style="font-size:12px;font-weight:900;text-transform:uppercase;opacity:.7">Clicca ✏️ sulla chip per configurare</span></div>'}</div>
     </div>`;
   }
 
   /* ── mount ── */
-  function _hideSubtitle(el) {
+  function _syncTitle(cfg, el) {
     try {
       const hdr = el.previousElementSibling; if (!hdr) return;
       const textWrap = hdr.children && hdr.children[1]; if (!textWrap) return;
-      const subEl = textWrap.children && textWrap.children[1]; if (!subEl) return;
-      subEl.style.display = 'none';
+      const titleEl = textWrap.children && textWrap.children[0]; if (!titleEl) return;
+      const subEl = textWrap.children && textWrap.children[1]; if (subEl) subEl.style.display = 'none';
+      const c = loadCfg(cfg);
+      const ents = Array.isArray(c.entities) ? c.entities : [];
+      const h = H();
+      const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
+      titleEl.style.color = '#fff';
+      titleEl.style.fontWeight = '900';
+      titleEl.style.textTransform = 'uppercase';
+      titleEl.textContent = active === 0 ? 'Tutto libero' : (active === 1 ? '1 zona con presenza' : `${active} zone con presenza`);
     } catch(e) {}
   }
 
   function mount(cfg, rawHass, el) {
-    setTimeout(() => _hideSubtitle(el), 0);
+    setTimeout(() => _syncTitle(cfg, el), 0);
     if (el._gpPoll) return;
     el._gpPoll = setInterval(() => {
       if (!el.isConnected) { clearInterval(el._gpPoll); delete el._gpPoll; return; }
@@ -200,14 +212,14 @@
         const h = H(); if (!h) return;
         const _sp=el.parentElement, _st=_sp?_sp.scrollTop:0;
         el.innerHTML = render(cfg, h);
-        _hideSubtitle(el);
+        _syncTitle(cfg, el);
         if(_sp&&_st>0) _sp.scrollTop=_st;
       } catch(e) {}
     }, 1500);
   }
 
   function update(cfg, rawHass, el) {
-    try { el.innerHTML = render(cfg, null); } catch(e){}
+    try { el.innerHTML = render(cfg, rawHass); _syncTitle(cfg, el); } catch(e){}
   }
 
   /* ── configure ── */
@@ -397,7 +409,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Presenza', icon: 'mdi:motion-sensor',
     desc: 'Chip contatore sensori presenza/movimento attivi. Clic → stato rilevato/libero per ogni zona.',
-    version: '1.3', isDistintivo: true,
+    version: '2.0', isDistintivo: true,
     defaultCfg: { label: 'Presenza', icon: 'mdi:motion-sensor', color: '#f59e0b', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -406,5 +418,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-presenza v1.0'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-presenza v2.0'); } catch(e){}
 })();
