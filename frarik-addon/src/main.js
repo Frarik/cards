@@ -19173,19 +19173,23 @@ if (!window.FratechColorRules) {
         + '<button data-' + pfx + '-del style="flex-shrink:0;width:22px;height:22px;padding:0;border-radius:4px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);color:#f87171;font-size:12px;cursor:pointer;line-height:1">✕</button>'
         + '</div>';
     }
-    function _secHtml(title, pfx, mode, fixed, rules, ps, hasNone) {
+    function _secHtml(title, pfx, mode, fixed, rules, ps, hasNone, hasFixed) {
+      if (hasFixed === undefined) hasFixed = true;
+      if (!hasFixed && mode !== 'none') mode = 'conditional';
       var showFixed = mode === 'fixed' ? 'flex' : 'none';
       var showCond  = mode === 'conditional' ? 'block' : 'none';
       return '<div style="margin-bottom:4px">'
         + '<div style="font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.5px;margin-bottom:5px">' + title + '</div>'
         + '<div style="display:flex;gap:4px;margin-bottom:6px">'
         + (hasNone ? '<button data-' + pfx + '-mode="none" style="' + _btnSt(mode === 'none') + '">Nessuno</button>' : '')
-        + '<button data-' + pfx + '-mode="fixed" style="' + _btnSt(mode === 'fixed') + '">Fisso</button>'
+        + (hasFixed ? '<button data-' + pfx + '-mode="fixed" style="' + _btnSt(mode === 'fixed') + '">Fisso</button>' : '')
         + (ps.length ? '<button data-' + pfx + '-mode="conditional" style="' + _btnSt(mode === 'conditional') + '">Condizioni</button>' : '')
         + '</div>'
-        + '<div id="' + pfx + '-fixed-wrap" style="display:' + showFixed + ';align-items:center;gap:8px;margin-bottom:4px">'
-        + '<input type="color" id="' + pfx + '-fixed-inp" value="' + eh(fixed) + '" style="width:34px;height:34px;border:none;cursor:pointer;border-radius:6px;background:transparent;padding:0">'
-        + '</div>'
+        + (hasFixed
+          ? '<div id="' + pfx + '-fixed-wrap" style="display:' + showFixed + ';align-items:center;gap:8px;margin-bottom:4px">'
+            + '<input type="color" id="' + pfx + '-fixed-inp" value="' + eh(fixed) + '" style="width:34px;height:34px;border:none;cursor:pointer;border-radius:6px;background:transparent;padding:0">'
+            + '</div>'
+          : '')
         + '<div id="' + pfx + '-cond-wrap" style="display:' + showCond + '">'
         + '<div id="' + pfx + '-rules-list">' + rules.map(function(r, i) { return _ruleHtml(r, ps, i, pfx); }).join('') + '</div>'
         + '<button id="' + pfx + '-add-rule" style="margin-top:6px;padding:4px 10px;font-size:11px;border-radius:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;cursor:pointer">+ Aggiungi condizione</button>'
@@ -19202,7 +19206,7 @@ if (!window.FratechColorRules) {
       var ps = Array.isArray(presets) ? presets : [];
       return '<div id="fcr-section" style="margin:8px 0;padding:12px;background:rgba(255,255,255,.05);border-radius:10px;border:1px solid rgba(255,255,255,.1)">'
         + '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.8px;margin-bottom:10px">🎨 COLORE CHIP</div>'
-        + _secHtml('Contenuto (testo, icona, numeri)', 'fcr', mode, fixed, rules, ps, false)
+        + _secHtml('Contenuto (testo, icona, numeri)', 'fcr', mode, fixed, rules, ps, false, false)
         + '<div style="height:1px;background:rgba(255,255,255,.08);margin:8px 0"></div>'
         + _secHtml('Bordo', 'fcrb', borderMode, borderFixed, borderRules, ps, true)
         + '</div>';

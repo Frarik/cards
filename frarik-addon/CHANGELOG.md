@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.88 — 2026-07-18
+
+### fix: rimosso "Fisso" dal colore del contenuto chip in tutte le configurazioni
+
+- `main.js` (`FratechColorRules`): la sezione "Contenuto (testo, icona, numeri)"
+  del popup "🎨 Colore chip" — condivisa da tutti i 14 distintivi — non mostra
+  più il pulsante "Fisso". Resta solo "Condizioni": senza regole configurate
+  il chip usa il colore automatico/di default, con regole cambia colore in
+  blocco su icona/numeri/testo insieme (nessuna distinzione tra i tre). La
+  sezione "Bordo" mantiene invece Nessuno/Fisso/Condizioni invariati.
+
 ## 2.0.87 — 2026-07-18
 
 ### feat: valore dei chip più spesso (senza ingrandirlo)
