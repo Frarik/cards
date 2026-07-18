@@ -1,4 +1,4 @@
-/* frarik-version: 2.3 */
+/* frarik-version: 2.4 */
 /* v2.2: allineata allo standard Frarik (posta-card/Meteo/Differenziata).
    Popup unificati: stesso sfondo #0a0816, icona neutra (era colorata a
    tema), titolo maiuscolo 16px/900, rimossa la sottotitolo sotto al
@@ -12,6 +12,12 @@
    seconda del colore scelto, ora blu fisso .16 come le altre card). */
 /* v2.3: rimossa la linea verticale tra la copertina/vinile e le info
    brano a destra. */
+/* v2.4: rimossa la pill di stato ("In riproduzione"/"Inattivo") accanto
+   all'ingranaggio nell'header (duplicava un'informazione già visibile
+   nel corpo della card). Sostituito il vinile con un'illustrazione tipo
+   smart speaker (disco/puck con anello luminoso colorato) — molto più
+   simile a un vero dispositivo Alexa, usato come fallback quando non
+   c'è copertina album. */
 (function () {
   'use strict';
 
@@ -60,17 +66,22 @@
     return (playing?'<style>'+kf+'</style>':'')+'<div style="display:flex;align-items:flex-end;gap:3px;height:22px;width:100%">'+bars+'</div>';
   }
 
-  /* ── VINYL SVG ── */
+  /* ── ECHO SPEAKER SVG (illustrazione tipo smart speaker) ── */
   function vinylSVG(col, playing) {
-    var spin=playing?';animation:alVin 3s linear infinite':'';
-    return '<svg width="68" height="68" viewBox="0 0 74 74" style="display:block'+spin+'">'
-      +(playing?'<style>@keyframes alVin{to{transform:rotate(360deg);transform-origin:37px 37px}}</style>':'')
-      +'<circle cx="37" cy="37" r="37" fill="#0d0820"/><circle cx="37" cy="37" r="31" fill="#140f2a"/>'
-      +'<circle cx="37" cy="37" r="24" fill="#0d0820"/><circle cx="37" cy="37" r="18" fill="#1a1035"/>'
-      +'<circle cx="37" cy="37" r="7"  fill="#0d0820"/><circle cx="37" cy="37" r="4"  fill="'+col+'"/>'
-      +'<circle cx="37" cy="37" r="1.8" fill="#0d0820"/>'
-      +'<path d="M37,6 A31,31 0 0,1 68,37" stroke="'+col+'" stroke-width=".8" fill="none" opacity=".5"/>'
-      +'<path d="M37,68 A31,31 0 0,1 6,37"  stroke="'+col+'" stroke-width=".8" fill="none" opacity=".3"/>'
+    var glow=playing?';animation:alRing 2s ease-in-out infinite':'';
+    return '<svg width="76" height="76" viewBox="0 0 100 100" style="display:block">'
+      +(playing?'<style>@keyframes alRing{0%,100%{opacity:.7}50%{opacity:1}}</style>':'')
+      +'<defs>'
+      +'<linearGradient id="alTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3a3a46"/><stop offset="100%" stop-color="#232330"/></linearGradient>'
+      +'<linearGradient id="alSide" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#22222d"/><stop offset="100%" stop-color="#15151d"/></linearGradient>'
+      +'</defs>'
+      +'<ellipse cx="50" cy="88" rx="30" ry="5" fill="#000" opacity=".3"/>'
+      +'<path d="M20,46 L20,60 Q20,72 50,72 Q80,72 80,60 L80,46 Z" fill="url(#alSide)"/>'
+      +'<circle cx="50" cy="44" r="30" fill="url(#alTop)"/>'
+      +'<circle cx="50" cy="44" r="24" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="7"/>'
+      +'<circle cx="50" cy="44" r="14" fill="none" stroke="rgba(255,255,255,.04)" stroke-width="5"/>'
+      +'<circle cx="50" cy="44" r="30" fill="none" stroke="'+col+'" stroke-width="3" style="'+(playing?'opacity:1':'opacity:.35')+glow+'"/>'
+      +'<ellipse cx="40" cy="32" rx="14" ry="8" fill="rgba(255,255,255,.06)"/>'
       +'</svg>';
   }
 
@@ -109,7 +120,6 @@
 
     var stLbls={playing:'In riproduzione',paused:'In pausa',idle:'Inattivo',standby:'Standby',off:'Spento',unavailable:'Non disponibile'};
     var stateLbl=stLbls[state]||state;
-    var stateHex=isPlaying?col:isPaused?'#94a3b8':'#475569', stateRgb=isPlaying?rgb:isPaused?'148,163,184':'71,85,105';
 
     /* art */
     var artInner;
@@ -233,15 +243,12 @@
     /* CSS */
     var css='<style>'
       +'@keyframes alArtPls{0%,100%{box-shadow:0 0 0 2px '+col+',0 4px 20px rgba('+rgb+',.4)}50%{box-shadow:0 0 0 3px '+col+',0 4px 28px rgba('+rgb+',.6),0 0 30px rgba('+rgb+',.25)}}'
-      +'@keyframes alDot{0%,100%{opacity:.5}50%{opacity:1}}'
       +'#'+rid+'{position:relative;width:100%;height:100%;min-height:375px;font-family:system-ui,sans-serif;display:block}'
       +'#'+rid+' .fc-card{display:flex;flex-direction:column;height:100%;min-height:375px;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
       +'#'+rid+' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.16) 0%,transparent 65%);pointer-events:none}'
       +'#'+rid+' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       +'#'+rid+' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;background:rgba('+rgb+',.12);border:1px solid rgba('+rgb+',.25)}'
       +'#'+rid+' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text}'
-      +'#'+rid+' .fc-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px;background:rgba('+stateRgb+',.08);border:1px solid rgba('+stateRgb+',.25);color:'+stateHex+'}'
-      +'#'+rid+' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:'+stateHex+(isPlaying?';animation:alDot .8s ease-in-out infinite':'')+'}'
       +'#'+rid+' .fc-gear{margin-left:4px;cursor:pointer;width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;flex-shrink:0}'
       +'#'+rid+' .fc-gear:hover{background:rgba(255,255,255,.12)}'
       +'#'+rid+' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
@@ -267,7 +274,6 @@
       +'<div class="fc-hdr">'
       +'<div class="fc-hdr-iw">🔊</div>'
       +'<div class="fc-hdr-tit" data-axa="rename" title="Clicca per rinominare">'+_esc(c.name||'Alexa')+'</div>'
-      +'<div class="fc-pill"><div class="fc-dot"></div>'+stateLbl+'</div>'
       +'<div class="fc-gear" data-axa="cfg">⚙</div>'
       +'</div>'
       +'<div class="fc-scroll">'
@@ -610,7 +616,7 @@
 
   /* ── REGISTRATION ── */
   var CARD={
-    id:'alexa-card',name:'Alexa Media',icon:'🔊',version:'2.3',
+    id:'alexa-card',name:'Alexa Media',icon:'🔊',version:'2.4',
     desc:'Alexa: album art, equalizzatore, sorgente, preset volume, timer countdown, TTS inline.',
     colSpan:2,rowSpan:3,frarik_no_edit:true,
     render:function(card){return render(card);},
@@ -621,5 +627,5 @@
   window.FratechCardRegistry[CARD.id]=CARD;
   window.FratechCards=window.FratechCards||{};
   window.FratechCards[CARD.id]=CARD;
-  try{console.log('[FratechStore] Card registrata: alexa-card v2.2');}catch(e){}
+  try{console.log('[FratechStore] Card registrata: alexa-card v2.4');}catch(e){}
 })();
