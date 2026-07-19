@@ -1,4 +1,12 @@
-/* frarik-version: 1.2 */
+/* frarik-version: 1.3 */
+/* v1.3: l'elemento "Azione" ora riconosce da solo cosa fare in base al
+   dominio dell'entità scelta, invece di dover scegliere manualmente
+   Attiva/Toggle (poco chiaro): luce/switch/input_boolean/ventola →
+   bottone accendi/spegni (colorato in base allo stato); script/scena →
+   un tap esegue; automazione → esegue subito (trigger); tapparella/tenda
+   → tre pulsanti ▲ su · ■ stop · ▼ giù; serratura → 🔓 sblocca/🔒 blocca.
+   Il pannello Impostazioni mostra una riga "Rilevato: ..." che spiega
+   cosa farà il tap prima ancora di salvare. */
 /* v1.2: popup Impostazioni ora a due colonne pari (controlli a sinistra,
    canvas/anteprima live a destra) come nelle altre card, invece di tutto
    impilato in un'unica colonna. Il canvas a destra resta interattivo: si
@@ -43,6 +51,28 @@
     };
   }
 
+  /* ── RILEVAMENTO AUTOMATICO AZIONE DAL DOMINIO DELL'ENTITÀ ── */
+  function domainActions(entityId) {
+    const domain = (entityId || '').split('.')[0];
+    const map = {
+      light:         { kind: 'toggle', icon: '💡', label: 'Luce — accendi/spegni' },
+      switch:        { kind: 'toggle', icon: '🔌', label: 'Switch — accendi/spegni' },
+      input_boolean: { kind: 'toggle', icon: '⚙️', label: 'Interruttore — accendi/spegni' },
+      fan:           { kind: 'toggle', icon: '🌀', label: 'Ventola — accendi/spegni' },
+      script:        { kind: 'run', icon: '▶️', label: 'Script — esegui', svcDomain: 'script', svc: 'turn_on' },
+      scene:         { kind: 'run', icon: '🎬', label: 'Scena — attiva', svcDomain: 'scene', svc: 'turn_on' },
+      automation:    { kind: 'run', icon: '⚡', label: 'Automazione — esegui ora', svcDomain: 'automation', svc: 'trigger' },
+      cover:         { kind: 'cover', label: 'Tapparella/Tenda — su · stop · giù' },
+      lock:          { kind: 'lock', label: 'Serratura — blocca/sblocca' },
+    };
+    if (map[domain]) return map[domain];
+    if (domain) return { kind: 'run', icon: '▶️', label: 'Dominio "' + domain + '" non riconosciuto — uso Attiva generico', svcDomain: domain, svc: 'turn_on' };
+    return { kind: 'none', label: 'Scegli un\'entità' };
+  }
+  function _clSegBtn(icon, sub, fg, fs) {
+    return '<div data-sub="' + sub + '" style="flex:1;height:100%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:' + fs + 'px;color:' + fg + ';transition:transform .1s">' + icon + '</div>';
+  }
+
   /* ── RENDER DI UN SINGOLO ELEMENTO (condiviso tra card montata ed editor) ── */
   function elementInnerHtml(e, h) {
     if (e.tipo === 'testo') {
@@ -69,10 +99,28 @@
       return '<div style="width:100%;height:100%;background:' + (e.colore || '#1e293b') + ';border-radius:' + (e.radius != null ? e.radius : 12) + 'px"></div>';
     }
     if (e.tipo === 'azione') {
+      const info = domainActions(e.entity);
       const bg = e.bgColore || '#1d4ed8', fg = e.colore || '#ffffff';
-      return '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:6px;background:' + bg + ';border-radius:' + (e.radius != null ? e.radius : 12) + 'px;color:' + fg + ';font-size:' + (e.fontSize || 13) + 'px;font-weight:' + (e.grassetto !== false ? '800' : '400') + ';cursor:pointer;user-select:none;transition:transform .1s;text-transform:none;padding:0 8px;box-sizing:border-box;overflow:hidden;white-space:nowrap">'
-        + (e.emoji ? '<span>' + esc(e.emoji) + '</span>' : '')
-        + (e.testo ? '<span style="overflow:hidden;text-overflow:ellipsis">' + esc(e.testo) + '</span>' : '')
+      const radius = e.radius != null ? e.radius : 12;
+      const fs = e.fontSize || 13;
+      if (info.kind === 'cover') {
+        return '<div style="width:100%;height:100%;display:flex;background:' + bg + ';border-radius:' + radius + 'px;overflow:hidden">'
+          + _clSegBtn('▲', 'open', fg, fs) + '<div style="width:1px;background:rgba(255,255,255,.2)"></div>'
+          + _clSegBtn('■', 'stop', fg, fs) + '<div style="width:1px;background:rgba(255,255,255,.2)"></div>'
+          + _clSegBtn('▼', 'close', fg, fs) + '</div>';
+      }
+      if (info.kind === 'lock') {
+        return '<div style="width:100%;height:100%;display:flex;background:' + bg + ';border-radius:' + radius + 'px;overflow:hidden">'
+          + _clSegBtn('🔓', 'unlock', fg, fs) + '<div style="width:1px;background:rgba(255,255,255,.2)"></div>'
+          + _clSegBtn('🔒', 'lock', fg, fs) + '</div>';
+      }
+      const isOn = info.kind === 'toggle' && e.entity ? (S(h, e.entity) === 'on') : false;
+      const showBg = isOn ? (e.bgColoreOn || '#16a34a') : bg;
+      const emoji = e.emoji || info.icon || '❔';
+      const label = e.testo || '';
+      return '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:6px;background:' + showBg + ';border-radius:' + radius + 'px;color:' + fg + ';font-size:' + fs + 'px;font-weight:' + (e.grassetto !== false ? '800' : '400') + ';cursor:pointer;user-select:none;transition:transform .1s,background .2s;text-transform:none;padding:0 8px;box-sizing:border-box;overflow:hidden;white-space:nowrap">'
+        + (emoji ? '<span>' + esc(emoji) + '</span>' : '')
+        + (label ? '<span style="overflow:hidden;text-overflow:ellipsis">' + esc(label) + '</span>' : '')
         + '</div>';
     }
     return '';
@@ -236,12 +284,18 @@
         out += colorInput('cl-p-colore', 'Colore', e.colore || '#1e293b')
           + labelInput('cl-p-radius', 'Raggio angoli (px)', e.radius != null ? e.radius : 12, 'number');
       } else if (e.tipo === 'azione') {
-        out += field('cl-p-entity', 'Entità da attivare', e.entity, 'script.esco_di_casa')
-          + selectRow('cl-p-azione', 'Azione', e.azione || 'turn_on', [['turn_on', 'Attiva / Esegui (script, scena, switch...)'], ['toggle', 'Accendi-Spegni (toggle)']])
-          + labelInput('cl-p-emoji', 'Emoji (opzionale)', e.emoji || '', 'text')
-          + labelInput('cl-p-testo', 'Etichetta (opzionale)', e.testo || '', 'text')
-          + '<div style="display:flex;gap:8px">' + colorInput('cl-p-colore', 'Colore testo', e.colore || '#ffffff') + colorInput('cl-p-bg', 'Colore sfondo bottone', e.bgColore || '#1d4ed8') + '</div>'
-          + '<div style="display:flex;gap:8px">' + labelInput('cl-p-fs', 'Dimensione testo (px)', e.fontSize || 13, 'number') + labelInput('cl-p-radius', 'Raggio angoli (px)', e.radius != null ? e.radius : 12, 'number') + '</div>';
+        const info = domainActions(e.entity);
+        const detectHtml = e.entity
+          ? ('🔎 Rilevato: <b>' + esc(info.label) + '</b>' + (info.kind === 'none' ? '' : ' — un tap ' + (info.kind === 'cover' ? 'sui 3 pulsanti' : info.kind === 'lock' ? 'su blocca/sblocca' : '') + (info.kind === 'toggle' || info.kind === 'run' ? ' esegue l\'azione' : '')))
+          : 'Scegli un\'entità: capisco da solo cosa deve fare il tap (luce/switch → accendi-spegni, tapparella → su/stop/giù, script/scena → esegui, serratura → blocca/sblocca).';
+        out += '<div style="font-size:11px;font-weight:700;color:#7dd3fc;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);border-radius:8px;padding:8px 10px;margin-bottom:9px">' + detectHtml + '</div>'
+          + field('cl-p-entity', 'Entità', e.entity, 'light.salotto · cover.tapparella_1 · script.esco_di_casa...');
+        if (info.kind === 'toggle' || info.kind === 'run') {
+          out += labelInput('cl-p-emoji', 'Emoji (opzionale, altrimenti automatica)', e.emoji || '', 'text')
+            + labelInput('cl-p-testo', 'Etichetta (opzionale)', e.testo || '', 'text');
+        }
+        out += '<div style="display:flex;gap:8px">' + colorInput('cl-p-colore', 'Colore testo/icone', e.colore || '#ffffff') + colorInput('cl-p-bg', 'Colore sfondo', e.bgColore || '#1d4ed8') + '</div>'
+          + '<div style="display:flex;gap:8px">' + labelInput('cl-p-fs', 'Dimensione (px)', e.fontSize || 13, 'number') + labelInput('cl-p-radius', 'Raggio angoli (px)', e.radius != null ? e.radius : 12, 'number') + '</div>';
       }
       out += boxClose;
       out += '<div style="display:flex;gap:8px;margin-top:8px">'
@@ -321,7 +375,7 @@
         drop.style.display = 'block';
         drop.innerHTML = hits.map(function (id) { return '<div data-pick="' + id + '" style="padding:6px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#fff">' + id + '</div>'; }).join('');
         drop.querySelectorAll('[data-pick]').forEach(function (row) {
-          row.addEventListener('mousedown', function (ev) { ev.preventDefault(); inp.value = row.getAttribute('data-pick'); drop.style.display = 'none'; inp.dispatchEvent(new Event('input')); });
+          row.addEventListener('mousedown', function (ev) { ev.preventDefault(); inp.value = row.getAttribute('data-pick'); drop.style.display = 'none'; inp.dispatchEvent(new Event('input')); inp.dispatchEvent(new Event('change')); });
           row.addEventListener('mouseover', function () { row.style.background = 'rgba(255,255,255,.08)'; });
           row.addEventListener('mouseout', function () { row.style.background = ''; });
         });
@@ -431,7 +485,12 @@
     function bindPropsEvents() {
       const e = state.elementi[state.selIdx]; if (!e) return;
       const modoSel = ov.querySelector('#cl-p-modo'); if (modoSel) modoSel.addEventListener('change', function () { e.modo = modoSel.value; renderProps(); renderCanvas(); });
-      const entityInp = ov.querySelector('#cl-p-entity'); if (entityInp) { bindField('cl-p-entity'); entityInp.addEventListener('input', function () { e.entity = entityInp.value; renderCanvas(); }); }
+      const entityInp = ov.querySelector('#cl-p-entity');
+      if (entityInp) {
+        bindField('cl-p-entity');
+        entityInp.addEventListener('input', function () { e.entity = entityInp.value; renderCanvas(); });
+        entityInp.addEventListener('change', function () { renderProps(); });
+      }
       const attrInp = ov.querySelector('#cl-p-attr'); if (attrInp) attrInp.addEventListener('input', function () { e.attribute = attrInp.value; renderCanvas(); });
       const unitInp = ov.querySelector('#cl-p-unit'); if (unitInp) unitInp.addEventListener('input', function () { e.unit = unitInp.value; renderCanvas(); });
       const decInp = ov.querySelector('#cl-p-dec'); if (decInp) decInp.addEventListener('input', function () { e.decimali = decInp.value === '' ? null : parseInt(decInp.value, 10); renderCanvas(); });
@@ -445,7 +504,6 @@
       const colorOnInp = ov.querySelector('#cl-p-colorOn'); if (colorOnInp) colorOnInp.addEventListener('input', function () { e.coloreOn = colorOnInp.value; renderCanvas(); });
       const colorOffInp = ov.querySelector('#cl-p-colorOff'); if (colorOffInp) colorOffInp.addEventListener('input', function () { e.coloreOff = colorOffInp.value; renderCanvas(); });
       const radiusInp = ov.querySelector('#cl-p-radius'); if (radiusInp) radiusInp.addEventListener('input', function () { e.radius = parseInt(radiusInp.value, 10) || 0; renderCanvas(); });
-      const azioneSel = ov.querySelector('#cl-p-azione'); if (azioneSel) azioneSel.addEventListener('change', function () { e.azione = azioneSel.value; renderCanvas(); });
       const bgInp2 = ov.querySelector('#cl-p-bg'); if (bgInp2) bgInp2.addEventListener('input', function () { e.bgColore = bgInp2.value; renderCanvas(); });
       const frontBtn = ov.querySelector('#cl-p-front'); if (frontBtn) frontBtn.addEventListener('click', function () { moveSelected(1); });
       const backBtn = ov.querySelector('#cl-p-back'); if (backBtn) backBtn.addEventListener('click', function () { moveSelected(-1); });
@@ -469,7 +527,7 @@
       const e = { id: 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), tipo: tipo, x: 10, y: 10 };
       if (tipo === 'testo') { e.w = 120; e.h = 28; e.modo = 'fisso'; e.testo = 'Testo'; e.colore = '#ffffff'; e.fontSize = 14; e.grassetto = false; e.allinea = 'left'; state.elementi.push(e); }
       else if (tipo === 'icona') { e.w = 36; e.h = 36; e.emoji = '⭐'; e.colore = '#ffffff'; e.statoOn = 'on'; e.coloreOn = '#4ade80'; e.coloreOff = '#f87171'; state.elementi.push(e); }
-      else if (tipo === 'azione') { e.w = 110; e.h = 40; e.entity = ''; e.azione = 'turn_on'; e.emoji = '▶️'; e.testo = 'Esegui'; e.colore = '#ffffff'; e.bgColore = '#1d4ed8'; e.fontSize = 13; e.grassetto = true; e.radius = 12; state.elementi.push(e); }
+      else if (tipo === 'azione') { e.w = 140; e.h = 40; e.entity = ''; e.testo = 'Esegui'; e.colore = '#ffffff'; e.bgColore = '#1d4ed8'; e.fontSize = 13; e.grassetto = true; e.radius = 12; state.elementi.push(e); }
       else { e.w = 120; e.h = 70; e.colore = '#1e293b'; e.radius = 12; state.elementi.unshift(e); }
       state.selIdx = state.elementi.indexOf(e);
       renderCanvas(); renderChips(); renderProps();
@@ -518,11 +576,16 @@
         const idx = parseInt(sya.dataset.idx, 10);
         const elm = (cfgFor(card).elementi || [])[idx];
         if (elm && elm.entity) {
-          const domain = elm.entity.split('.')[0];
-          if (elm.azione === 'toggle') callSvc('homeassistant', 'toggle', { entity_id: elm.entity });
-          else callSvc(domain, 'turn_on', { entity_id: elm.entity });
-          sya.style.transform = 'scale(.94)';
-          setTimeout(function () { sya.style.transform = ''; }, 150);
+          const info = domainActions(elm.entity);
+          const subEl = e.target.closest('[data-sub]');
+          const sub = subEl ? subEl.dataset.sub : null;
+          if (info.kind === 'cover' && sub) callSvc('cover', sub === 'open' ? 'open_cover' : sub === 'close' ? 'close_cover' : 'stop_cover', { entity_id: elm.entity });
+          else if (info.kind === 'lock' && sub) callSvc('lock', sub === 'lock' ? 'lock' : 'unlock', { entity_id: elm.entity });
+          else if (info.kind === 'toggle') callSvc('homeassistant', 'toggle', { entity_id: elm.entity });
+          else if (info.kind === 'run') callSvc(info.svcDomain, info.svc, { entity_id: elm.entity });
+          const fx = subEl || sya;
+          fx.style.transform = 'scale(.9)';
+          setTimeout(function () { fx.style.transform = ''; }, 150);
         }
         return;
       }
@@ -532,7 +595,7 @@
 
   /* ── CARD ── */
   var CARD = {
-    id: 'canvas-libero', name: 'Canvas Libero', icon: '🧩', version: '1.2',
+    id: 'canvas-libero', name: 'Canvas Libero', icon: '🧩', version: '1.3',
     desc: 'Canvas libero: crea la tua card personalizzata trascinando testo, icone e blocchi colorati, ognuno collegabile a qualsiasi sensore Home Assistant.',
     colSpan: 2, rowSpan: 2, frarik_no_edit: true,
     render: function (card) { return render(card); },
