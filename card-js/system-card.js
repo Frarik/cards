@@ -1,4 +1,11 @@
-﻿/* frarik-version: 5.7 */
+﻿/* frarik-version: 5.8 */
+/* v5.8: allineati popup ed etichette allo standard delle altre card (sfondo
+   #0a0816, icona/bordo neutri, titolo maiuscolo, niente sottotitoli); bagliore
+   card più visibile (.08→.16); pulsante "Salva" e slider dimensione card ora
+   blu invece che ambra; applicato maiuscolo+grassetto a TUTTO il testo di
+   card e popup tramite regola CSS universale; rimaste scritte sbiadite
+   portate a bianco pieno. Aggiunto CARD.version al sig di update() così le
+   modifiche si vedono anche senza che cambi un sensore sottostante. */
 (function () {
   'use strict';
 
@@ -259,7 +266,8 @@
     return '<style>'
       +'#'+rid+'{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
       +'#'+rid+' .sc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      +'#'+rid+' .sc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.08) 0%,transparent 65%);pointer-events:none}'
+      +'#'+rid+' .sc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.16) 0%,transparent 65%);pointer-events:none}'
+      +'#'+rid+' .sc-card *{text-transform:uppercase!important;font-weight:800!important}'
       +'#'+rid+' .sc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       +'#'+rid+' .sc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       +'#'+rid+' .sc-scroll::-webkit-scrollbar{display:none}'
@@ -333,15 +341,15 @@
     ov._close=close;
     return ov;
   }
-  const POP_CSS='<style>@keyframes syUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.sypc{overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}.sypc::-webkit-scrollbar{display:none}</style>';
-  function popShell(icon,rgb,title,sub,closeId,content) {
-    return POP_CSS+'<div style="width:100%;max-height:76vh;display:flex;flex-direction:column;background:#080b14;border:1px solid rgba('+rgb+',.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:syUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
-      +'<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
-        +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba('+rgb+',.15);border:1px solid rgba('+rgb+',.3)">'+icon+'</div>'
-        +'<div><div style="font-size:14px;font-weight:800;color:#fff">'+title+'</div><div style="font-size:11px;color:#fff;margin-top:1px">'+sub+'</div></div>'
-        +'<button id="'+closeId+'" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
+  const POP_CSS='<style>@keyframes syUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.sypc{overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}.sypc::-webkit-scrollbar{display:none}.sypc *{text-transform:uppercase!important;font-weight:800!important}</style>';
+  function popShell(icon,title,closeId,content) {
+    return POP_CSS+'<div style="width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:syUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
+      +'<div style="display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">'
+        +'<div style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;flex-shrink:0">'+icon+'</div>'
+        +'<div style="flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">'+title+'</div>'
+        +'<button id="'+closeId+'" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);flex-shrink:0">✕</button>'
       +'</div>'
-      +'<div class="sypc" style="flex:1;overflow-y:auto;padding:13px 15px;display:flex;flex-direction:column;gap:0">'+content+'</div>'
+      +'<div class="sypc" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:0">'+content+'</div>'
       +'</div>';
   }
 
@@ -356,19 +364,19 @@
     const content='<div style="background:rgba(249,115,22,.1);border-radius:12px;padding:12px 14px;text-align:center;margin-bottom:10px"><div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Potenza Attuale</div><div style="font-size:28px;font-weight:900;color:#fb923c">'+(pwV==null?'—':pwV.toFixed(0)+' W')+'</div></div>'
       +'<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Energia</div>'
       +row('Oggi',fmtKwh(S(h,c.pk_en_oggi)),'#fdba74')
-      +row('Ieri',fmtKwh(enIeri),'rgba(255,255,255,.4)')
+      +row('Ieri',fmtKwh(enIeri),'#fff')
       +row('Questo mese',fmtKwh(S(h,c.pk_en_mese)),'#fdba74')
-      +row('Mese precedente',fmtKwh(enMeseP),'rgba(255,255,255,.4)')
+      +row('Mese precedente',fmtKwh(enMeseP),'#fff')
       +row('Questo anno',fmtKwh(S(h,c.pk_en_anno)),'#fdba74')
-      +row('Anno precedente',fmtKwh(enAnnoP),'rgba(255,255,255,.4)')
+      +row('Anno precedente',fmtKwh(enAnnoP),'#fff')
       +'<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Costi (€)</div>'
       +row('Oggi',fmtEur(S(h,c.pk_co_oggi)),'#fbbf24')
-      +row('Ieri',fmtEur(S(h,c.pk_co_ieri)),'rgba(255,255,255,.4)')
+      +row('Ieri',fmtEur(S(h,c.pk_co_ieri)),'#fff')
       +row('Questo mese',fmtEur(S(h,c.pk_co_mese)),'#fbbf24')
-      +row('Mese precedente',fmtEur(S(h,c.pk_co_mese_p)),'rgba(255,255,255,.4)')
+      +row('Mese precedente',fmtEur(S(h,c.pk_co_mese_p)),'#fff')
       +row('Questo anno',fmtEur(S(h,c.pk_co_anno)),'#fbbf24')
-      +row('Anno precedente',fmtEur(S(h,c.pk_co_anno_p)),'rgba(255,255,255,.4)');
-    mkOv(popShell('⚡','249,115,22','Energia & Costi','Consumo server','en-close',content),'en-close');
+      +row('Anno precedente',fmtEur(S(h,c.pk_co_anno_p)),'#fff');
+    mkOv(popShell('⚡','Energia & Costi','en-close',content),'en-close');
   }
 
   /* ── AGGIORNAMENTI POPUP ── */
@@ -460,7 +468,7 @@
 
     const TABS=[{id:'notif',lbl:'🔔 Notifiche'},{id:'alert',lbl:'⚠ Alert'},{id:'backup',lbl:'💾 Backup'},{id:'report',lbl:'📊 Report'},{id:'riavvio',lbl:'🔄 Riavvio'},{id:'update',lbl:'⬆ Update'}];
 
-    const tabBar='<div id="nt-tabs" style="display:flex;gap:4px;flex-wrap:wrap;padding:8px 15px 0;background:#080b14;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.07)">'
+    const tabBar='<div id="nt-tabs" style="display:flex;gap:4px;flex-wrap:wrap;padding:8px 20px 0;background:#0a0816;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.07)">'
       +TABS.map(function(t,i){ return '<button data-tab="'+t.id+'" style="padding:5px 10px;border-radius:8px 8px 0 0;border:none;font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;background:'+(i===0?'rgba(139,92,246,.2)':'rgba(255,255,255,.05)')+';color:'+(i===0?'#c4b5fd':'rgba(255,255,255,.4)')+';border-bottom:2px solid '+(i===0?'#a78bfa':'transparent')+'">'+t.lbl+'</button>'; }).join('')
       +'</div>';
 
@@ -527,15 +535,15 @@
         +dayChips('ha_update')
       );
 
-    const html=POP_CSS+'<div style="width:100%;max-height:84vh;display:flex;flex-direction:column;background:#080b14;border:1px solid rgba(139,92,246,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);animation:syUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
-      +'<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
-        +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3)">🔔</div>'
-        +'<div style="flex:1"><div style="font-size:14px;font-weight:800;color:#fff">Notifiche & Automazioni</div><div style="font-size:11px;color:#fff">Configurazione completa pkg</div></div>'
-        +'<button id="nf-cfg" style="padding:5px 10px;border-radius:8px;font-size:10px;font-weight:700;color:#fff;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);cursor:pointer;white-space:nowrap">⚙ Sensori</button>'
-        +'<button id="nf-close" style="margin-left:6px;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
+    const html=POP_CSS+'<div style="width:100%;max-height:84vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);animation:syUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
+      +'<div style="display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">'
+        +'<div style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;flex-shrink:0">🔔</div>'
+        +'<div style="flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">Notifiche & Automazioni</div>'
+        +'<button id="nf-cfg" style="padding:6px 12px;border-radius:8px;font-size:10px;font-weight:800;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);cursor:pointer;white-space:nowrap;text-transform:uppercase">⚙ Sensori</button>'
+        +'<button id="nf-close" style="margin-left:6px;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);flex-shrink:0">✕</button>'
       +'</div>'
       +tabBar
-      +'<div class="sypc" style="flex:1;overflow-y:auto;padding:0 15px 14px">'+tabs+'</div>'
+      +'<div class="sypc" style="flex:1;overflow-y:auto;padding:0 20px 16px">'+tabs+'</div>'
       +'</div>';
 
     const ov=mkOv(html,'nf-close');
@@ -609,7 +617,7 @@
         +'</div>';
     }
     var loadArea=(l1!=null||l5!=null||l15!=null)?('<div style="margin-bottom:10px">'
-      +'<div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Load Average</div>'
+      +'<div style="font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Load Average</div>'
       +'<div style="background:rgba(255,255,255,.03);border-radius:10px;padding:7px 10px">'
         +lrow('1m',l1)+lrow('5m',l5)+lrow('15m',l15)
       +'</div></div>'):'';
@@ -618,7 +626,7 @@
       +'<span style="font-size:16px;font-weight:900;color:'+tempColor(tmpV)+'">'+tmpV.toFixed(1)+'°C</span>'
       +'</div>'):'';
     var netSection=(niV!=null||noV!=null)?('<div style="margin-bottom:10px">'
-      +'<div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Rete</div>'
+      +'<div style="font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Rete</div>'
       +'<div style="background:rgba(255,255,255,.03);border-radius:10px;padding:8px 12px">'
         +'<div style="display:flex;justify-content:space-between">'
           +'<div style="font-size:12px;font-weight:700;color:#38bdf8">↓ '+fmtNet(niV)+'</div>'
@@ -627,12 +635,12 @@
         +(ip?'<div style="font-size:9px;color:#fff;font-family:monospace;margin-top:4px">IP: '+ip+'</div>':'')
       +'</div></div>'):'';
     var ioSection=(drV!=null||dwV!=null)?('<div style="margin-bottom:10px">'
-      +'<div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">I/O Disco</div>'
+      +'<div style="font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">I/O Disco</div>'
       +'<div style="background:rgba(255,255,255,.03);border-radius:10px;padding:8px 12px"><div style="display:flex;justify-content:space-between">'
-        +(drV!=null?'<div><div style="font-size:8px;color:rgba(255,255,255,.5)">Lettura</div><div style="font-size:12px;font-weight:700;color:#fbbf24">'+fmtIO(drV,unit(h,c.diskr))+'</div></div>':'')
-        +(dwV!=null?'<div><div style="font-size:8px;color:rgba(255,255,255,.5)">Scrittura</div><div style="font-size:12px;font-weight:700;color:#f97316">'+fmtIO(dwV,unit(h,c.diskw))+'</div></div>':'')
+        +(drV!=null?'<div><div style="font-size:8px;color:#fff">Lettura</div><div style="font-size:12px;font-weight:700;color:#fbbf24">'+fmtIO(drV,unit(h,c.diskr))+'</div></div>':'')
+        +(dwV!=null?'<div><div style="font-size:8px;color:#fff">Scrittura</div><div style="font-size:12px;font-weight:700;color:#f97316">'+fmtIO(dwV,unit(h,c.diskw))+'</div></div>':'')
       +'</div></div></div>'):'';
-    mkOv(popShell('📊','56,189,248','Prestazioni','CPU · RAM · Disco · Rete','pf-close',rings+tempRow+loadArea+netSection+ioSection),'pf-close');
+    mkOv(popShell('📊','Prestazioni','pf-close',rings+tempRow+loadArea+netSection+ioSection),'pf-close');
   }
 
   /* ── SISTEMA HA POPUP ── */
@@ -645,26 +653,26 @@
     var hacsN=num(S(h,c.pk_hacs)), certS=c.pk_cert?S(h,c.pk_cert):null;
     function row(lbl,val,col){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span style="font-size:12px;color:#fff">'+lbl+'</span><span style="font-size:12px;font-weight:800;color:'+(col||'#fff')+'">'+val+'</span></div>'; }
     function badge(lbl,ok,txt){ var col=ok?'#22c55e':'#f97316'; return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:10px;background:'+col+'10;border:1px solid '+col+'25;margin-bottom:6px"><span style="font-size:12px;font-weight:700;color:#fff">'+lbl+'</span><span style="font-size:11px;font-weight:800;color:'+col+'">'+(ok?'✓ Aggiornato':'! '+(txt||'Da aggiornare'))+'</span></div>'; }
-    var content='<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Uptime & Info</div>'
+    var content='<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Uptime & Info</div>'
       +row('HA attivo da',haUptime||'—','#a78bfa')
       +row('Server attivo da',srvUptime||'—','#818cf8')
       +row('Entità totali',entCount||'—','#38bdf8')
       +row('Ultimo backup',lastBk||'—','#22c55e')
-      +(haStart?row('Avvio HA',haStart,'rgba(255,255,255,.6)'):'')
-      +'<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px">Aggiornamenti</div>'
+      +(haStart?row('Avvio HA',haStart,'#fff'):'')
+      +'<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px">Aggiornamenti</div>'
       +badge('Core HA',coreOk,S(h,c.pk_core))
       +badge('Supervisor',supOk,S(h,c.pk_sup))
       +badge('Add-on',addonOk,S(h,c.pk_addon))
       +badge('HACS',hacsOk,S(h,c.pk_hacs_card))
       +(hacsN&&hacsN>0?'<div style="padding:8px 12px;border-radius:10px;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.2);font-size:11px;color:#fdba74;margin-bottom:6px">'+hacsN+' aggiornamenti HACS disponibili</div>':'')
       +(certS!=null?'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:10px;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2)"><span style="font-size:11px;color:#fff">🔐 Certificato SSL</span><span style="font-size:11px;font-weight:800;color:#38bdf8">'+certS+'</span></div>':'');
-    mkOv(popShell('🏠','129,140,248','Sistema HA','Stato Home Assistant','ha-close',content),'ha-close');
+    mkOv(popShell('🏠','Sistema HA','ha-close',content),'ha-close');
   }
 
   /* ── UPDATE / MOUNT ── */
   function update(card,hass,el) {
     var h=H(), c=cfgFor(card);
-    var sig=[S(h,c.cpu),S(h,c.ram),S(h,c.disk),S(h,c.temp),S(h,c.swap),S(h,c.load1),S(h,c.netin),S(h,c.netout),S(h,c.pk_power),S(h,c.pk_en_oggi),S(h,c.pk_co_oggi),S(h,c.pk_core),S(h,c.pk_sup),S(h,c.pk_addon),S(h,c.pk_hacs_card),S(h,c.pk_entita),S(h,c.pk_backup),uptimeText(h,c.pk_srv_uptime)].join('|');
+    var sig=[CARD.version,S(h,c.cpu),S(h,c.ram),S(h,c.disk),S(h,c.temp),S(h,c.swap),S(h,c.load1),S(h,c.netin),S(h,c.netout),S(h,c.pk_power),S(h,c.pk_en_oggi),S(h,c.pk_co_oggi),S(h,c.pk_core),S(h,c.pk_sup),S(h,c.pk_addon),S(h,c.pk_hacs_card),S(h,c.pk_entita),S(h,c.pk_backup),uptimeText(h,c.pk_srv_uptime)].join('|');
     if(!el.querySelector('.sc-card')||el._scSig!==sig){
       el._scSig=sig;
       el.innerHTML=render(card);
@@ -750,16 +758,16 @@
       +field('sy-pk-cert','Certificato SSL',cf.pk_cert,'')
       +'<div style="'+stSecPk+'">🔌 PKG — Switch</div>'
       +field('sy-pk-ventola','Switch ventola fisica',cf.pk_ventola,'switch.presa_ventola_armadietto_sala')
-      +'<div style="display:flex;gap:8px;margin-top:14px"><button id="sy-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button><button id="sy-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#fbbf24;color:#0a0816">Salva</button></div>';
+      +'<div style="display:flex;gap:8px;margin-top:14px"><button id="sy-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button><button id="sy-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#fff">Salva</button></div>';
 
     const ov=document.createElement('div');
     ov.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
-    ov.innerHTML='<style>@keyframes sySlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@media(max-width:600px){.fcc{flex-direction:column!important}.fcf{width:100%!important;border-right:none!important;overflow-y:visible!important;flex-shrink:0!important}.fcp{min-width:0!important}}</style>'
-      +'<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:sySlideUp .22s cubic-bezier(.32,1.12,.56,1)">'
-        +'<div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
-          +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);flex-shrink:0">🖥️</div>'
-          +'<div><div style="font-size:14px;font-weight:800">Configura Mini-PC</div><div style="font-size:11px;color:#fff;margin-top:1px">'+card.id+'</div></div>'
-          +'<button id="sy-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
+    ov.innerHTML='<style>@keyframes sySlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@media(max-width:600px){.fcc{flex-direction:column!important}.fcf{width:100%!important;border-right:none!important;overflow-y:visible!important;flex-shrink:0!important}.fcp{min-width:0!important}}#sy-cfg-root *{text-transform:uppercase!important;font-weight:800!important}</style>'
+      +'<div id="sy-cfg-root" style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:sySlideUp .22s cubic-bezier(.32,1.12,.56,1)">'
+        +'<div style="display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">'
+          +'<div style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;flex-shrink:0">🖥️</div>'
+          +'<div style="flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">Configura Mini-PC</div>'
+          +'<button id="sy-hdr-close" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);flex-shrink:0">✕</button>'
         +'</div>'
         +'<div class="fcc" style="display:flex;flex:1;overflow:hidden;min-height:0">'
           +'<div class="fcf" style="width:420px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none">'+formHtml+'</div>'
@@ -768,8 +776,8 @@
             +'<div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><div id="sy-prev-inner"></div></div>'
             +'<div style="padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">'
               +'<div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>'
-              +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Altezza</span><input type="range" id="sy-cardscale" min="20" max="100" step="5" value="'+cardScaleV+'" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px"><span id="sy-cardscale-lbl" style="font-size:12px;font-weight:800;color:#fbbf24;width:64px;text-align:right;flex-shrink:0">'+(cardScaleV>=100?'Auto (100%)':cardScaleV+'%')+'</span></div>'
-              +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Larghezza</span><input type="range" id="sy-cardw" min="20" max="100" step="5" value="'+cardWV+'" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px"><span id="sy-cardw-lbl" style="font-size:12px;font-weight:800;color:#fbbf24;width:64px;text-align:right;flex-shrink:0">'+(cardWV>=100?'Auto (100%)':cardWV+'%')+'</span></div>'
+              +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Altezza</span><input type="range" id="sy-cardscale" min="20" max="100" step="5" value="'+cardScaleV+'" style="flex:1;cursor:pointer;accent-color:#38bdf8;height:4px"><span id="sy-cardscale-lbl" style="font-size:12px;font-weight:800;color:#fff;width:64px;text-align:right;flex-shrink:0">'+(cardScaleV>=100?'Auto (100%)':cardScaleV+'%')+'</span></div>'
+              +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Larghezza</span><input type="range" id="sy-cardw" min="20" max="100" step="5" value="'+cardWV+'" style="flex:1;cursor:pointer;accent-color:#38bdf8;height:4px"><span id="sy-cardw-lbl" style="font-size:12px;font-weight:800;color:#fff;width:64px;text-align:right;flex-shrink:0">'+(cardWV>=100?'Auto (100%)':cardWV+'%')+'</span></div>'
             +'</div>'
           +'</div>'
         +'</div>'
@@ -2294,7 +2302,7 @@ automation:
   }
 
   var CARD={
-    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'5.7',
+    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'5.8',
     desc:'Mini-PC/Server: SVG animato mini-PC, CPU/RAM/Temp/Potenza in evidenza. Popup: Prestazioni (ring CPU/RAM/Disco/Swap + load + rete), Energia & Costi, Sistema HA (uptime/aggiornamenti/entità), Gestione automazioni. Sensori autodetect + PKG completo.',
     colSpan:2, rowSpan:3,
     frarik_no_edit:true,
