@@ -1,4 +1,4 @@
-/* frarik-version: 2.5 */
+/* frarik-version: 2.6 */
 /* v2.4: popup Energia/Cicli/Impostazioni allineati allo standard delle altre
    card (sfondo/bordo/icona/titolo neutri, niente sottotitoli); bagliore card
    più visibile (.08→.16); pulsante "Salva impostazioni" blu pieno invece che
@@ -9,6 +9,9 @@
    card e popup (non solo alle etichette) tramite una regola CSS che copre
    ogni elemento discendente del corpo card e del contenuto popup, incluse
    frasi/hint/valori che prima restavano normali. */
+/* v2.6: popup Impostazioni ora a due colonne pari (impostazioni a sinistra,
+   anteprima live + dimensione card a destra), invece di avere l'anteprima
+   in fondo a una colonna unica scrollabile dove passava inosservata. */
 (function () {
   'use strict';
 
@@ -510,10 +513,10 @@
         + '<span id="' + id + '-lbl" style="font-size:12px;font-weight:900;color:#fff;width:54px;text-align:right;flex-shrink:0">' + vLbl + '</span>'
         + '</div>';
     }
-    dSec('📐 Aspetto');
-    rows.push(layoutRow('Altezza', 'fi-scale', tScale));
-    rows.push(layoutRow('Larghezza', 'fi-w', tW));
-    rows.push('<div style="border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);padding:10px;overflow:auto;max-height:300px;margin:10px 0 4px"><div id="fi-prev-wrap" style="transform-origin:top left"></div></div>');
+    const previewHtml = '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding:0 0 6px;margin-bottom:6px;border-bottom:1px solid rgba(56,189,248,.15)">📐 Aspetto</div>'
+      + layoutRow('Altezza', 'fi-scale', tScale)
+      + layoutRow('Larghezza', 'fi-w', tW)
+      + '<div style="border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);padding:10px;overflow:auto;max-height:300px;margin:10px 0 4px"><div id="fi-prev-wrap" style="transform-origin:top left"></div></div>';
 
     const swCss = '<style>'
       + '.fi-sw{width:44px;height:26px;border-radius:13px;cursor:pointer;position:relative;flex-shrink:0;transition:background .25s}'
@@ -525,7 +528,12 @@
     const saveBtn = '<button id="fi-save" style="width:100%;margin-top:12px;padding:13px;border-radius:12px;background:#38bdf8;border:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer">💾 Salva impostazioni</button>';
     const resetBtn = '<button id="fi-reset" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#f87171;font-size:13px;font-weight:700;cursor:pointer">🔄 Reset Contatori</button>';
     const closeId = 'fi-cl-' + Math.random().toString(36).slice(2, 6);
-    const ov = mkOv(popShell('⚙', 'Impostazioni', closeId, swCss + rows.join('') + saveBtn + resetBtn), closeId);
+    const settingsHtml = rows.join('') + saveBtn + resetBtn;
+    const content = '<div style="display:flex;gap:20px;align-items:flex-start">'
+      + '<div style="flex:1;min-width:0">' + settingsHtml + '</div>'
+      + '<div style="flex:1;min-width:0">' + previewHtml + '</div>'
+      + '</div>';
+    const ov = mkOv(popShell('⚙', 'Impostazioni', closeId, swCss + content), closeId);
 
     function _fiUpdatePreview() {
       const wrap = ov.querySelector('#fi-prev-wrap'); if (!wrap) return;
@@ -1378,7 +1386,7 @@ script:
 
   /* ── CARD REGISTRATION ── */
   const CARD = {
-    id: 'montalatte', name: 'Montalatte', icon: '🥛', version: '2.5',
+    id: 'montalatte', name: 'Montalatte', icon: '🥛', version: '2.6',
     desc: 'Monitoraggio riscaldatore, cicli, energia e costi. Richiede PKG Centro Controllo Montalatte.',
     render: render, update: update, frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_montalatte_versione',
