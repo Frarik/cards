@@ -1,4 +1,16 @@
-/* frarik-version: 1.4 */
+/* frarik-version: 1.5 */
+/* v1.5: FIX BUG — il timer di sicurezza dopo "Avvia Test" resettava lo stato
+   a "idle" dopo soli 10 secondi, molto prima che un vero speedtest (20-40s+)
+   fosse completato: la card sembrava annullare il test e tornare a mostrare
+   valori vecchi, e quando il sensore si aggiornava per davvero non veniva
+   mai mostrato "✅ Completato!". Il timer di sicurezza è stato portato a
+   120s (è solo un fallback, non la durata attesa del test). Allineati anche
+   popup ed etichette allo standard delle altre card (sfondo #0a0816, icona/
+   bordo neutri, titolo maiuscolo, niente sottotitoli, riquadri con contorno
+   attorno ai campi sensore); bagliore card più visibile (.08→.16); aggiunta
+   anteprima live + slider dimensione card nel popup Configura (mancava del
+   tutto); maiuscolo+grassetto su tutto il testo tramite regola CSS
+   universale. */
 (function () {
   'use strict';
 
@@ -208,7 +220,8 @@
     const css = '<style>'
       + '#'+rid+'{position:relative;width:100%;height:100%;min-height:285px;font-family:system-ui,sans-serif;display:block}'
       + '#'+rid+' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative'+(justDone?';box-shadow:0 0 0 1px rgba(34,197,94,.2)':'')+'}'
-      + '#'+rid+' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.08) 0%,transparent 65%);pointer-events:none}'
+      + '#'+rid+' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.16) 0%,transparent 65%);pointer-events:none}'
+      + '#'+rid+' .fc-card *{text-transform:uppercase!important;font-weight:800!important}'
       + '#'+rid+' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#'+rid+' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2)}'
       + '#'+rid+' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
@@ -257,15 +270,15 @@
     ov._close = close;
     return ov;
   }
-  const POP_CSS = '<style>@keyframes fcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.fcpc{overflow-y:auto;scrollbar-width:none}.fcpc::-webkit-scrollbar{display:none}</style>';
-  function popShell(icon, rgb, title, sub, closeId, content) {
-    return POP_CSS+'<div style="width:100%;max-height:76vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba('+rgb+',.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
-      +'<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
-      +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba('+rgb+',.15);border:1px solid rgba('+rgb+',.3)">'+icon+'</div>'
-      +'<div><div style="font-size:14px;font-weight:800;color:#fff">'+title+'</div><div style="font-size:11px;color:#fff;margin-top:1px">'+sub+'</div></div>'
-      +'<button id="'+closeId+'" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
+  const POP_CSS = '<style>@keyframes fcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.fcpc{overflow-y:auto;scrollbar-width:none}.fcpc::-webkit-scrollbar{display:none}.fcpc *{text-transform:uppercase!important;font-weight:800!important}</style>';
+  function popShell(icon, title, closeId, content) {
+    return POP_CSS+'<div style="width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
+      +'<div style="display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">'
+      +'<div style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;flex-shrink:0">'+icon+'</div>'
+      +'<div style="flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">'+title+'</div>'
+      +'<button id="'+closeId+'" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);flex-shrink:0">✕</button>'
       +'</div>'
-      +'<div class="fcpc" style="flex:1;overflow-y:auto;padding:13px 15px;display:flex;flex-direction:column;gap:0">'+content+'</div>'
+      +'<div class="fcpc" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:0">'+content+'</div>'
       +'</div>';
   }
 
@@ -279,34 +292,88 @@
     const stLbl = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:3px;display:block';
     const stSec = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(56,189,248,.2)';
 
+    const boxOpen = '<div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid #fff;margin-bottom:9px">';
+    const boxClose = '</div>';
     function field(fid, lbl, val, hint) {
       return '<div style="margin-bottom:9px;position:relative"><label style="'+stLbl+'">'+lbl+(hint?'<span style="font-weight:400;color:#fff;margin-left:6px;font-family:monospace;text-transform:none;letter-spacing:0">'+hint+'</span>':'')+'</label>'
         +'<input id="'+fid+'" type="text" value="'+(val||'').replace(/"/g,'&quot;')+'" autocomplete="off" placeholder="Cerca entità…" style="'+stInp+'">'
         +'<div id="'+fid+'-d" style="'+stDrop+'"></div></div>';
     }
 
+    const cardId = (card && card.id) || '';
+    let _ll = {}; try { _ll = JSON.parse(localStorage.getItem('_frk_layout_'+cardId)||'{}'); } catch(e) {}
+    let tScale = _ll.cardScale!=null?_ll.cardScale:100, tW = _ll.cardW!=null?_ll.cardW:100;
+    function layoutRow(lbl, id, val) {
+      const vLbl = val>=100?'Auto (100%)':val+'%';
+      return '<div style="display:flex;align-items:center;gap:8px;margin-top:10px">'
+        +'<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#fff;width:72px;flex-shrink:0">'+lbl+'</span>'
+        +'<input type="range" id="'+id+'" min="20" max="100" step="5" value="'+val+'" style="flex:1;accent-color:#38bdf8;cursor:pointer">'
+        +'<span id="'+id+'-lbl" style="font-size:12px;font-weight:900;color:#fff;width:54px;text-align:right;flex-shrink:0">'+vLbl+'</span>'
+        +'</div>';
+    }
+
     const allFieldIds = ['fsc-dl','fsc-ul','fsc-ping','fsc-jitter','fsc-grade','fsc-isp','fsc-server','fsc-button'];
-    const formHtml = '<div style="margin-bottom:10px"><label style="'+stLbl+'">Nome card</label><input id="fsc-name" type="text" value="'+(cf.name||'').replace(/"/g,'&quot;')+'" placeholder="es. Speedtest casa" style="'+stInp.replace('monospace','system-ui')+'"></div>'
+    const settingsHtml = '<div style="margin-bottom:10px"><label style="'+stLbl+'">Nome card</label><input id="fsc-name" type="text" value="'+(cf.name||'').replace(/"/g,'&quot;')+'" placeholder="es. Speedtest casa" style="'+stInp.replace('monospace','system-ui')+'"></div>'
       +'<div style="margin-bottom:9px"><label style="'+stLbl+'">Velocità massima (Mbit/s)<span style="font-weight:400;color:#475569;margin-left:6px;font-family:monospace;text-transform:none">es. 500</span></label><input id="fsc-maxspeed" type="number" value="'+(cf.max_speed||500)+'" min="1" max="10000" style="'+stInp+'"></div>'
       +'<div style="'+stSec+'">Scaricamento / Caricamento</div>'
+      +boxOpen
       +field('fsc-dl',   'Scaricamento (Mbit/s)', cf.pk_download,'sensor.speedtest_download')
       +field('fsc-ul',   'Caricamento (Mbit/s)',  cf.pk_upload,  'sensor.speedtest_upload')
+      +boxClose
       +'<div style="'+stSec+'">Qualità connessione</div>'
+      +boxOpen
       +field('fsc-ping',   'Ping (ms)',    cf.pk_ping,   'sensor.speedtest_ping')
       +field('fsc-jitter', 'Jitter (ms)', cf.pk_jitter, 'sensor.speedtest_jitter')
       +field('fsc-grade',  'Bufferbloat', cf.pk_grade,  'sensor.speedtest_download_bufferbloat')
+      +boxClose
       +'<div style="'+stSec+'">Info connessione</div>'
+      +boxOpen
       +field('fsc-isp',    'Provider',    cf.pk_isp,    'sensor.speedtest_isp')
       +field('fsc-server', 'Server',      cf.pk_server, 'sensor.speedtest_server_name')
+      +boxClose
       +'<div style="'+stSec+'">Azione</div>'
+      +boxOpen
       +field('fsc-button', 'Pulsante avvia test', cf.pk_button, 'button.ookla_speedtest')
+      +boxClose
       +'<div style="display:flex;gap:8px;margin-top:16px">'
       +'<button id="fsc-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
-      +'<button id="fsc-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#060d14">Salva</button>'
+      +'<button id="fsc-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#fff">Salva</button>'
       +'</div>';
 
-    const ov = mkOv(popShell('🌐','56,189,248','Configura Speedtest',card.id||'','fsc-cfg-close',formHtml),'fsc-cfg-close');
+    const previewHtml = '<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#fff">Anteprima live</div>'
+      +'<div id="fsc-prev" style="border-radius:14px;overflow:hidden;background:rgba(255,255,255,.02);margin-top:8px;padding:10px;display:flex;justify-content:center"></div>'
+      +'<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#fff;margin-top:16px">Dimensione card</div>'
+      +layoutRow('Altezza', 'fsc-scale', tScale)
+      +layoutRow('Larghezza', 'fsc-w', tW);
+
+    const formHtml = '<div style="display:flex;gap:20px;align-items:flex-start">'
+      +'<div style="flex:1;min-width:0">'+settingsHtml+'</div>'
+      +'<div style="width:230px;flex-shrink:0">'+previewHtml+'</div>'
+      +'</div>';
+
+    const ov = mkOv(popShell('🌐','Configura Speedtest','fsc-cfg-close',formHtml),'fsc-cfg-close');
     ov.querySelector('#fsc-cancel').addEventListener('click',function(){ ov._close(); });
+
+    function _fscPreview() {
+      const wrap = ov.querySelector('#fsc-prev'); if (!wrap) return;
+      const baseRid = 'fsp' + (cardId || 'x');
+      const previewRid = baseRid + '-prev';
+      try { wrap.innerHTML = render(card).split(baseRid).join(previewRid); } catch(e) {}
+      const elp = wrap.querySelector('#' + previewRid);
+      if (elp) { elp.style.width = tW<100?tW+'%':''; elp.style.zoom = tScale<100?tScale+'%':''; }
+    }
+    const fscScaleInp = ov.querySelector('#fsc-scale'), fscWInp = ov.querySelector('#fsc-w');
+    if (fscScaleInp) fscScaleInp.addEventListener('input', function() {
+      tScale = parseInt(fscScaleInp.value, 10);
+      const l = ov.querySelector('#fsc-scale-lbl'); if (l) l.textContent = tScale>=100?'Auto (100%)':tScale+'%';
+      _fscPreview();
+    });
+    if (fscWInp) fscWInp.addEventListener('input', function() {
+      tW = parseInt(fscWInp.value, 10);
+      const l = ov.querySelector('#fsc-w-lbl'); if (l) l.textContent = tW>=100?'Auto (100%)':tW+'%';
+      _fscPreview();
+    });
+    _fscPreview();
 
     function g(id){ const e=ov.querySelector('#'+id); return e?e.value.trim():''; }
 
@@ -337,6 +404,10 @@
         pk_ping:g('fsc-ping'), pk_jitter:g('fsc-jitter'), pk_grade:g('fsc-grade'),
         pk_isp:g('fsc-isp'), pk_server:g('fsc-server'), pk_button:g('fsc-button'),
       });
+      try {
+        localStorage.setItem('_frk_layout_'+cardId, JSON.stringify({cardScale:tScale, cardW:tW}));
+        document.dispatchEvent(new CustomEvent('frarik-card-layout', {bubbles:true, detail:{cardId:cardId, cardScale:tScale, cardW:tW}}));
+      } catch(e) {}
       ov._close();
       try{ el._fspSig=''; el.innerHTML=render(card); }catch(e){}
     });
@@ -389,10 +460,14 @@
         el._fspSig   = '';
         el.innerHTML = render(card);
         mount(card, null, el);
+        /* Failsafe: un vero speedtest richiede in genere 20-40s (a volte di
+           più). Questo timer serve solo a sbloccare la card se il sensore non
+           si aggiorna mai (es. servizio fallito), non è la durata attesa del
+           test — va quindi tenuto ben più lungo del tempo reale del test. */
         _spTimer = setTimeout(function () {
           _spTestTs = 0; _spTimer = null;
           try { el._fspSig=''; el.innerHTML=render(card); mount(card,null,el); } catch(e){}
-        }, 10000);
+        }, 120000);
         return;
       }
       if (a === 'cfg') { openCfg(card, el); return; }
