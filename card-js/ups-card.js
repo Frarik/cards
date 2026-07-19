@@ -1,4 +1,7 @@
-/* frarik-version: 1.6 */
+/* frarik-version: 1.7 */
+/* v1.7: rimosso il limite max-width:340px sulla colonna anteprima, che la
+   rendeva più stretta della colonna sensori nei popup larghi: ora le due
+   colonne restano sempre esattamente uguali. */
 /* v1.6: anteprima live del popup Configura ora a colonne pari 50/50 (era
    230px fisso, sproporzionato); il pulsante "⚙ Soglie" in card ora apre
    direttamente Configura (con anteprima+dimensione subito visibili) invece
@@ -507,7 +510,7 @@
 
     const formHtml = '<div style="display:flex;gap:20px;align-items:flex-start">'
       + '<div style="flex:1;min-width:0">' + settingsHtml + '</div>'
-      + '<div style="flex:1;min-width:0;max-width:340px">' + previewHtml + '</div>'
+      + '<div style="flex:1;min-width:0">' + previewHtml + '</div>'
       + '</div>';
 
     const fieldIds = ['ups-cf-main','ups-cf-stato','ups-cf-tipo','ups-cf-stxt','ups-cf-batt','ups-cf-carico','ups-cf-vin','ups-cf-vout',
@@ -615,7 +618,7 @@
     id: 'ups-card',
     name: 'UPS',
     icon: '🔋',
-    version: '1.6',
+    version: '1.7',
     desc: 'Monitoraggio UPS: batteria, carico, tensioni, storico blackout e notifiche push. Richiede PKG UPS Tecnoware.',
     colSpan: 2,
     rowSpan: 3,
