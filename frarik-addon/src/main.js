@@ -3306,7 +3306,7 @@ function _isElettrCard(f, idFile){
   if(code){ const m=code.match(/frarik-category:\s*(\S+)/i); if(m) return m[1].toLowerCase()==='elettrodomestici'; }
   // 3. Smart-match sul nome file (fallback per card esistenti)
   const n=(f.name||'').toLowerCase().replace(/\.js$/i,'');
-  return /asciugat|lavatr|lavastov|forno|friggit|microond|scaldab|frigorif|induzion|elettrodomest|clima|condiz|split|hvac/.test(n);
+  return /asciugat|lavatr|lavastov|forno|friggit|microond|scaldab|frigorif|induzion|montalatte|tostapane|elettrodomest|clima|condiz|split|hvac/.test(n);
 }
 function _ghStoreRenderElettr(q){
   const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');

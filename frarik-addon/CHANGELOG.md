@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.1.0 — 2026-07-19
+
+### feat: Montalatte e Tostapane ora classificate come Elettrodomestici nello Store
+
+- Il tab "🔌 Elettrodomestici" dello Store filtra le card con un
+  riconoscimento automatico sul nome file (`_isElettrCard`); le due card
+  esistevano già in `card-js/` ma non comparivano nel tab perché il loro
+  nome non era incluso nel pattern di riconoscimento. Aggiunte
+  `montalatte` e `tostapane` al pattern.
+
 ## 2.0.99 — 2026-07-18
 
 ### fix: notifiche di aggiornamento card non arrivavano per file con un campo "version:" incorporato
