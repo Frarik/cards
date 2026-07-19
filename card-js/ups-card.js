@@ -1,4 +1,10 @@
-/* frarik-version: 1.3 */
+/* frarik-version: 1.4 */
+/* v1.4: allineati popup ed etichette allo standard delle altre card (sfondo
+   #0a0816, icona/bordo neutri, titolo maiuscolo, niente sottotitoli); bagliore
+   card più visibile (.08→.16); pulsanti "Salva" ora blu pieno invece che
+   translucidi; applicato maiuscolo+grassetto a TUTTO il testo di card e
+   popup tramite regola CSS universale. Aggiunta sezione "Aspetto" nel popup
+   Soglie con zoom/larghezza card e anteprima live (mancava del tutto). */
 (function () {
   'use strict';
 
@@ -201,7 +207,8 @@
     const css = '<style>'
       + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
       + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.08) 0%,transparent 65%);pointer-events:none}'
+      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.16) 0%,transparent 65%);pointer-events:none}'
+      + '#' + rid + ' .fc-card *{text-transform:uppercase!important;font-weight:800!important}'
       + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2)}'
       + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
@@ -289,15 +296,15 @@
     ov._close = close;
     return ov;
   }
-  const POP_CSS = '<style>@keyframes fcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.fcpc{overflow-y:auto;scrollbar-width:none}.fcpc::-webkit-scrollbar{display:none}</style>';
-  function popShell(icon, rgb, title, sub, closeId, content) {
-    return POP_CSS + '<div style="width:100%;max-height:76vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba(' + rgb + ',.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
-      + '<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
-      + '<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(' + rgb + ',.15);border:1px solid rgba(' + rgb + ',.3)">' + icon + '</div>'
-      + '<div><div style="font-size:14px;font-weight:800;color:#fff">' + title + '</div><div style="font-size:11px;color:#fff;margin-top:1px">' + sub + '</div></div>'
-      + '<button id="' + closeId + '" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
+  const POP_CSS = '<style>@keyframes fcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.fcpc{overflow-y:auto;scrollbar-width:none}.fcpc::-webkit-scrollbar{display:none}.fcpc *{text-transform:uppercase!important;font-weight:800!important}</style>';
+  function popShell(icon, title, closeId, content) {
+    return POP_CSS + '<div style="width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
+      + '<div style="display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">'
+      + '<div style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;flex-shrink:0">' + icon + '</div>'
+      + '<div style="flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">' + title + '</div>'
+      + '<button id="' + closeId + '" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);flex-shrink:0">✕</button>'
       + '</div>'
-      + '<div class="fcpc" style="flex:1;overflow-y:auto;padding:13px 15px;display:flex;flex-direction:column;gap:0">' + content + '</div>'
+      + '<div class="fcpc" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:0">' + content + '</div>'
       + '</div>';
   }
 
@@ -334,7 +341,7 @@
       + row('Carico', caricoVal != null ? caricoVal + ' %' : null, '#a78bfa')
       + row('Tensione ingresso', vinVal != null ? vinVal + ' V' : null, '#7dd3fc')
       + row('Tensione uscita', voutVal != null ? voutVal + ' V' : null, '#34d399');
-    mkOv(popShell('📊', '56,189,248', 'Storico Blackout', 'UPS Tecnoware', 'ups-st-close', content), 'ups-st-close');
+    mkOv(popShell('📊', 'Storico Blackout', 'ups-st-close', content), 'ups-st-close');
   }
 
   /* ── NOTIFICHE POPUP ── */
@@ -357,8 +364,8 @@
       + tog(c.pk_ntf_energia, '📱 Ripristino energia')
       + tog(c.pk_ntf_batt, '🔋 Batteria sotto soglia')
       + tog(c.pk_ntf_spg, '🖥 Spegnimento server programmato')
-      + '<button id="ups-ntf-save" style="width:100%;margin-top:14px;padding:12px;border-radius:12px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#38bdf8;font-size:14px;font-weight:700;cursor:pointer">💾 Salva</button>';
-    const ov = mkOv(popShell('🔔', '56,189,248', 'Notifiche Push', 'UPS Tecnoware', 'ups-ntf-close', content), 'ups-ntf-close');
+      + '<button id="ups-ntf-save" style="width:100%;margin-top:14px;padding:12px;border-radius:12px;background:#38bdf8;border:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer">💾 Salva</button>';
+    const ov = mkOv(popShell('🔔', 'Notifiche Push', 'ups-ntf-close', content), 'ups-ntf-close');
     ov.querySelectorAll('.ups-sw').forEach(function (sw) {
       sw.addEventListener('click', function () { sw.classList.toggle('on'); sw.classList.toggle('off'); });
     });
@@ -377,21 +384,63 @@
     const h = H(), c = cfgFor(card);
     const iBase = 'width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;box-sizing:border-box;outline:none;color-scheme:dark';
     function nv(e) { const v = num(S(h, e)); return v != null ? v : ''; }
+    const cardId = (card && card.id) || '';
+    let _ll = {}; try { _ll = JSON.parse(localStorage.getItem('_frk_layout_'+cardId)||'{}'); } catch(e) {}
+    const tScaleInit = _ll.cardScale!=null?_ll.cardScale:100, tWInit = _ll.cardW!=null?_ll.cardW:100;
+    function layoutRow(lbl, id, val) {
+      const vLbl = val>=100?'Auto (100%)':val+'%';
+      return '<div style="display:flex;align-items:center;gap:8px;margin-top:10px">'
+        + '<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#fff;width:72px;flex-shrink:0">' + lbl + '</span>'
+        + '<input type="range" id="' + id + '" min="20" max="100" step="5" value="' + val + '" style="flex:1;accent-color:#38bdf8;cursor:pointer">'
+        + '<span id="' + id + '-lbl" style="font-size:12px;font-weight:900;color:#fff;width:54px;text-align:right;flex-shrink:0">' + vLbl + '</span>'
+        + '</div>';
+    }
     const content = '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding:0 0 10px;border-bottom:1px solid rgba(56,189,248,.15);margin-bottom:12px">Soglie batteria</div>'
       + '<div style="margin-bottom:10px"><div style="font-size:12px;color:#fff;margin-bottom:5px">⚠️ Soglia avviso (%)</div>'
       + '<input id="ups-sg-av" type="number" min="0" max="100" step="1" value="' + nv(c.pk_soglia_av) + '" style="' + iBase + '"></div>'
       + '<div style="margin-bottom:16px"><div style="font-size:12px;color:#fff;margin-bottom:5px">🖥 Soglia spegnimento server (%)</div>'
       + '<input id="ups-sg-spg" type="number" min="0" max="100" step="1" value="' + nv(c.pk_soglia_spg) + '" style="' + iBase + '"></div>'
-      + '<button id="ups-sg-save" style="width:100%;padding:12px;border-radius:12px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#38bdf8;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">💾 Salva soglie</button>'
+      + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:10px;border-bottom:1px solid rgba(56,189,248,.15);margin-bottom:4px">📐 Aspetto</div>'
+      + layoutRow('Altezza', 'ups-sg-scale', tScaleInit)
+      + layoutRow('Larghezza', 'ups-sg-w', tWInit)
+      + '<div style="border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);padding:10px;overflow:auto;max-height:300px;margin:10px 0 14px"><div id="ups-sg-prev" style="transform-origin:top left"></div></div>'
+      + '<button id="ups-sg-save" style="width:100%;padding:12px;border-radius:12px;background:#38bdf8;border:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:8px">💾 Salva soglie</button>'
       + '<button id="ups-sg-reset" style="width:100%;padding:11px;border-radius:12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">🔄 Reset contatori blackout</button>'
       + '<button id="ups-sg-cfg" style="width:100%;padding:11px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:700;cursor:pointer">⚙ Configura sensori</button>';
-    const ov = mkOv(popShell('⚙', '56,189,248', 'Soglie & Impostazioni', 'UPS Tecnoware', 'ups-sg-close', content), 'ups-sg-close');
+    const ov = mkOv(popShell('⚙', 'Soglie & Impostazioni', 'ups-sg-close', content), 'ups-sg-close');
+
+    let tScale = tScaleInit, tW = tWInit;
+    function _upsUpdatePreview() {
+      const wrap = ov.querySelector('#ups-sg-prev'); if (!wrap) return;
+      const baseRid = 'fru' + (cardId || 'x');
+      const previewRid = baseRid + '-prev';
+      try { wrap.innerHTML = render(card).split(baseRid).join(previewRid); } catch(e) {}
+      const elp = wrap.querySelector('#' + previewRid);
+      if (elp) { elp.style.width = tW<100?tW+'%':''; elp.style.zoom = tScale<100?tScale+'%':''; }
+    }
+    const scaleInp = ov.querySelector('#ups-sg-scale'), wInp = ov.querySelector('#ups-sg-w');
+    if (scaleInp) scaleInp.addEventListener('input', function() {
+      tScale = parseInt(scaleInp.value, 10);
+      const l = ov.querySelector('#ups-sg-scale-lbl'); if (l) l.textContent = tScale>=100?'Auto (100%)':tScale+'%';
+      _upsUpdatePreview();
+    });
+    if (wInp) wInp.addEventListener('input', function() {
+      tW = parseInt(wInp.value, 10);
+      const l = ov.querySelector('#ups-sg-w-lbl'); if (l) l.textContent = tW>=100?'Auto (100%)':tW+'%';
+      _upsUpdatePreview();
+    });
+    _upsUpdatePreview();
     const sb = ov.querySelector('#ups-sg-save');
     if (sb) sb.addEventListener('click', function () {
       const av = parseFloat(ov.querySelector('#ups-sg-av').value);
       const spg = parseFloat(ov.querySelector('#ups-sg-spg').value);
       if (!isNaN(av)) callSvc('input_number', 'set_value', {entity_id: c.pk_soglia_av, value: av});
       if (!isNaN(spg)) callSvc('input_number', 'set_value', {entity_id: c.pk_soglia_spg, value: spg});
+      try {
+        localStorage.setItem('_frk_layout_'+cardId, JSON.stringify({cardScale:tScale, cardW:tW}));
+        document.dispatchEvent(new CustomEvent('frarik-card-layout', {bubbles:true, detail:{cardId:cardId, cardScale:tScale, cardW:tW}}));
+        if (el) el._upsSig = '';
+      } catch(e) {}
       sb.textContent = '✅ Salvato!'; sb.style.background = 'rgba(34,197,94,.15)'; sb.style.borderColor = 'rgba(34,197,94,.4)'; sb.style.color = '#4ade80';
       setTimeout(function () { sb.textContent = '💾 Salva soglie'; sb.style.background = ''; sb.style.borderColor = ''; sb.style.color = ''; }, 2000);
     });
@@ -456,7 +505,7 @@
     const fieldIds = ['ups-cf-main','ups-cf-stato','ups-cf-tipo','ups-cf-stxt','ups-cf-batt','ups-cf-carico','ups-cf-vin','ups-cf-vout',
       'ups-cf-bo-og','ups-cf-bo-me','ups-cf-bo-an','ups-cf-bo-tot',
       'ups-cf-dur','ups-cf-data','ups-cf-rip','ups-cf-sgav','ups-cf-sgspg','ups-cf-nte','ups-cf-ntb','ups-cf-nts'];
-    const ov = mkOv(popShell('🔋', '56,189,248', 'Configura UPS', card.id || '', 'ups-cf-close', formHtml), 'ups-cf-close');
+    const ov = mkOv(popShell('🔋', 'Configura UPS', 'ups-cf-close', formHtml), 'ups-cf-close');
     ov.querySelector('#ups-cf-cancel').addEventListener('click', function () { ov._close(); });
 
     function g(id) { const e = ov.querySelector('#' + id); return e ? e.value.trim() : ''; }
@@ -528,7 +577,7 @@
     id: 'ups-card',
     name: 'UPS',
     icon: '🔋',
-    version: '1.2',
+    version: '1.4',
     desc: 'Monitoraggio UPS: batteria, carico, tensioni, storico blackout e notifiche push. Richiede PKG UPS Tecnoware.',
     colSpan: 2,
     rowSpan: 3,
