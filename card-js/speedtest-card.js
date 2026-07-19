@@ -1,4 +1,7 @@
-/* frarik-version: 1.6 */
+/* frarik-version: 1.7 */
+/* v1.7: rimosso il limite max-width:340px sulla colonna anteprima, che la
+   rendeva più stretta della colonna sensori nei popup larghi: ora le due
+   colonne restano sempre esattamente uguali. */
 /* v1.6: anteprima live del popup Configura ora a colonne pari 50/50 (era
    230px fisso, sproporzionato); il timer di sicurezza dopo "Avvia Test"
    portato da 120s a 30s su richiesta esplicita. */
@@ -351,7 +354,7 @@
 
     const formHtml = '<div style="display:flex;gap:20px;align-items:flex-start">'
       +'<div style="flex:1;min-width:0">'+settingsHtml+'</div>'
-      +'<div style="flex:1;min-width:0;max-width:340px">'+previewHtml+'</div>'
+      +'<div style="flex:1;min-width:0">'+previewHtml+'</div>'
       +'</div>';
 
     const ov = mkOv(popShell('🌐','Configura Speedtest','fsc-cfg-close',formHtml),'fsc-cfg-close');
@@ -476,7 +479,7 @@
 
   /* ── CARD ── */
   var CARD = {
-    id: 'speedtest-card', name: 'Speedtest', icon: '🌐', version: '1.6',
+    id: 'speedtest-card', name: 'Speedtest', icon: '🌐', version: '1.7',
     desc: 'Monitoraggio connessione: scaricamento, caricamento, ping, jitter, bufferbloat. Richiede integrazione Ookla Speedtest.',
     colSpan: 2, rowSpan: 3, frarik_no_edit: true,
     render: function(card){ return render(card); },
