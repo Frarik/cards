@@ -1,4 +1,9 @@
-/* frarik-version: 1.4 */
+/* frarik-version: 1.5 */
+/* v1.5: consolidata la dimensione/anteprima card nel popup "Configura sensori"
+   (prima duplicata anche in Soglie, ora rimossa da lì): il popup Configura
+   ha ora un layout a due colonne con i campi sensore raggruppati in riquadri
+   con contorno a sinistra, e anteprima live + slider dimensione a destra,
+   come nelle altre card. */
 /* v1.4: allineati popup ed etichette allo standard delle altre card (sfondo
    #0a0816, icona/bordo neutri, titolo maiuscolo, niente sottotitoli); bagliore
    card più visibile (.08→.16); pulsanti "Salva" ora blu pieno invece che
@@ -384,63 +389,26 @@
     const h = H(), c = cfgFor(card);
     const iBase = 'width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;box-sizing:border-box;outline:none;color-scheme:dark';
     function nv(e) { const v = num(S(h, e)); return v != null ? v : ''; }
-    const cardId = (card && card.id) || '';
-    let _ll = {}; try { _ll = JSON.parse(localStorage.getItem('_frk_layout_'+cardId)||'{}'); } catch(e) {}
-    const tScaleInit = _ll.cardScale!=null?_ll.cardScale:100, tWInit = _ll.cardW!=null?_ll.cardW:100;
-    function layoutRow(lbl, id, val) {
-      const vLbl = val>=100?'Auto (100%)':val+'%';
-      return '<div style="display:flex;align-items:center;gap:8px;margin-top:10px">'
-        + '<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#fff;width:72px;flex-shrink:0">' + lbl + '</span>'
-        + '<input type="range" id="' + id + '" min="20" max="100" step="5" value="' + val + '" style="flex:1;accent-color:#38bdf8;cursor:pointer">'
-        + '<span id="' + id + '-lbl" style="font-size:12px;font-weight:900;color:#fff;width:54px;text-align:right;flex-shrink:0">' + vLbl + '</span>'
-        + '</div>';
-    }
+    const boxOpen = '<div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid #fff">';
+    const boxClose = '</div>';
     const content = '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding:0 0 10px;border-bottom:1px solid rgba(56,189,248,.15);margin-bottom:12px">Soglie batteria</div>'
+      + boxOpen
       + '<div style="margin-bottom:10px"><div style="font-size:12px;color:#fff;margin-bottom:5px">⚠️ Soglia avviso (%)</div>'
       + '<input id="ups-sg-av" type="number" min="0" max="100" step="1" value="' + nv(c.pk_soglia_av) + '" style="' + iBase + '"></div>'
-      + '<div style="margin-bottom:16px"><div style="font-size:12px;color:#fff;margin-bottom:5px">🖥 Soglia spegnimento server (%)</div>'
+      + '<div><div style="font-size:12px;color:#fff;margin-bottom:5px">🖥 Soglia spegnimento server (%)</div>'
       + '<input id="ups-sg-spg" type="number" min="0" max="100" step="1" value="' + nv(c.pk_soglia_spg) + '" style="' + iBase + '"></div>'
-      + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:10px;border-bottom:1px solid rgba(56,189,248,.15);margin-bottom:4px">📐 Aspetto</div>'
-      + layoutRow('Altezza', 'ups-sg-scale', tScaleInit)
-      + layoutRow('Larghezza', 'ups-sg-w', tWInit)
-      + '<div style="border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);padding:10px;overflow:auto;max-height:300px;margin:10px 0 14px"><div id="ups-sg-prev" style="transform-origin:top left"></div></div>'
-      + '<button id="ups-sg-save" style="width:100%;padding:12px;border-radius:12px;background:#38bdf8;border:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:8px">💾 Salva soglie</button>'
+      + boxClose
+      + '<button id="ups-sg-save" style="width:100%;margin-top:14px;padding:12px;border-radius:12px;background:#38bdf8;border:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:8px">💾 Salva soglie</button>'
       + '<button id="ups-sg-reset" style="width:100%;padding:11px;border-radius:12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#f87171;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">🔄 Reset contatori blackout</button>'
-      + '<button id="ups-sg-cfg" style="width:100%;padding:11px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:700;cursor:pointer">⚙ Configura sensori</button>';
+      + '<button id="ups-sg-cfg" style="width:100%;padding:11px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:700;cursor:pointer">⚙ Configura sensori & aspetto</button>';
     const ov = mkOv(popShell('⚙', 'Soglie & Impostazioni', 'ups-sg-close', content), 'ups-sg-close');
 
-    let tScale = tScaleInit, tW = tWInit;
-    function _upsUpdatePreview() {
-      const wrap = ov.querySelector('#ups-sg-prev'); if (!wrap) return;
-      const baseRid = 'fru' + (cardId || 'x');
-      const previewRid = baseRid + '-prev';
-      try { wrap.innerHTML = render(card).split(baseRid).join(previewRid); } catch(e) {}
-      const elp = wrap.querySelector('#' + previewRid);
-      if (elp) { elp.style.width = tW<100?tW+'%':''; elp.style.zoom = tScale<100?tScale+'%':''; }
-    }
-    const scaleInp = ov.querySelector('#ups-sg-scale'), wInp = ov.querySelector('#ups-sg-w');
-    if (scaleInp) scaleInp.addEventListener('input', function() {
-      tScale = parseInt(scaleInp.value, 10);
-      const l = ov.querySelector('#ups-sg-scale-lbl'); if (l) l.textContent = tScale>=100?'Auto (100%)':tScale+'%';
-      _upsUpdatePreview();
-    });
-    if (wInp) wInp.addEventListener('input', function() {
-      tW = parseInt(wInp.value, 10);
-      const l = ov.querySelector('#ups-sg-w-lbl'); if (l) l.textContent = tW>=100?'Auto (100%)':tW+'%';
-      _upsUpdatePreview();
-    });
-    _upsUpdatePreview();
     const sb = ov.querySelector('#ups-sg-save');
     if (sb) sb.addEventListener('click', function () {
       const av = parseFloat(ov.querySelector('#ups-sg-av').value);
       const spg = parseFloat(ov.querySelector('#ups-sg-spg').value);
       if (!isNaN(av)) callSvc('input_number', 'set_value', {entity_id: c.pk_soglia_av, value: av});
       if (!isNaN(spg)) callSvc('input_number', 'set_value', {entity_id: c.pk_soglia_spg, value: spg});
-      try {
-        localStorage.setItem('_frk_layout_'+cardId, JSON.stringify({cardScale:tScale, cardW:tW}));
-        document.dispatchEvent(new CustomEvent('frarik-card-layout', {bubbles:true, detail:{cardId:cardId, cardScale:tScale, cardW:tW}}));
-        if (el) el._upsSig = '';
-      } catch(e) {}
       sb.textContent = '✅ Salvato!'; sb.style.background = 'rgba(34,197,94,.15)'; sb.style.borderColor = 'rgba(34,197,94,.4)'; sb.style.color = '#4ade80';
       setTimeout(function () { sb.textContent = '💾 Salva soglie'; sb.style.background = ''; sb.style.borderColor = ''; sb.style.color = ''; }, 2000);
     });
@@ -465,41 +433,75 @@
     const stDrop = 'position:absolute;left:0;right:0;top:calc(100% + 2px);z-index:200;max-height:160px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-radius:9px;display:none;scrollbar-width:none';
     const stLbl = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px;display:block';
     const stSec = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(56,189,248,.2)';
+    const boxOpen = '<div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid #fff;margin-bottom:9px">';
+    const boxClose = '</div>';
     function field(fid, lbl2, val, hint) {
       return '<div style="margin-bottom:9px;position:relative"><label style="' + stLbl + '">' + lbl2 + (hint ? '<span style="font-weight:400;color:#475569;margin-left:6px;font-family:monospace;text-transform:none;letter-spacing:0">' + hint + '</span>' : '') + '</label>'
         + '<input id="' + fid + '" type="text" value="' + (val || '').replace(/"/g, '&quot;') + '" autocomplete="off" placeholder="Cerca entità…" style="' + stInp + '">'
         + '<div id="' + fid + '-d" style="' + stDrop + '"></div></div>';
     }
-    const formHtml = '<div style="margin-bottom:10px"><label style="' + stLbl + '">Nome card</label>'
+    const cardId = (card && card.id) || '';
+    let _ll = {}; try { _ll = JSON.parse(localStorage.getItem('_frk_layout_'+cardId)||'{}'); } catch(e) {}
+    let tScale = _ll.cardScale!=null?_ll.cardScale:100, tW = _ll.cardW!=null?_ll.cardW:100;
+    function layoutRow(lbl2, id, val) {
+      const vLbl = val>=100?'Auto (100%)':val+'%';
+      return '<div style="display:flex;align-items:center;gap:8px;margin-top:10px">'
+        + '<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#fff;width:72px;flex-shrink:0">' + lbl2 + '</span>'
+        + '<input type="range" id="' + id + '" min="20" max="100" step="5" value="' + val + '" style="flex:1;accent-color:#38bdf8;cursor:pointer">'
+        + '<span id="' + id + '-lbl" style="font-size:12px;font-weight:900;color:#fff;width:54px;text-align:right;flex-shrink:0">' + vLbl + '</span>'
+        + '</div>';
+    }
+    const settingsHtml = '<div style="margin-bottom:10px"><label style="' + stLbl + '">Nome card</label>'
       + '<input id="ups-cf-name" type="text" value="' + (cf.name || '').replace(/"/g, '&quot;') + '" placeholder="es. UPS Server" style="' + stInp.replace('monospace', 'system-ui') + '"></div>'
       + '<div style="' + stSec + '">Sensori principali</div>'
+      + boxOpen
       + field('ups-cf-main',   'Sensore aggregato',      cf.pk_main,      'sensor.alimentazione_ups_tecnoware')
       + field('ups-cf-stato',  'Stato raw (OL/OB)',      cf.pk_stato,     'sensor.tecnoware_dati_di_stato')
       + field('ups-cf-tipo',   'Tipo / Modello UPS',     cf.pk_tipo,      'sensor.tecnoware_tipo_di_ups')
       + field('ups-cf-stxt',   'Stato testuale',         cf.pk_stato_txt, 'sensor.tecnoware_stato')
+      + boxClose
       + '<div style="' + stSec + '">Sensori fisici</div>'
+      + boxOpen
       + field('ups-cf-batt',   'Carica batteria %',      cf.pk_batteria, 'sensor.tecnoware_carica_batterie')
       + field('ups-cf-carico', 'Carico UPS %',           cf.pk_carico,   'sensor.tecnoware_carico')
       + field('ups-cf-vin',    'Tensione ingresso',      cf.pk_vin,      'sensor.tecnoware_tensione_di_ingresso')
       + field('ups-cf-vout',   'Tensione uscita',        cf.pk_vout,     'sensor.tecnoware_tensione_di_uscita')
+      + boxClose
       + '<div style="' + stSec + '">Contatori blackout</div>'
+      + boxOpen
       + field('ups-cf-bo-og',  'Blackout oggi',          cf.pk_bo_oggi,  'sensor.cicli_blackout_oggi_ups')
       + field('ups-cf-bo-me',  'Blackout mese',          cf.pk_bo_mese,  'sensor.cicli_blackout_mese_ups')
       + field('ups-cf-bo-an',  'Blackout anno',          cf.pk_bo_anno,  'sensor.cicli_blackout_anno_ups')
       + field('ups-cf-bo-tot', 'Blackout totale',        cf.pk_bo_tot,   'counter.cicli_blackout_totale_ups')
+      + boxClose
       + '<div style="' + stSec + '">Testi evento</div>'
+      + boxOpen
       + field('ups-cf-dur',    'Durata ultimo blackout', cf.pk_dur_bo,    'input_text.durata_ultimo_blackout')
       + field('ups-cf-data',   'Data ultimo blackout',   cf.pk_data_bo,   'input_text.data_ultimo_blackout')
       + field('ups-cf-rip',    'Data ripristino',        cf.pk_ripristino,'input_text.data_ripristino_energia')
+      + boxClose
       + '<div style="' + stSec + '">Soglie & notifiche</div>'
+      + boxOpen
       + field('ups-cf-sgav',   'Soglia avviso batt.',    cf.pk_soglia_av,  'input_number.soglia_avviso_batteria_tecnoware')
       + field('ups-cf-sgspg',  'Soglia spegni server',   cf.pk_soglia_spg, 'input_number.soglia_batteria_spegnimento_programmato_server_tecnoware')
       + field('ups-cf-nte',    'Notify energia',         cf.pk_ntf_energia,'input_boolean.notify_push_ups_tecnoware_energia')
       + field('ups-cf-ntb',    'Notify batteria',        cf.pk_ntf_batt,   'input_boolean.notify_push_ups_tecnoware_batteria_sotto_soglia')
       + field('ups-cf-nts',    'Notify spegnimento',     cf.pk_ntf_spg,    'input_boolean.notify_push_ups_tecnoware_spegni_server')
+      + boxClose
       + '<div style="display:flex;gap:8px;margin-top:16px">'
       + '<button id="ups-cf-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
-      + '<button id="ups-cf-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#060d14">Salva</button>'
+      + '<button id="ups-cf-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#fff">Salva</button>'
+      + '</div>';
+
+    const previewHtml = '<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#fff">Anteprima live</div>'
+      + '<div id="ups-cf-prev" style="border-radius:14px;overflow:hidden;background:rgba(255,255,255,.02);margin-top:8px;padding:10px;display:flex;justify-content:center"></div>'
+      + '<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#fff;margin-top:16px">Dimensione card</div>'
+      + layoutRow('Altezza', 'ups-cf-scale', tScale)
+      + layoutRow('Larghezza', 'ups-cf-w', tW);
+
+    const formHtml = '<div style="display:flex;gap:20px;align-items:flex-start">'
+      + '<div style="flex:1;min-width:0">' + settingsHtml + '</div>'
+      + '<div style="width:230px;flex-shrink:0">' + previewHtml + '</div>'
       + '</div>';
 
     const fieldIds = ['ups-cf-main','ups-cf-stato','ups-cf-tipo','ups-cf-stxt','ups-cf-batt','ups-cf-carico','ups-cf-vin','ups-cf-vout',
@@ -507,6 +509,27 @@
       'ups-cf-dur','ups-cf-data','ups-cf-rip','ups-cf-sgav','ups-cf-sgspg','ups-cf-nte','ups-cf-ntb','ups-cf-nts'];
     const ov = mkOv(popShell('🔋', 'Configura UPS', 'ups-cf-close', formHtml), 'ups-cf-close');
     ov.querySelector('#ups-cf-cancel').addEventListener('click', function () { ov._close(); });
+
+    function _upsCfPreview() {
+      const wrap = ov.querySelector('#ups-cf-prev'); if (!wrap) return;
+      const baseRid = 'fru' + (cardId || 'x');
+      const previewRid = baseRid + '-prev';
+      try { wrap.innerHTML = render(card).split(baseRid).join(previewRid); } catch(e) {}
+      const elp = wrap.querySelector('#' + previewRid);
+      if (elp) { elp.style.width = tW<100?tW+'%':''; elp.style.zoom = tScale<100?tScale+'%':''; }
+    }
+    const cfScaleInp = ov.querySelector('#ups-cf-scale'), cfWInp = ov.querySelector('#ups-cf-w');
+    if (cfScaleInp) cfScaleInp.addEventListener('input', function() {
+      tScale = parseInt(cfScaleInp.value, 10);
+      const l = ov.querySelector('#ups-cf-scale-lbl'); if (l) l.textContent = tScale>=100?'Auto (100%)':tScale+'%';
+      _upsCfPreview();
+    });
+    if (cfWInp) cfWInp.addEventListener('input', function() {
+      tW = parseInt(cfWInp.value, 10);
+      const l = ov.querySelector('#ups-cf-w-lbl'); if (l) l.textContent = tW>=100?'Auto (100%)':tW+'%';
+      _upsCfPreview();
+    });
+    _upsCfPreview();
 
     function g(id) { const e = ov.querySelector('#' + id); return e ? e.value.trim() : ''; }
     fieldIds.forEach(function (fid) {
@@ -542,6 +565,10 @@
         pk_soglia_av: g('ups-cf-sgav'), pk_soglia_spg: g('ups-cf-sgspg'),
         pk_ntf_energia: g('ups-cf-nte'), pk_ntf_batt: g('ups-cf-ntb'), pk_ntf_spg: g('ups-cf-nts'),
       });
+      try {
+        localStorage.setItem('_frk_layout_'+cardId, JSON.stringify({cardScale:tScale, cardW:tW}));
+        document.dispatchEvent(new CustomEvent('frarik-card-layout', {bubbles:true, detail:{cardId:cardId, cardScale:tScale, cardW:tW}}));
+      } catch(e) {}
       ov._close();
       try { el._upsSig = ''; el.innerHTML = render(card); } catch (e) {}
     });
@@ -577,7 +604,7 @@
     id: 'ups-card',
     name: 'UPS',
     icon: '🔋',
-    version: '1.4',
+    version: '1.5',
     desc: 'Monitoraggio UPS: batteria, carico, tensioni, storico blackout e notifiche push. Richiede PKG UPS Tecnoware.',
     colSpan: 2,
     rowSpan: 3,
