@@ -1,4 +1,13 @@
-/* frarik-version: 2.3 */
+/* frarik-version: 2.4 */
+/* v2.4: popup Energia/Impostazioni allineati allo standard delle altre card
+   (sfondo/bordo/icona/titolo neutri, niente sottotitoli); bagliore card e
+   sfondo allineati (era legato al colore di stato, ora blu fisso .16 come
+   le altre card); pulsante "Salva impostazioni" blu pieno invece che
+   translucido arancione; etichette dei campi maiuscolo/grassetto; rimaste
+   scritte sbiadite portate a bianco pieno. Aggiunta sezione "Aspetto" nel
+   popup Impostazioni con zoom/larghezza card e anteprima live. Aggiunta la
+   funzione callSvc mancante (i pulsanti Salva/Reset non hanno mai
+   funzionato: chiamavano una funzione non definita nel file). */
 (function () {
   'use strict';
 
@@ -11,6 +20,7 @@
   function Attr(h, id, attr) { const s = h && id && h.states && h.states[id]; return (s && s.attributes && s.attributes[attr] != null) ? s.attributes[attr] : null; }
   function num(v) { const x = parseFloat(String(v != null ? v : '').replace(',', '.')); return isNaN(x) ? null : x; }
   function isOn(h, id) { return !!(h && h.states && h.states[id] && (h.states[id].state === 'on' || h.states[id].state === 'heating')); }
+  function callSvc(domain, service, data) { try { const h = H(); if (h && h.callService) h.callService(domain, service, data || {}); } catch (e) {} }
 
   function fmtEur(v) { if (v == null || v === '') return '—'; const n = parseFloat(v); return isNaN(n) ? '—' : n.toFixed(2) + ' €'; }
   function fmtKwh(v) { if (v == null || v === '') return '—'; const n = parseFloat(v); return isNaN(n) ? '—' : n.toFixed(3) + ' kWh'; }
@@ -162,8 +172,8 @@
 
     const css = '<style>'
       + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
-      + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#08101a 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(' + colRgb + ',.08) 0%,transparent 65%);pointer-events:none}'
+      + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
+      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.16) 0%,transparent 65%);pointer-events:none}'
       + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(' + colRgb + ',.1);border:1px solid rgba(' + colRgb + ',.2)}'
       + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
@@ -262,15 +272,15 @@
 
   const POP_CSS = '<style>@keyframes fcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.fcpc{overflow-y:auto;scrollbar-width:none}.fcpc::-webkit-scrollbar{display:none}</style>';
 
-  function popShell(icon, rgb, title, sub, closeId, content) {
+  function popShell(icon, title, closeId, content) {
     return POP_CSS
-      + '<div style="width:100%;max-height:78vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba(' + rgb + ',.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
-      + '<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
-      + '<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(' + rgb + ',.15);border:1px solid rgba(' + rgb + ',.3)">' + icon + '</div>'
-      + '<div><div style="font-size:14px;font-weight:800;color:#fff">' + title + '</div><div style="font-size:11px;color:#fff;margin-top:1px">' + sub + '</div></div>'
-      + '<button id="' + closeId + '" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
+      + '<div style="width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
+      + '<div style="display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">'
+      + '<div style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;flex-shrink:0">' + icon + '</div>'
+      + '<div style="flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">' + title + '</div>'
+      + '<button id="' + closeId + '" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);flex-shrink:0">✕</button>'
       + '</div>'
-      + '<div class="fcpc" style="flex:1;overflow-y:auto;padding:13px 15px;display:flex;flex-direction:column;gap:0">' + content + '</div>'
+      + '<div class="fcpc" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:0">' + content + '</div>'
       + '</div>';
   }
 
@@ -333,11 +343,11 @@
       + row('Questo mese',  Attr(h, ton, 'Mese')   || '—', '#fdba74')
       + row('Questo anno',  Attr(h, ton, 'Anno')   || '—', '#fdba74');
 
-    mkOv(popShell('🛁', '249,115,22', 'Energia & Costi', S(h, 'input_text.frarik_scaldabagno_nome') || c.name || 'Scaldabagno', 'fc-en-close', content), 'fc-en-close');
+    mkOv(popShell('🛁', 'Energia & Costi', 'fc-en-close', content), 'fc-en-close');
   }
 
   /* ── IMPOSTAZIONI HA POPUP ── */
-  function openImpostazioniHAPopup(c) {
+  function openImpostazioniHAPopup(card, c) {
     const h = H();
     function bs(e) { return !!(h && h.states && h.states[e] && h.states[e].state === 'on'); }
     function ss(e) { const st = h && h.states && h.states[e]; return (st && st.state) || ''; }
@@ -352,7 +362,7 @@
     function dToggle(entity, lbl) {
       const on = bs(entity);
       rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
-        + '<span style="font-size:13px;color:#fff">' + lbl + '</span>'
+        + '<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:#fff">' + lbl + '</span>'
         + '<div class="fi-sw ' + (on ? 'on' : 'off') + '" data-entity="' + entity + '"><div class="fi-knob"></div></div>'
         + '</div>');
     }
@@ -360,27 +370,27 @@
       const raw = ss(entity);
       const val = raw && raw.length >= 5 ? raw.substring(0, 5) : '';
       rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
-        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + '</span>'
+        + '<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:#fff;flex:1">' + lbl + '</span>'
         + '<input type="time" class="fi-inp" data-entity="' + entity + '" data-svctype="time" value="' + val + '" style="' + iBase + ';width:108px;padding:6px 8px;text-align:center">'
         + '</div>');
     }
     function dNum(entity, lbl, unit, mn, mx, step, _ov) {
       const val = (_ov !== undefined && _ov !== null) ? _ov : ns(entity);
       rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
-        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + (unit ? ' <span style="font-size:10px;color:rgba(255,255,255,.6)">(' + unit + ')</span>' : '') + '</span>'
+        + '<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:#fff;flex:1">' + lbl + (unit ? ' <span style="font-size:10px;color:#fff">(' + unit + ')</span>' : '') + '</span>'
         + '<input type="number" class="fi-inp" data-entity="' + entity + '" data-svctype="number" value="' + (val != null ? val : '') + '" min="' + (mn != null ? mn : 0) + '" max="' + (mx != null ? mx : 9999) + '" step="' + (step || 1) + '" style="' + iBase + ';width:90px;padding:6px 8px;text-align:right">'
         + '</div>');
     }
     function dText(entity, lbl) {
       const val = ss(entity);
       rows.push('<div style="padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
-        + '<div style="font-size:13px;color:#fff;margin-bottom:5px">' + lbl + '</div>'
+        + '<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:#fff;margin-bottom:5px">' + lbl + '</div>'
         + '<input type="text" class="fi-inp" data-entity="' + entity + '" data-svctype="text" value="' + (val || '').replace(/"/g, '&quot;') + '" style="' + iBase + ';width:100%;padding:7px 10px">'
         + '</div>');
     }
     function dInfo(lbl, val) {
       rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
-        + '<span style="font-size:12px;color:rgba(255,255,255,.7)">' + lbl + '</span>'
+        + '<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:#fff">' + lbl + '</span>'
         + '<span style="font-size:12px;font-weight:700;color:#fff">' + (val || '—') + '</span>'
         + '</div>');
     }
@@ -407,6 +417,23 @@
     dNum('input_number.costo_energia', 'Costo energia', '€/kWh', 0, 2, 0.001);
     dInfo('Ultimo reset contatori', ss('input_text.frarik_scaldabagno_data_reset'));
 
+    const cardId = (card && card.id) || '';
+    let _ll = null; try { _ll = JSON.parse(localStorage.getItem('_frk_layout_' + cardId) || 'null'); } catch(e) {}
+    let tScale = (_ll && _ll.cardScale) || 100;
+    let tW     = (_ll && _ll.cardW) || 100;
+    function layoutRow(lbl, id, val) {
+      const vLbl = val >= 100 ? 'Auto (100%)' : val + '%';
+      return '<div style="display:flex;align-items:center;gap:8px;margin-top:10px">'
+        + '<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#fff;width:72px;flex-shrink:0">' + lbl + '</span>'
+        + '<input type="range" id="' + id + '" min="20" max="100" step="5" value="' + val + '" style="flex:1;accent-color:#38bdf8;cursor:pointer">'
+        + '<span id="' + id + '-lbl" style="font-size:12px;font-weight:900;color:#fff;width:54px;text-align:right;flex-shrink:0">' + vLbl + '</span>'
+        + '</div>';
+    }
+    dSec('📐 Aspetto');
+    rows.push(layoutRow('Altezza', 'fi-scale', tScale));
+    rows.push(layoutRow('Larghezza', 'fi-w', tW));
+    rows.push('<div style="border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);padding:10px;overflow:auto;max-height:300px;margin:10px 0 4px"><div id="fi-prev-wrap" style="transform-origin:top left"></div></div>');
+
     const swCss = '<style>'
       + '.fi-sw{width:44px;height:26px;border-radius:13px;cursor:pointer;position:relative;flex-shrink:0;transition:background .25s}'
       + '.fi-sw.on{background:#fb923c}.fi-sw.off{background:rgba(255,255,255,.12)}'
@@ -414,10 +441,30 @@
       + '.fi-sw.on .fi-knob{left:21px}.fi-sw.off .fi-knob{left:3px}'
       + '.fi-inp:focus{border-color:rgba(251,146,60,.55)!important;box-shadow:0 0 0 2px rgba(251,146,60,.12)}'
       + '</style>';
-    const saveBtn = '<button id="fi-save" style="width:100%;margin-top:12px;padding:13px;border-radius:12px;background:rgba(251,146,60,.15);border:1px solid rgba(251,146,60,.4);color:#fb923c;font-size:14px;font-weight:700;cursor:pointer">💾 Salva impostazioni</button>';
+    const saveBtn = '<button id="fi-save" style="width:100%;margin-top:12px;padding:13px;border-radius:12px;background:#38bdf8;border:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer">💾 Salva impostazioni</button>';
     const resetBtn = '<button id="fi-reset" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#f87171;font-size:13px;font-weight:700;cursor:pointer">🔄 Reset Contatori</button>';
     const closeId = 'fi-cl-' + Math.random().toString(36).slice(2, 6);
-    const ov = mkOv(popShell('⚙', '249,115,22', 'Impostazioni', S(h, 'input_text.frarik_scaldabagno_nome') || c.name || 'Scaldabagno', closeId, swCss + rows.join('') + saveBtn + resetBtn), closeId);
+    const ov = mkOv(popShell('⚙', 'Impostazioni', closeId, swCss + rows.join('') + saveBtn + resetBtn), closeId);
+
+    function _fiUpdatePreview() {
+      const wrap = ov.querySelector('#fi-prev-wrap'); if (!wrap) return;
+      const previewRid = 'frc' + cardId + '-prev';
+      try { wrap.innerHTML = render(card).split('frc' + cardId).join(previewRid); } catch(e) {}
+      const elp = wrap.querySelector('#' + previewRid);
+      if (elp) { elp.style.width = tW < 100 ? tW + '%' : ''; elp.style.zoom = tScale < 100 ? tScale + '%' : ''; }
+    }
+    const fiScaleInp = ov.querySelector('#fi-scale'), fiWInp = ov.querySelector('#fi-w');
+    if (fiScaleInp) fiScaleInp.addEventListener('input', function() {
+      tScale = parseInt(fiScaleInp.value, 10);
+      const l = ov.querySelector('#fi-scale-lbl'); if (l) l.textContent = tScale >= 100 ? 'Auto (100%)' : tScale + '%';
+      _fiUpdatePreview();
+    });
+    if (fiWInp) fiWInp.addEventListener('input', function() {
+      tW = parseInt(fiWInp.value, 10);
+      const l = ov.querySelector('#fi-w-lbl'); if (l) l.textContent = tW >= 100 ? 'Auto (100%)' : tW + '%';
+      _fiUpdatePreview();
+    });
+    _fiUpdatePreview();
 
     ov.querySelectorAll('.fi-sw').forEach(function(sw) {
       sw.addEventListener('click', function() {
@@ -444,6 +491,10 @@
           callSvc('input_text', 'set_value', {entity_id: entity, value: inp.value});
         }
       });
+      try {
+        localStorage.setItem('_frk_layout_' + cardId, JSON.stringify({cardScale: tScale, cardW: tW}));
+        document.dispatchEvent(new CustomEvent('frarik-card-layout', {bubbles: true, detail: {cardId: cardId, cardScale: tScale, cardW: tW}}));
+      } catch(e) {}
       sb.textContent = '✅ Salvato!';
       sb.style.background = 'rgba(34,197,94,.15)';
       sb.style.borderColor = 'rgba(34,197,94,.4)';
@@ -473,7 +524,7 @@
       const sya = e.target.closest('[data-sya]'); if (!sya) return;
       const a = sya.dataset.sya;
       if (a === 'popup-energia') { openEnergiaPopup(cfgFor(card)); return; }
-      if (a === 'popup-cfg')     { openImpostazioniHAPopup(cfgFor(card)); return; }
+      if (a === 'popup-cfg')     { openImpostazioniHAPopup(card, cfgFor(card)); return; }
     };
     el.addEventListener('click', el._fcHandler);
   }
@@ -1422,7 +1473,7 @@ automation:
         + '.wd-push-row .wd-inp{flex:1}'
         + '.wd-rm{width:30px;height:38px;border-radius:8px;background:rgba(255,255,255,.07);border:none;color:#fff;cursor:pointer;font-size:14px;flex-shrink:0}'
         + '.wd-add{padding:6px 12px;border-radius:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer}'
-        + '.wd-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:0 0 10px}'
+        + '.wd-note{font-size:11px;color:#fff;line-height:1.5;margin:0 0 10px}'
         + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
         + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
         + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#060d14}'
@@ -1534,7 +1585,7 @@ automation:
 
   /* ── REGISTRATION ── */
   const CARD = {
-    id: 'scaldabagno', name: 'Scaldabagno', icon: '🛁', version: '2.2',
+    id: 'scaldabagno', name: 'Scaldabagno', icon: '🛁', version: '2.4',
     desc: 'Scaldabagno elettrico — temperatura acqua, riscaldamento, consumo, energia e costi.',
     render: render, mount: mount, update: update, configure: null, frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_scaldabagno_versione',
