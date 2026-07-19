@@ -1,4 +1,7 @@
-/* frarik-version: 2.9 */
+/* frarik-version: 3.0 */
+/* v3.0: rimosso il limite max-width:340px sulla colonna anteprima, che la
+   rendeva più stretta della colonna impostazioni nei popup larghi: ora le
+   due colonne restano sempre esattamente uguali. */
 /* v2.9: il popup Impostazioni ora è a due colonne (impostazioni a sinistra,
    anteprima live + dimensione card subito visibili a destra, 50/50) invece
    di avere l'anteprima in fondo a una colonna unica scrollabile. */
@@ -414,7 +417,7 @@
 
     var content = '<div style="display:flex;gap:20px;align-items:flex-start">'
       + '<div style="flex:1;min-width:0">' + settingsHtml + '</div>'
-      + '<div style="flex:1;min-width:0;max-width:340px">' + previewHtml + '</div>'
+      + '<div style="flex:1;min-width:0">' + previewHtml + '</div>'
       + '</div>';
 
     var ov = mkOv(popShell('⚙', 'Impostazioni', rid2+'x', content), rid2+'x');
@@ -504,7 +507,7 @@
   }
 
   var CARD = {
-    id: 'database-card', name: 'Database HA', icon: '🗄️', version: '2.9',
+    id: 'database-card', name: 'Database HA', icon: '🗄️', version: '3.0',
     desc: 'Monitoraggio database HA: dimensione, repack automatico, statistiche.',
     colSpan: 2, rowSpan: 3,
     frarik_no_edit: true,
