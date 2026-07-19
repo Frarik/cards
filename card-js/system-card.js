@@ -1,4 +1,7 @@
-﻿/* frarik-version: 5.8 */
+﻿/* frarik-version: 5.9 */
+/* v5.9: campi sensori del popup Configura ora raggruppati in riquadri con
+   contorno bianco (come le altre card), invece di essere solo separati da
+   un'etichetta di sezione. */
 /* v5.8: allineati popup ed etichette allo standard delle altre card (sfondo
    #0a0816, icona/bordo neutri, titolo maiuscolo, niente sottotitoli); bagliore
    card più visibile (.08→.16); pulsante "Salva" e slider dimensione card ora
@@ -711,26 +714,37 @@
     const cardScaleV=_fll.cardScale!=null?_fll.cardScale:(c.cardScale||100),cardWV=_fll.cardW!=null?_fll.cardW:(c.cardW||100);
     var _prevTimer=null;
 
+    var boxOpen='<div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid #fff">';
+    var boxClose='</div>';
     function field(fid,lbl2,val,hint){ return '<div style="margin-bottom:9px;position:relative"><label style="'+stLbl+'">'+lbl2+(hint?'<span style="font-weight:400;color:#475569;margin-left:6px;font-family:monospace;text-transform:none;letter-spacing:0">'+hint+'</span>':'')+'</label><input id="'+fid+'" type="text" value="'+(val||'').replace(/"/g,'&quot;')+'" autocomplete="off" placeholder="Clicca o scrivi…" style="'+stInp+'"><div id="'+fid+'-d" style="'+stDrop+'"></div></div>'; }
 
     const formHtml='<div style="margin-bottom:10px"><label style="'+stLbl+'">Nome</label><input id="sy-name" type="text" value="'+(c.name||'').replace(/"/g,'&quot;')+'" placeholder="es. Mini PC, NAS…" style="'+stBase+'"></div>'
       +'<div style="'+stSec+'">Utilizzi %</div>'
+      +boxOpen
       +field('sy-cpu','CPU (%)',cf.cpu,'sensor.processor_use')+field('sy-ram','RAM (%)',cf.ram,'sensor.memory_use_percent')
       +field('sy-disk','Disco (%)',cf.disk,'sensor.disk_use_percent')+field('sy-swap','Swap (%)',cf.swap,'sensor.swap_use_percent')
       +field('sy-temp','Temperatura CPU',cf.temp,'sensor.cpu_temperatura')
+      +boxClose
       +'<div style="'+stSec+'">Carico e avvio</div>'
+      +boxOpen
       +field('sy-load1','Load 1m',cf.load1,'sensor.load_1m')+field('sy-load5','Load 5m',cf.load5,'sensor.load_5m')
       +field('sy-load15','Load 15m',cf.load15,'sensor.load_15m')+field('sy-boot','Last boot OS',cf.boot,'sensor.last_boot')
+      +boxClose
       +'<div style="'+stSec+'">Rete</div>'
+      +boxOpen
       +field('sy-netin','Traffico in',cf.netin,'sensor.network_throughput_in_enp2s0')
       +field('sy-netout','Traffico out',cf.netout,'sensor.network_throughput_out_enp2s0')
       +field('sy-ip','IP locale',cf.ip,'sensor.ipv4_address_enp2s0')
+      +boxClose
       +'<div style="'+stSec+'">Valori assoluti</div>'
+      +boxOpen
       +field('sy-memuse','RAM usata',cf.memuse,'sensor.memory_use')+field('sy-memfree','RAM libera',cf.memfree,'sensor.memory_free')
       +field('sy-diskuse','Disco usato',cf.diskuse,'sensor.disk_use')+field('sy-diskfree','Disco libero',cf.diskfree,'sensor.disk_free')
       +field('sy-swapuse','Swap usata',cf.swapuse,'sensor.swap_use')
       +field('sy-diskr','Lettura disco',cf.diskr,'sensor.disk_read_throughput')+field('sy-diskw','Scrittura disco',cf.diskw,'sensor.disk_write_throughput')
+      +boxClose
       +'<div style="'+stSecPk+'">⚡ PKG — Energia</div>'
+      +boxOpen
       +field('sy-pk-power','Potenza (W)',cf.pk_power,'sensor.sensore_potenza_server_w')
       +field('sy-pk-en-oggi','Energia oggi kWh',cf.pk_en_oggi,'sensor.energia_oggi_server')
       +field('sy-pk-en-mese','Energia mese kWh',cf.pk_en_mese,'sensor.energia_mese_server')
@@ -741,7 +755,9 @@
       +field('sy-pk-co-mese-p','Costo mese prec €',cf.pk_co_mese_p,'sensor.costo_consumo_mese_precedente_server')
       +field('sy-pk-co-anno','Costo anno €',cf.pk_co_anno,'sensor.costo_consumo_annuale_server')
       +field('sy-pk-co-anno-p','Costo anno prec €',cf.pk_co_anno_p,'sensor.costo_consumo_anno_precedente_server')
+      +boxClose
       +'<div style="'+stSecPk+'">🖥 PKG — Sistema HA</div>'
+      +boxOpen
       +field('sy-pk-ha-uptime','Uptime HA',cf.pk_ha_uptime,'sensor.template_tempo_di_avvio_homeassistant')
       +field('sy-pk-srv-uptime','Uptime Server',cf.pk_srv_uptime,'sensor.tempo_avvio_server')
       +field('sy-pk-entita','Conteggio entità',cf.pk_entita,'sensor.conteggio_entita')
@@ -749,15 +765,20 @@
       +field('sy-pk-ha-start','Log avvio HA',cf.pk_ha_start,'sensor.homeassistant_start')
       +field('sy-pk-ram-tot','RAM totale',cf.pk_ram_tot,'sensor.ram_totale')
       +field('sy-pk-disk-tot','Disco totale',cf.pk_disk_tot,'sensor.disk_total')
+      +boxClose
       +'<div style="'+stSecPk+'">🔄 PKG — Aggiornamenti</div>'
+      +boxOpen
       +field('sy-pk-core','Stato Core HA',cf.pk_core,'sensor.update_core_card')
       +field('sy-pk-sup','Stato Supervisor',cf.pk_sup,'sensor.update_supervisor_card')
       +field('sy-pk-addon','Stato Add-on',cf.pk_addon,'sensor.supervisor_update_addon_card')
       +field('sy-pk-hacs-card','Stato HACS store',cf.pk_hacs_card,'sensor.hacs_store_card')
       +field('sy-pk-hacs','HACS count',cf.pk_hacs,'sensor.hacs')
       +field('sy-pk-cert','Certificato SSL',cf.pk_cert,'')
+      +boxClose
       +'<div style="'+stSecPk+'">🔌 PKG — Switch</div>'
+      +boxOpen
       +field('sy-pk-ventola','Switch ventola fisica',cf.pk_ventola,'switch.presa_ventola_armadietto_sala')
+      +boxClose
       +'<div style="display:flex;gap:8px;margin-top:14px"><button id="sy-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button><button id="sy-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#fff">Salva</button></div>';
 
     const ov=document.createElement('div');
@@ -2302,7 +2323,7 @@ automation:
   }
 
   var CARD={
-    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'5.8',
+    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'5.9',
     desc:'Mini-PC/Server: SVG animato mini-PC, CPU/RAM/Temp/Potenza in evidenza. Popup: Prestazioni (ring CPU/RAM/Disco/Swap + load + rete), Energia & Costi, Sistema HA (uptime/aggiornamenti/entità), Gestione automazioni. Sensori autodetect + PKG completo.',
     colSpan:2, rowSpan:3,
     frarik_no_edit:true,
