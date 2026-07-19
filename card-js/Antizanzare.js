@@ -4039,7 +4039,7 @@ automation:
         + '.wd-push-row{display:flex;gap:6px;margin-bottom:6px}'
         + '.wd-rm{width:30px;height:38px;border-radius:8px;background:rgba(255,255,255,.07);border:none;color:#fff;cursor:pointer;font-size:14px;flex-shrink:0}'
         + '.wd-add{padding:6px 12px;border-radius:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer}'
-        + '.wd-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:0 0 10px}'
+        + '.wd-note{font-size:11px;color:#fff;line-height:1.5;margin:0 0 10px}'
         + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
         + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
         + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#060d14}'
@@ -4356,8 +4356,6 @@ automation:
     else if (stato === 'Manuale Attiva')     { col = '#f97316'; colRgb = '249,115,22';  statusLabel = 'ACCESA'; }
     else if (stato === 'Ciclo in Corso')     { col = '#22c55e'; colRgb = '34,197,94';   statusLabel = 'ACCESA'; }
     else if (stato === 'Automazione Attiva') { col = '#06b6d4'; colRgb = '6,182,212';   statusLabel = 'ACCESA'; }
-    var isAccesa = (autoOn || manOn || timerActive);
-    var bgOpacity = isAccesa ? '.15' : '.07';
 
     var durataManuale = Math.round(_azNum(_azS(h, c.pk_durata_manuale)) || 60);
     var durManHtml = '';
@@ -4405,8 +4403,8 @@ automation:
     var css = '<style>'
       + '@keyframes azPulse{0%,100%{opacity:.6}50%{opacity:1}}'
       + '#' + rid + '{position:relative;width:100%;height:100%;min-height:260px;font-family:system-ui,sans-serif;display:block}'
-      + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#08101a 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:180px;background:radial-gradient(ellipse at 20% 0%,rgba(' + colRgb + ',' + bgOpacity + ') 0%,transparent 65%);pointer-events:none}'
+      + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
+      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.16) 0%,transparent 65%);pointer-events:none}'
       + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:10px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(' + colRgb + ',.1);border:1px solid rgba(' + colRgb + ',.2)}'
       + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
@@ -4541,15 +4539,15 @@ automation:
     return ov;
   }
 
-  function _azPopShell(icon, rgb, title, sub, closeId, content) {
+  function _azPopShell(icon, title, closeId, content) {
     return '<style>@keyframes azUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.azpc{overflow-y:auto;scrollbar-width:none}.azpc::-webkit-scrollbar{display:none}</style>'
-      + '<div style="width:100%;max-height:78vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba(' + rgb + ',.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:azUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
-      + '<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
-      + '<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(' + rgb + ',.15);border:1px solid rgba(' + rgb + ',.3)">' + icon + '</div>'
-      + '<div><div style="font-size:14px;font-weight:800;color:#fff">' + title + '</div><div style="font-size:11px;color:#fff;margin-top:1px">' + sub + '</div></div>'
-      + '<button id="' + closeId + '" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
+      + '<div style="width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:azUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
+      + '<div style="display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">'
+      + '<div style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;flex-shrink:0">' + icon + '</div>'
+      + '<div style="flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">' + title + '</div>'
+      + '<button id="' + closeId + '" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);flex-shrink:0">✕</button>'
       + '</div>'
-      + '<div class="azpc" style="flex:1;overflow-y:auto;padding:13px 15px;display:flex;flex-direction:column;gap:0">' + content + '</div>'
+      + '<div class="azpc" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:0">' + content + '</div>'
       + '</div>';
   }
 
@@ -4582,14 +4580,14 @@ automation:
         + '</div>'
         + '</div>'
         + (isOn ? '<div style="display:flex;align-items:center;gap:6px;margin-top:7px">'
-          + (times.length ? '<span style="font-size:10px;color:rgba(255,255,255,.45);flex:1">' + times.join(' · ') + '</span>' : '<span style="flex:1"></span>')
+          + (times.length ? '<span style="font-size:10px;color:#fff;flex:1">' + times.join(' · ') + '</span>' : '<span style="flex:1"></span>')
           + '<button class="az-dedit" data-day="' + d + '" style="padding:4px 10px;border-radius:8px;border:1px solid rgba(' + rgb + ',.3);background:rgba(' + rgb + ',.1);font-size:10px;font-weight:700;color:' + col + ';cursor:pointer">✏ Modifica cicli</button>'
           + '</div>' : '')
         + '</div>';
     }).join('');
     var content = dayRows
       + '<button id="azpm-ok" style="width:100%;padding:10px;border-radius:11px;border:1px solid rgba(255,255,255,.12);cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.07);color:#fff;margin-top:4px">Chiudi</button>';
-    var ov = _azMkOv(_azPopShell('📅',rgb,'Programma Settimanale','Attiva giorni e configura orari cicli','az-pm-cl',content),'az-pm-cl');
+    var ov = _azMkOv(_azPopShell('📅','Programma Settimanale','az-pm-cl',content),'az-pm-cl');
     ov.querySelector('#azpm-ok').addEventListener('click', function() { ov._close(); if (el) el._fcSig = null; });
     ov.querySelectorAll('.az-dtog').forEach(function(tog) {
       tog.addEventListener('click', function() {
@@ -4634,7 +4632,7 @@ automation:
         + '</div>';
     }
     var content = '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 12px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:10px">'
-      + '<span style="font-size:12px;font-weight:600;color:#fff">Cicli attivi (0–5)</span>'
+      + '<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:#fff">Cicli attivi (0–5)</span>'
       + '<div style="display:flex;align-items:center;gap:7px">'
       + '<button id="azdd-ncm" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:17px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>'
       + '<span id="azdd-ncv" style="font-size:20px;font-weight:800;color:'+col+';min-width:28px;text-align:center">'+nC+'</span>'
@@ -4643,8 +4641,8 @@ automation:
       + '</div>'
       + '</div>'
       + rows
-      + '<button id="azdd-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:'+col+';color:#022c1b;margin-top:8px">💾 Salva '+lbl+'</button>';
-    var ov2 = _azMkOv(_azPopShell('📅',rgb,lbl,'Orari e durate cicli','azdd-cl',content),'azdd-cl');
+      + '<button id="azdd-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#fff;margin-top:8px">💾 Salva '+lbl+'</button>';
+    var ov2 = _azMkOv(_azPopShell('📅',lbl,'azdd-cl',content),'azdd-cl');
     var ncInput = ov2.querySelector('#azdd-nc'), ncDisp = ov2.querySelector('#azdd-ncv');
     ov2.querySelector('#azdd-ncm').addEventListener('click', function() {
       var v = Math.max(0, parseInt(ncInput.value)-1); ncInput.value=v; ncDisp.textContent=v;
@@ -4707,10 +4705,10 @@ automation:
     function numRow(id, ico, label, val, unit, min, max, step) {
       return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
         + '<div style="font-size:16px;width:24px;text-align:center;flex-shrink:0">' + ico + '</div>'
-        + '<span style="font-size:12px;color:#fff;flex:1">' + label + '</span>'
+        + '<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:#fff;flex:1">' + label + '</span>'
         + '<input id="azuc-' + id + '" type="number" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '"'
         + ' style="width:72px;padding:6px 8px;border-radius:8px;background:#0d1a2b;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;font-weight:700;outline:none;text-align:right">'
-        + '<span style="font-size:10px;color:rgba(255,255,255,.4);width:28px;flex-shrink:0">' + unit + '</span>'
+        + '<span style="font-size:10px;color:#fff;width:28px;flex-shrink:0">' + unit + '</span>'
         + '</div>';
     }
 
@@ -4719,8 +4717,8 @@ automation:
       return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
         + '<div style="font-size:19px;width:26px;text-align:center;flex-shrink:0">' + ico + '</div>'
         + '<div style="flex:1;min-width:0">'
-        + '<div style="font-size:12px;font-weight:700;color:#fff">' + label + '</div>'
-        + '<div style="font-size:10px;color:rgba(255,255,255,.38);margin-top:2px;line-height:1.3">' + desc + '</div>'
+        + '<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:#fff">' + label + '</div>'
+        + '<div style="font-size:10px;color:#fff;opacity:.6;margin-top:2px;line-height:1.3">' + desc + '</div>'
         + '</div>'
         + '<div id="' + id + '" data-on="' + (isOn?'1':'0') + '"'
         + ' style="width:46px;height:26px;border-radius:13px;flex-shrink:0;cursor:pointer;'
@@ -4758,16 +4756,29 @@ automation:
         + '<span id="azs-ncv-' + d + '" style="font-size:15px;font-weight:800;color:#22c55e;min-width:20px;text-align:center">' + nc + '</span>'
         + '<input type="hidden" id="azs-nc-' + d + '" value="' + nc + '">'
         + '<button id="azs-ncp-' + d + '" style="width:24px;height:24px;border-radius:7px;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;line-height:1">+</button>'
-        + '<span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:2px">cicli</span>'
+        + '<span style="font-size:9px;font-weight:700;text-transform:uppercase;color:#fff;margin-left:2px">cicli</span>'
         + '</div></div>'
         + '<div id="azs-times-' + d + '" style="display:' + (nc===0?'none':'block') + '">'
-        + '<div style="font-size:9px;color:rgba(255,255,255,.3);margin-bottom:2px">⏰ Orari</div>'
+        + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#fff;margin-bottom:2px">⏰ Orari</div>'
         + '<div style="display:flex;gap:4px">' + timeInputs + '</div>'
-        + '<div style="font-size:9px;color:rgba(255,255,255,.3);margin:5px 0 2px">⏱ Durate (sec)</div>'
+        + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#fff;margin:5px 0 2px">⏱ Durate (sec)</div>'
         + '<div style="display:flex;gap:4px">' + durInputs + '</div>'
         + '</div>'
         + '</div>';
     }).join('');
+
+    var cardId = card && card.id || '';
+    var _ll = null; try { _ll = JSON.parse(localStorage.getItem('_frk_layout_' + cardId) || 'null'); } catch(e) {}
+    var tScale = (_ll && _ll.cardScale) || 100;
+    var tW     = (_ll && _ll.cardW) || 100;
+    function layoutRow(label, id, val) {
+      var vLbl = val >= 100 ? 'Auto (100%)' : val + '%';
+      return '<div style="display:flex;align-items:center;gap:8px;margin-top:10px">'
+        + '<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#fff;width:72px;flex-shrink:0">' + label + '</span>'
+        + '<input type="range" id="' + id + '" min="20" max="100" step="5" value="' + val + '" style="flex:1;accent-color:#38bdf8;cursor:pointer">'
+        + '<span id="' + id + '-lbl" style="font-size:12px;font-weight:900;color:#fff;width:54px;text-align:right;flex-shrink:0">' + vLbl + '</span>'
+        + '</div>';
+    }
 
     var content = sec('⚡', 'Automazione & Sicurezza')
       + togRow('azuc-tog-auto', '🔄', 'Automazione schedulata', 'Avvia i cicli automaticamente agli orari impostati', autoOn, '34,197,94')
@@ -4777,11 +4788,11 @@ automation:
       + togRow('azuc-tog-nalexa', '🔊', 'Annunci Alexa', 'Annunci vocali tramite dispositivi Alexa configurati', notifyAlexaOn, '251,146,60')
       + '<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
       + '<div style="flex:1">'
-      + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.38);margin-bottom:4px">Dalle</div>'
+      + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#fff;margin-bottom:4px">Dalle</div>'
       + '<input id="azuc-ntf-start" type="time" value="' + inizioNtf + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0d1a2b;color:#f1f5f9;border:1px solid rgba(255,255,255,.14);font-size:13px;box-sizing:border-box;outline:none">'
       + '</div>'
       + '<div style="flex:1">'
-      + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.38);margin-bottom:4px">Alle</div>'
+      + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#fff;margin-bottom:4px">Alle</div>'
       + '<input id="azuc-ntf-end" type="time" value="' + fineNtf + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0d1a2b;color:#f1f5f9;border:1px solid rgba(255,255,255,.14);font-size:13px;box-sizing:border-box;outline:none">'
       + '</div></div>'
       + sec('📅', 'Programma Settimanale')
@@ -4793,9 +4804,35 @@ automation:
       + togRow('azuc-tog-vento', '💨', 'Blocco per vento attivo', 'Blocca i cicli quando il vento supera la soglia', abilitaVentoOn, '6,182,212')
       + numRow('tar', '🎯', 'Target cicli mensili', tarMens, 'cicli', 1, 999, 1)
       + '<button id="azuc-reset-cicli" data-armed="0" style="width:100%;padding:9px;border-radius:10px;border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.08);color:#ef4444;font-weight:700;font-size:12px;cursor:pointer;margin:2px 0 10px">🔄 Reset cicli mensili (' + cicliMAttuali + ' fatti)</button>'
-      + '<button id="azuc-save" style="width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;font-weight:800;font-size:14px;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#fff;margin-top:10px;box-shadow:0 4px 16px rgba(34,197,94,.28)">💾 Salva tutto</button>';
+      + sec('📐', 'Aspetto')
+      + layoutRow('Altezza', 'azuc-scale', tScale)
+      + layoutRow('Larghezza', 'azuc-w', tW)
+      + '<div style="border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);padding:10px;overflow:auto;max-height:300px;margin:10px 0 4px">'
+      + '<div id="azuc-prev-wrap" style="transform-origin:top left"></div>'
+      + '</div>'
+      + '<button id="azuc-save" style="width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;font-weight:800;font-size:14px;background:#38bdf8;color:#fff;margin-top:10px">💾 Salva tutto</button>';
 
-    var ov = _azMkOv(_azPopShell('⚙','34,197,94','Impostazioni',c.name||'Anti Zanzare','azuc-cl',content),'azuc-cl');
+    var ov = _azMkOv(_azPopShell('⚙','Impostazioni','azuc-cl',content),'azuc-cl');
+
+    function _azUpdatePreview() {
+      var wrap = ov.querySelector('#azuc-prev-wrap'); if (!wrap) return;
+      var previewRid = 'fraz' + cardId + '-prev';
+      try { wrap.innerHTML = _azRender(card).split('fraz' + cardId).join(previewRid); } catch(e) {}
+      var elp = wrap.querySelector('#' + previewRid);
+      if (elp) { elp.style.width = tW < 100 ? tW + '%' : ''; elp.style.zoom = tScale < 100 ? tScale + '%' : ''; }
+    }
+    var azScaleInp = ov.querySelector('#azuc-scale'), azWInp = ov.querySelector('#azuc-w');
+    if (azScaleInp) azScaleInp.addEventListener('input', function() {
+      tScale = parseInt(azScaleInp.value, 10);
+      var l = ov.querySelector('#azuc-scale-lbl'); if (l) l.textContent = tScale >= 100 ? 'Auto (100%)' : tScale + '%';
+      _azUpdatePreview();
+    });
+    if (azWInp) azWInp.addEventListener('input', function() {
+      tW = parseInt(azWInp.value, 10);
+      var l = ov.querySelector('#azuc-w-lbl'); if (l) l.textContent = tW >= 100 ? 'Auto (100%)' : tW + '%';
+      _azUpdatePreview();
+    });
+    _azUpdatePreview();
 
     // Toggle iOS-style handler
     var togCols = {'azuc-tog-auto':'34,197,94','azuc-tog-pres':'245,158,11','azuc-tog-npush':'168,85,247','azuc-tog-nalexa':'251,146,60','azuc-tog-pioggia':'6,182,212','azuc-tog-vento':'6,182,212'};
@@ -4902,6 +4939,10 @@ automation:
       if (pioggiaTogBtn && c.pk_abilita_pioggia) _azCallSvc('input_boolean', pioggiaTogBtn.dataset.on==='1'?'turn_on':'turn_off', {entity_id:c.pk_abilita_pioggia});
       var ventoTogBtn = ov.querySelector('#azuc-tog-vento');
       if (ventoTogBtn && c.pk_abilita_vento) _azCallSvc('input_boolean', ventoTogBtn.dataset.on==='1'?'turn_on':'turn_off', {entity_id:c.pk_abilita_vento});
+      try {
+        localStorage.setItem('_frk_layout_' + cardId, JSON.stringify({cardScale: tScale, cardW: tW}));
+        document.dispatchEvent(new CustomEvent('frarik-card-layout', {bubbles: true, detail: {cardId: cardId, cardScale: tScale, cardW: tW}}));
+      } catch(e) {}
       ov._close();
       if (el) el._fcSig = null;
     });
@@ -4924,7 +4965,7 @@ automation:
     // quando nessun timer è attivo, altrimenti resterebbe fermo finché non
     // cambia qualche altra entità (serve altrimenti un refresh manuale pagina).
     var minuteTick = (tc !== 'active' && tm !== 'active') ? (function(){var n=new Date();return n.getHours()+':'+n.getMinutes();})() : '';
-    return ['2.6az',_azS(h,c.pk_stato),_azS(h,c.pk_auto),_azS(h,c.pk_manuale),tc,tm,
+    return ['2.7az',_azS(h,c.pk_stato),_azS(h,c.pk_auto),_azS(h,c.pk_manuale),tc,tm,
             _azS(h,c.pk_cicli_mensili),_azS(h,c.pk_cicli_target),
             _azS(h,c.pk_blocco_meteo),_azS(h,c.pk_pioggia),_azS(h,c.pk_pioggia_corso),
             _azS(h,c.pk_durata_manuale),_azS(h,c.pk_soglia_pioggia),_azS(h,c.pk_soglia_vento),
@@ -4940,8 +4981,8 @@ automation:
   }
 
   function _azMount(card, hass, el) {
-    if (el._fcBound === '2.6az') return;
-    el._fcBound = '2.6az';
+    if (el._fcBound === '2.7az') return;
+    el._fcBound = '2.7az';
     // Rimuove la matita se renderizzata prima del caricamento del registry
     var _azPencil = el.querySelector('.ovb-edit');
     if (_azPencil) _azPencil.remove();
@@ -5021,7 +5062,7 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.34', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.35', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
