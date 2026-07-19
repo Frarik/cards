@@ -1,4 +1,7 @@
-﻿/* frarik-version: 6.0 */
+﻿/* frarik-version: 6.1 */
+/* v6.1: rimosso il limite max-width:340px sulla colonna anteprima, che la
+   rendeva più stretta della colonna sensori nei popup larghi: ora le due
+   colonne restano sempre esattamente uguali. */
 /* v6.0: anteprima live del popup Configura ora a colonne pari 50/50 (era
    420px fisso vs flessibile, sproporzionato); il pulsante "⚙️ Gestione" in
    card ora apre direttamente Configura (con anteprima+dimensione subito
@@ -798,7 +801,7 @@
         +'</div>'
         +'<div class="fcc" style="display:flex;flex:1;overflow:hidden;min-height:0">'
           +'<div class="fcf" style="flex:1;min-width:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none">'+formHtml+'</div>'
-          +'<div class="fcp" style="flex:1;min-width:0;max-width:340px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">'
+          +'<div class="fcp" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">'
             +'<div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>'
             +'<div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><div id="sy-prev-inner"></div></div>'
             +'<div style="padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">'
@@ -2331,7 +2334,7 @@ automation:
   }
 
   var CARD={
-    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'6.0',
+    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'6.1',
     desc:'Mini-PC/Server: SVG animato mini-PC, CPU/RAM/Temp/Potenza in evidenza. Popup: Prestazioni (ring CPU/RAM/Disco/Swap + load + rete), Energia & Costi, Sistema HA (uptime/aggiornamenti/entità), Gestione automazioni. Sensori autodetect + PKG completo.',
     colSpan:2, rowSpan:3,
     frarik_no_edit:true,
