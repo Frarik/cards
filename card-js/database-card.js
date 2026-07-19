@@ -1,4 +1,12 @@
-/* frarik-version: 2.6 */
+/* frarik-version: 2.7 */
+/* v2.7: allineati popup ed etichette allo standard delle altre card (sfondo
+   #0a0816, icona/bordo neutri, titolo maiuscolo, niente sottotitoli); bagliore
+   card più visibile (.08→.16); pulsante "Salva impostazioni" ora blu pieno
+   invece che translucido; applicato maiuscolo+grassetto a TUTTO il testo di
+   card e popup tramite regola CSS universale; rimaste scritte sbiadite
+   (anche nel grafico SVG) portate a bianco pieno. Aggiunta sezione "Aspetto"
+   nel popup Impostazioni con zoom/larghezza card e anteprima live (mancava
+   del tutto). */
 (function () {
   'use strict';
 
@@ -127,7 +135,7 @@
     for (var g=0;g<=4;g++) {
       var gy = pt+cH - Math.round((g/4)*cH);
       out += '<line x1="'+pl+'" y1="'+gy+'" x2="'+(W-pr)+'" y2="'+gy+'" stroke="rgba(255,255,255,.05)" stroke-width="1"/>';
-      if (g>0) { var gl = Math.round((maxV/4)*g); gl = gl>=1000?(gl/1000).toFixed(1)+'k':gl+''; out += '<text x="'+(pl-3)+'" y="'+(gy+3)+'" text-anchor="end" fill="#fff" fill-opacity=".35" font-size="7" font-family="system-ui">'+gl+'</text>'; }
+      if (g>0) { var gl = Math.round((maxV/4)*g); gl = gl>=1000?(gl/1000).toFixed(1)+'k':gl+''; out += '<text x="'+(pl-3)+'" y="'+(gy+3)+'" text-anchor="end" fill="#fff" font-size="7" font-family="system-ui" font-weight="800">'+gl+'</text>'; }
     }
     vals.forEach(function(v,i){
       var bH = v>0 ? Math.max(3,Math.round((v/maxV)*cH)) : 2;
@@ -135,7 +143,7 @@
       var isT = i===todayIdx;
       out += '<rect x="'+x+'" y="'+y+'" width="'+bW+'" height="'+bH+'" rx="2" fill="'+(isT?ACCH:'rgba('+ACC+',.4)')+'"/>';
       if (isT&&v>0){ var vl=v>=1000?(v/1000).toFixed(1)+'k':Math.round(v)+''; out+='<text x="'+(x+bW/2)+'" y="'+(y-3)+'" text-anchor="middle" fill="'+ACCH+'" font-size="7" font-family="system-ui">'+vl+'</text>'; }
-      out += '<text x="'+(x+bW/2)+'" y="'+(H2-pb+11)+'" text-anchor="middle" fill="#fff" fill-opacity="'+(isT?'1':'.45')+'" font-size="8" font-family="system-ui">'+lbl[i]+'</text>';
+      out += '<text x="'+(x+bW/2)+'" y="'+(H2-pb+11)+'" text-anchor="middle" fill="#fff" font-size="8" font-family="system-ui" font-weight="800">'+lbl[i]+'</text>';
     });
     return out+'</svg>';
   }
@@ -173,7 +181,8 @@
     var css = '<style>'
       + '#'+rid+'{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
       + '#'+rid+' .dc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      + '#'+rid+' .dc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.08) 0%,transparent 65%);pointer-events:none}'
+      + '#'+rid+' .dc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.16) 0%,transparent 65%);pointer-events:none}'
+      + '#'+rid+' .dc-card *{text-transform:uppercase!important;font-weight:800!important}'
       + '#'+rid+' .dc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#'+rid+' .dc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba('+ACC+',.12);border:1px solid rgba('+ACC+',.25)}'
       + '#'+rid+' .dc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
@@ -271,15 +280,15 @@
     ov._close = close;
     return ov;
   }
-  var POP_CSS = '<style>@keyframes dcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.dcpc{overflow-y:auto;scrollbar-width:none}.dcpc::-webkit-scrollbar{display:none}.dc-fi-sw{width:44px;height:26px;border-radius:13px;cursor:pointer;position:relative;flex-shrink:0;transition:background .25s}.dc-fi-sw.on{background:'+ACCH+'}.dc-fi-sw.off{background:rgba(255,255,255,.12)}.dc-fi-knob{position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,.4)}.dc-fi-sw.on .dc-fi-knob{left:21px}.dc-fi-sw.off .dc-fi-knob{left:3px}.dc-fi-inp{background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;font-size:12px;font-family:monospace;box-sizing:border-box;outline:none}.dc-fi-inp:focus{border-color:rgba('+ACC+',.55)!important}</style>';
-  function popShell(icon, rgb, title, sub, closeId, content) {
-    return POP_CSS+'<div style="width:100%;max-height:76vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba('+rgb+',.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:dcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
-      +'<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
-      +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba('+rgb+',.15);border:1px solid rgba('+rgb+',.3)">'+icon+'</div>'
-      +'<div><div style="font-size:14px;font-weight:800;color:#fff">'+title+'</div><div style="font-size:11px;color:#fff;margin-top:1px;opacity:.6">'+sub+'</div></div>'
-      +'<button id="'+closeId+'" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
+  var POP_CSS = '<style>@keyframes dcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.dcpc{overflow-y:auto;scrollbar-width:none}.dcpc::-webkit-scrollbar{display:none}.dcpc *{text-transform:uppercase!important;font-weight:800!important}.dc-fi-sw{width:44px;height:26px;border-radius:13px;cursor:pointer;position:relative;flex-shrink:0;transition:background .25s}.dc-fi-sw.on{background:'+ACCH+'}.dc-fi-sw.off{background:rgba(255,255,255,.12)}.dc-fi-knob{position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,.4)}.dc-fi-sw.on .dc-fi-knob{left:21px}.dc-fi-sw.off .dc-fi-knob{left:3px}.dc-fi-inp{background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;font-size:12px;font-family:monospace;box-sizing:border-box;outline:none}.dc-fi-inp:focus{border-color:rgba('+ACC+',.55)!important}</style>';
+  function popShell(icon, title, closeId, content) {
+    return POP_CSS+'<div style="width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:dcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
+      +'<div style="display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">'
+      +'<div style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;flex-shrink:0">'+icon+'</div>'
+      +'<div style="flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">'+title+'</div>'
+      +'<button id="'+closeId+'" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);flex-shrink:0">✕</button>'
       +'</div>'
-      +'<div class="dcpc" style="flex:1;overflow-y:auto;padding:13px 15px;display:flex;flex-direction:column;gap:0">'+content+'</div>'
+      +'<div class="dcpc" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:0">'+content+'</div>'
       +'</div>';
   }
   function pRow(lbl, val, col) {
@@ -319,11 +328,11 @@
       +pRow('Ultimo repack', S(h,'input_text.frarik_db_ultimo_repack')||'—','#fff')
       +pSec('📦 Versione PKG')
       +pRow('Versione', S(h,'sensor.frarik_database_versione')||'—','#fff');
-    mkOv(popShell('🗄️', ACC, 'Statistiche Database', 'Database HA', rid2, content), rid2);
+    mkOv(popShell('🗄️', 'Statistiche Database', rid2, content), rid2);
   }
 
   /* ──────────────────────────── POPUP IMPOSTAZIONI ────────────────── */
-  function openImpostazioni(card) {
+  function openImpostazioni(card, el) {
     var h = H();
     var orario = S(h,'input_datetime.frarik_db_orario_repack')||'';
     if (orario&&orario.length>=5) orario=orario.substring(0,5); else orario='';
@@ -349,6 +358,22 @@
     });
     daysHtml += '</div>';
 
+    var cardId = (card && card.id) || '';
+    var _ll = {}; try { _ll = JSON.parse(localStorage.getItem('_frk_layout_'+cardId)||'{}'); } catch(e) {}
+    var tScale = _ll.cardScale!=null?_ll.cardScale:100, tW = _ll.cardW!=null?_ll.cardW:100;
+    function layoutRow(lbl, id, val) {
+      var vLbl = val>=100?'Auto (100%)':val+'%';
+      return '<div style="display:flex;align-items:center;gap:8px;margin-top:10px">'
+        +'<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#fff;width:72px;flex-shrink:0">'+lbl+'</span>'
+        +'<input type="range" id="'+id+'" min="20" max="100" step="5" value="'+val+'" style="flex:1;accent-color:'+ACCH+';cursor:pointer">'
+        +'<span id="'+id+'-lbl" style="font-size:12px;font-weight:900;color:#fff;width:54px;text-align:right;flex-shrink:0">'+vLbl+'</span>'
+        +'</div>';
+    }
+    var aspettoHtml = pSec('📐 Aspetto')
+      + layoutRow('Altezza', 'dc-scale-'+rid2, tScale)
+      + layoutRow('Larghezza', 'dc-w-'+rid2, tW)
+      + '<div style="border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);padding:10px;overflow:auto;max-height:300px;margin:10px 0 4px"><div id="dc-prev-'+rid2+'" style="transform-origin:top left"></div></div>';
+
     var content = pSec('⚡ Automazioni')
       + tog('input_boolean.frarik_db_repack_orario', isOn(h,'input_boolean.frarik_db_repack_orario'), 'Repack automatico a orario')
       + tog('input_boolean.frarik_db_repack_dimensione', isOn(h,'input_boolean.frarik_db_repack_dimensione'), 'Repack per dimensione massima')
@@ -370,9 +395,31 @@
       + '</div>'
       + pSec('⚙ Repack Manuale')
       + '<button id="dc-repack-'+rid2+'" style="width:100%;padding:12px;border-radius:11px;border:none;cursor:pointer;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,#38bdf8,#0ea5e9);font-family:system-ui;margin-top:4px">🔄 Esegui Repack Ora</button>'
-      + '<button id="dc-save-'+rid2+'" style="width:100%;margin-top:8px;padding:13px;border-radius:12px;background:rgba('+ACC+',.15);border:1px solid rgba('+ACC+',.4);color:'+ACCH+';font-size:14px;font-weight:700;cursor:pointer;font-family:system-ui">💾 Salva impostazioni</button>';
+      + aspettoHtml
+      + '<button id="dc-save-'+rid2+'" style="width:100%;margin-top:8px;padding:13px;border-radius:12px;background:#38bdf8;border:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:system-ui">💾 Salva impostazioni</button>';
 
-    var ov = mkOv(popShell('⚙', ACC, 'Impostazioni', 'Database HA', rid2+'x', content), rid2+'x');
+    var ov = mkOv(popShell('⚙', 'Impostazioni', rid2+'x', content), rid2+'x');
+
+    function _dcUpdatePreview() {
+      var wrap = ov.querySelector('#dc-prev-'+rid2); if (!wrap) return;
+      var baseRid = 'dbc'+(cardId||'x').replace(/[^a-z0-9]/gi,'');
+      var previewRid = baseRid+'-prev';
+      try { wrap.innerHTML = render(card).split(baseRid).join(previewRid); } catch(e) {}
+      var elp = wrap.querySelector('#'+previewRid);
+      if (elp) { elp.style.width = tW<100?tW+'%':''; elp.style.zoom = tScale<100?tScale+'%':''; }
+    }
+    var dcScaleInp = ov.querySelector('#dc-scale-'+rid2), dcWInp = ov.querySelector('#dc-w-'+rid2);
+    if (dcScaleInp) dcScaleInp.addEventListener('input', function(){
+      tScale = parseInt(dcScaleInp.value,10);
+      var l = ov.querySelector('#dc-scale-'+rid2+'-lbl'); if (l) l.textContent = tScale>=100?'Auto (100%)':tScale+'%';
+      _dcUpdatePreview();
+    });
+    if (dcWInp) dcWInp.addEventListener('input', function(){
+      tW = parseInt(dcWInp.value,10);
+      var l = ov.querySelector('#dc-w-'+rid2+'-lbl'); if (l) l.textContent = tW>=100?'Auto (100%)':tW+'%';
+      _dcUpdatePreview();
+    });
+    _dcUpdatePreview();
 
     ov.querySelectorAll('.dc-fi-sw[data-entity]').forEach(function(sw){
       sw.addEventListener('click', function(){
@@ -402,6 +449,11 @@
       var ori = ov.querySelector('#dc-orario-'+rid2); if (ori&&ori.value) callSvc('input_datetime','set_datetime',{entity_id:'input_datetime.frarik_db_orario_repack',time:ori.value+':00'});
       var gmE = ov.querySelector('#dc-gm-'+rid2); if (gmE&&gmE.value) callSvc('input_number','set_value',{entity_id:'input_number.frarik_db_giorni_da_mantenere',value:parseFloat(gmE.value)});
       var dmE = ov.querySelector('#dc-dm-'+rid2); if (dmE&&dmE.value) callSvc('input_number','set_value',{entity_id:'input_number.frarik_db_dimensione_massima',value:parseFloat(dmE.value)});
+      try {
+        localStorage.setItem('_frk_layout_'+cardId, JSON.stringify({cardScale:tScale, cardW:tW}));
+        document.dispatchEvent(new CustomEvent('frarik-card-layout', {bubbles:true, detail:{cardId:cardId, cardScale:tScale, cardW:tW}}));
+        if (el) el._dcSig = '';
+      } catch(e) {}
       sb.textContent='✅ Salvato!'; sb.style.background='rgba(34,197,94,.15)'; sb.style.borderColor='rgba(34,197,94,.4)'; sb.style.color='#4ade80';
       setTimeout(function(){ try{ov._close();}catch(e){} },1500);
     });
@@ -416,7 +468,7 @@
       var sya = e.target.closest('[data-sya]'); if (!sya) return;
       var a = sya.dataset.sya;
       if (a === 'popup-storico')      { openStorico(card); return; }
-      if (a === 'popup-impostazioni') { openImpostazioni(card); return; }
+      if (a === 'popup-impostazioni') { openImpostazioni(card, el); return; }
       if (a === 'repack-now')         { callSvc('script','turn_on',{entity_id:'script.frarik_db_repack'}); return; }
     };
     el.addEventListener('click', el._dcHandler);
@@ -433,7 +485,7 @@
   }
 
   var CARD = {
-    id: 'database-card', name: 'Database HA', icon: '🗄️', version: '2.4',
+    id: 'database-card', name: 'Database HA', icon: '🗄️', version: '2.7',
     desc: 'Monitoraggio database HA: dimensione, repack automatico, statistiche.',
     colSpan: 2, rowSpan: 3,
     frarik_no_edit: true,
