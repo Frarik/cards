@@ -1,4 +1,8 @@
-/* frarik-version: 1.1 */
+/* frarik-version: 1.2 */
+/* v1.2: popup Impostazioni ora a due colonne pari (controlli a sinistra,
+   canvas/anteprima live a destra) come nelle altre card, invece di tutto
+   impilato in un'unica colonna. Il canvas a destra resta interattivo: si
+   trascina/ridimensiona direttamente lì, non è solo uno specchietto. */
 /* v1.1: aggiunto un quarto tipo di elemento, "Azione" (🔘): un bottone che al
    tap chiama un servizio su un'entità qualsiasi (script/scena → "Attiva",
    switch/luce/input_boolean → "Toggle"), per card tipo "premo e parte lo
@@ -248,17 +252,23 @@
       return out;
     }
 
-    const content = '<div class="cl-chrome">' + toolbarHtml + '</div>'
-      + '<div style="margin:14px 0;overflow:auto;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.28);padding:12px">'
-      + '<div id="cl-canvas" style="position:relative;width:' + state.canvasW + 'px;height:' + state.canvasH + 'px;background:' + state.bgColor + ';border-radius:10px;margin:0 auto"></div>'
-      + '</div>'
-      + '<div class="cl-chrome">'
-      + '<div id="cl-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>'
+    const settingsHtml = '<div class="cl-chrome">' + toolbarHtml
+      + '<div id="cl-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 0"></div>'
       + '<div id="cl-props"></div>'
       + '<div style="display:flex;gap:8px;margin-top:16px">'
       + '<button id="cl-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
       + '<button id="cl-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#fff">💾 Salva</button>'
       + '</div>'
+      + '</div>';
+
+    const previewHtml = '<div class="cl-chrome" style="margin-bottom:8px"><div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#fff">Anteprima live — trascina qui dentro</div></div>'
+      + '<div style="overflow:auto;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.28);padding:12px">'
+      + '<div id="cl-canvas" style="position:relative;width:' + state.canvasW + 'px;height:' + state.canvasH + 'px;background:' + state.bgColor + ';border-radius:10px;margin:0 auto"></div>'
+      + '</div>';
+
+    const content = '<div style="display:flex;gap:20px;align-items:flex-start">'
+      + '<div style="flex:1;min-width:0">' + settingsHtml + '</div>'
+      + '<div style="flex:1;min-width:0">' + previewHtml + '</div>'
       + '</div>';
 
     const ov = mkOv(popShell('🧩', 'Impostazioni Canvas', 'cl-close', content), 'cl-close');
@@ -522,7 +532,7 @@
 
   /* ── CARD ── */
   var CARD = {
-    id: 'canvas-libero', name: 'Canvas Libero', icon: '🧩', version: '1.1',
+    id: 'canvas-libero', name: 'Canvas Libero', icon: '🧩', version: '1.2',
     desc: 'Canvas libero: crea la tua card personalizzata trascinando testo, icone e blocchi colorati, ognuno collegabile a qualsiasi sensore Home Assistant.',
     colSpan: 2, rowSpan: 2, frarik_no_edit: true,
     render: function (card) { return render(card); },
