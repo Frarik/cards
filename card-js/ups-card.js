@@ -1,4 +1,9 @@
-/* frarik-version: 1.5 */
+/* frarik-version: 1.6 */
+/* v1.6: anteprima live del popup Configura ora a colonne pari 50/50 (era
+   230px fisso, sproporzionato); il pulsante "⚙ Soglie" in card ora apre
+   direttamente Configura (con anteprima+dimensione subito visibili) invece
+   di Soglie, con un pulsante "🎚 Soglie batteria & reset contatori" per
+   raggiungerle da lì. */
 /* v1.5: consolidata la dimensione/anteprima card nel popup "Configura sensori"
    (prima duplicata anche in Soglie, ora rimossa da lì): il popup Configura
    ha ora un layout a due colonne con i campi sensore raggruppati in riquadri
@@ -488,7 +493,8 @@
       + field('ups-cf-ntb',    'Notify batteria',        cf.pk_ntf_batt,   'input_boolean.notify_push_ups_tecnoware_batteria_sotto_soglia')
       + field('ups-cf-nts',    'Notify spegnimento',     cf.pk_ntf_spg,    'input_boolean.notify_push_ups_tecnoware_spegni_server')
       + boxClose
-      + '<div style="display:flex;gap:8px;margin-top:16px">'
+      + '<button id="ups-cf-sg" style="width:100%;margin-top:16px;padding:11px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:700;cursor:pointer">🎚 Soglie batteria & reset contatori</button>'
+      + '<div style="display:flex;gap:8px;margin-top:8px">'
       + '<button id="ups-cf-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
       + '<button id="ups-cf-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#fff">Salva</button>'
       + '</div>';
@@ -501,7 +507,7 @@
 
     const formHtml = '<div style="display:flex;gap:20px;align-items:flex-start">'
       + '<div style="flex:1;min-width:0">' + settingsHtml + '</div>'
-      + '<div style="width:230px;flex-shrink:0">' + previewHtml + '</div>'
+      + '<div style="flex:1;min-width:0;max-width:340px">' + previewHtml + '</div>'
       + '</div>';
 
     const fieldIds = ['ups-cf-main','ups-cf-stato','ups-cf-tipo','ups-cf-stxt','ups-cf-batt','ups-cf-carico','ups-cf-vin','ups-cf-vout',
@@ -509,6 +515,11 @@
       'ups-cf-dur','ups-cf-data','ups-cf-rip','ups-cf-sgav','ups-cf-sgspg','ups-cf-nte','ups-cf-ntb','ups-cf-nts'];
     const ov = mkOv(popShell('🔋', 'Configura UPS', 'ups-cf-close', formHtml), 'ups-cf-close');
     ov.querySelector('#ups-cf-cancel').addEventListener('click', function () { ov._close(); });
+    const sgBtn = ov.querySelector('#ups-cf-sg');
+    if (sgBtn) sgBtn.addEventListener('click', function () {
+      ov._close();
+      setTimeout(function () { openSogliePopup(card, el); }, 80);
+    });
 
     function _upsCfPreview() {
       const wrap = ov.querySelector('#ups-cf-prev'); if (!wrap) return;
@@ -594,7 +605,7 @@
       const a = sya.dataset.sya;
       if (a === 'storico')   { openStoricoPopup(cfgFor(card)); return; }
       if (a === 'notifiche') { openNotifPopup(cfgFor(card)); return; }
-      if (a === 'soglie')    { openSogliePopup(card, el); return; }
+      if (a === 'soglie')    { openCfg(card, el); return; }
     };
     el.addEventListener('click', el._upsHandler);
   }
@@ -604,7 +615,7 @@
     id: 'ups-card',
     name: 'UPS',
     icon: '🔋',
-    version: '1.5',
+    version: '1.6',
     desc: 'Monitoraggio UPS: batteria, carico, tensioni, storico blackout e notifiche push. Richiede PKG UPS Tecnoware.',
     colSpan: 2,
     rowSpan: 3,
