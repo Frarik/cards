@@ -417,17 +417,17 @@
 <!-- STATS: solo cio' che l'utente vuole vedere a colpo d'occhio -->
 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:6px 10px 10px;flex:1;align-content:end">
   <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:5px;text-align:center">
-    <div style="font-size:6px;color:#fff;text-transform:uppercase;letter-spacing:.5px">Acqua</div>
+    <div style="font-size:6px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.5px">Acqua</div>
     <div data-lp-update="wval" style="font-size:14px;font-weight:900;color:${waterCol}">${waterPct}%</div>
     <div style="font-size:10px">💧</div>
   </div>
   <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:5px;text-align:center">
-    <div style="font-size:6px;color:#fff;text-transform:uppercase;letter-spacing:.5px">Temp</div>
+    <div style="font-size:6px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.5px">Temp</div>
     <div data-lp-update="tval" style="font-size:14px;font-weight:900;color:${tempCol}">${tempVal.toFixed(1)}°</div>
     <div style="font-size:10px">🌡️</div>
   </div>
   <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:5px;text-align:center">
-    <div style="font-size:6px;color:#fff;text-transform:uppercase;letter-spacing:.5px">Giorno</div>
+    <div style="font-size:6px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.5px">Giorno</div>
     <div data-lp-update="aval" style="font-size:14px;font-weight:900;color:#86efac">${plantsAge!=='unknown'?plantsAge:'—'}</div>
     <div style="font-size:10px">🌱</div>
   </div>
@@ -536,7 +536,7 @@
 
     function swRow(label,icon,checked,action){
       return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 2px;border-bottom:1px solid rgba(255,255,255,.06)">
-        <span style="font-size:12px;font-weight:600;color:#fff">${icon} ${label}</span>
+        <span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:#fff">${icon} ${label}</span>
         <div class="lp-sw ${checked?'on':''}" data-sw-action="${action}"></div>
       </div>`;
     }
@@ -553,22 +553,22 @@
       ${swRow('Ricircolo a cicli','♻️',pumpCycl,'cycl')}
       <div style="padding:14px 0 6px;font-size:10px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Illuminazione</div>
       <div style="display:flex;align-items:center;gap:8px;padding:6px 0">
-        <span style="font-size:11px;color:#fff;width:78px;flex-shrink:0">🌅 Accensione</span>
+        <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#fff;width:78px;flex-shrink:0">🌅 Accensione</span>
         <input type="time" id="lps-ton" value="${lightOnVal}" style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#fff;font-size:12px;padding:6px 8px;color-scheme:dark">
       </div>
       <div style="display:flex;align-items:center;gap:8px;padding:6px 0 14px">
-        <span style="font-size:11px;color:#fff;width:78px;flex-shrink:0">🌙 Spegnimento</span>
+        <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#fff;width:78px;flex-shrink:0">🌙 Spegnimento</span>
         <input type="time" id="lps-toff" value="${lightOffVal}" style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#fff;font-size:12px;padding:6px 8px;color-scheme:dark">
       </div>
       <div style="display:flex;align-items:center;gap:10px;padding:6px 0 14px">
-        <span style="font-size:11px;color:#fff;flex:1">✨ Luminosità</span>
+        <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#fff;flex:1">✨ Luminosità</span>
         <button id="lps-brdn" style="width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:16px;cursor:pointer">−</button>
         <span id="lps-brval" style="font-size:13px;font-weight:800;min-width:22px;text-align:center">${brCur!=='unknown'&&brCur!==undefined?brCur:'—'}</span>
         <span style="font-size:10px;color:#fff">/${brMax}</span>
         <button id="lps-brup" style="width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:16px;cursor:pointer">+</button>
       </div>
       <div style="padding-bottom:16px">
-        <span style="font-size:11px;color:#fff;display:block;margin-bottom:5px">🎛️ Modalità luce</span>
+        <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#fff;display:block;margin-bottom:5px">🎛️ Modalità luce</span>
         <select id="lps-mode" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:9px;color:#fff;font-size:12px;padding:8px 10px;color-scheme:dark">${modeOpts}</select>
       </div>
       <button id="lps-cfg" style="width:100%;padding:9px;border-radius:10px;border:1px dashed rgba(255,255,255,.2);background:transparent;color:#fff;font-size:11px;cursor:pointer;margin-bottom:6px">🔧 Collega entità (setup avanzato)</button>
@@ -642,7 +642,7 @@
     const body=sh.querySelector('#lp-body'),inputs={};
     FIELDS.forEach(f=>{
       const w=document.createElement('div');w.style.cssText='position:relative';
-      const lb=document.createElement('div');lb.style.cssText='font-size:10px;color:#fff;margin-bottom:4px;font-weight:600';lb.textContent=f.label;
+      const lb=document.createElement('div');lb.style.cssText='font-size:10px;color:#fff;margin-bottom:4px;font-weight:800;text-transform:uppercase;letter-spacing:.05em';lb.textContent=f.label;
       const inp=document.createElement('input');inp.value=ent[f.key]||'';inp.placeholder=f.domains[0]+'.*';inp.autocomplete='off';inp.spellcheck=false;
       inp.style.cssText='width:100%;padding:9px 11px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;font-size:12px;box-sizing:border-box;outline:none';
       inputs[f.key]=inp;
@@ -667,8 +667,8 @@
     return render(mc,{states:{'switch.letpot_max_power':{state:'on'},'switch.letpot_max_auto_mode':{state:'on'},'switch.letpot_max_pump_cycling':{state:'on'},'sensor.letpot_max_water_level':{state:'78'},'sensor.letpot_max_temperatura':{state:'26.5'},'sensor.letpot_max_plants_age':{state:'45'},'switch.letpot_max_pump':{state:'on'},'time.letpot_max_light_on':{state:'06:00:00'},'time.letpot_max_light_off':{state:'22:00:00'},'number.letpot_max_light_brightness':{state:'7',attributes:{min:1,max:10,step:1}},'select.letpot_max_modalita_luce':{state:'Verdure/Erbe',attributes:{options:['Verdure/Erbe','Frutti','Fiori','Erbe aromatiche','Personalizzato']}},'binary_sensor.letpot_max_low_water':{state:'off'},'binary_sensor.letpot_max_low_nutrients':{state:'off'},'binary_sensor.letpot_max_refill_error':{state:'off'}}});
   }
 
-  const CARD={id:ID,name:'LetPot Max',icon:'🌿',desc:'Sistema idroponico LPH-MAX 21 pod — luce che cambia tonalità in base alla modalità, timer pompa reale 30min, impostazioni in un pannello dedicato',version:'4.9',colSpan:2,rowSpan:3,frarik_no_edit:true,render,mount,update,configure,preview};
+  const CARD={id:ID,name:'LetPot Max',icon:'🌿',desc:'Sistema idroponico LPH-MAX 21 pod — luce che cambia tonalità in base alla modalità, timer pompa reale 30min, impostazioni in un pannello dedicato',version:'4.10',colSpan:2,rowSpan:3,frarik_no_edit:true,render,mount,update,configure,preview};
   window.FratechCardRegistry=window.FratechCardRegistry||{};window.FratechCardRegistry[ID]=CARD;
   window.FratechCards=window.FratechCards||{};window.FratechCards[ID]=CARD;
-  try{console.log('[FratechStore] letpot-max v4.9');}catch(e){}
+  try{console.log('[FratechStore] letpot-max v4.10');}catch(e){}
 })();

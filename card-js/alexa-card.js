@@ -1,4 +1,4 @@
-/* frarik-version: 2.4 */
+/* frarik-version: 2.5 */
 /* v2.2: allineata allo standard Frarik (posta-card/Meteo/Differenziata).
    Popup unificati: stesso sfondo #0a0816, icona neutra (era colorata a
    tema), titolo maiuscolo 16px/900, rimossa la sottotitolo sotto al
@@ -18,6 +18,9 @@
    smart speaker (disco/puck con anello luminoso colorato) — molto più
    simile a un vero dispositivo Alexa, usato come fallback quando non
    c'è copertina album. */
+/* v2.5: label "Altezza"/"Larghezza" dello slider dimensione card nel
+   popup Configura ora maiuscolo/grassetto come le altre etichette
+   (era rimasta solo grassetto, non maiuscola). */
 (function () {
   'use strict';
 
@@ -379,7 +382,7 @@
     function layoutRow(lbl,id,val){
       var vLbl=val>=100?'Auto (100%)':val+'%';
       return '<div style="display:flex;align-items:center;gap:8px;margin-top:10px">'
-        +'<span style="font-size:12px;font-weight:900;color:#fff;width:72px;flex-shrink:0">'+lbl+'</span>'
+        +'<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#fff;width:72px;flex-shrink:0">'+lbl+'</span>'
         +'<input type="range" id="'+id+'" min="20" max="100" step="5" value="'+val+'" style="flex:1;accent-color:#fff;cursor:pointer">'
         +'<span id="'+id+'-lbl" style="font-size:12px;font-weight:900;color:#fff;width:54px;text-align:right;flex-shrink:0">'+vLbl+'</span>'
         +'</div>';
@@ -616,7 +619,7 @@
 
   /* ── REGISTRATION ── */
   var CARD={
-    id:'alexa-card',name:'Alexa Media',icon:'🔊',version:'2.4',
+    id:'alexa-card',name:'Alexa Media',icon:'🔊',version:'2.5',
     desc:'Alexa: album art, equalizzatore, sorgente, preset volume, timer countdown, TTS inline.',
     colSpan:2,rowSpan:3,frarik_no_edit:true,
     render:function(card){return render(card);},
@@ -627,5 +630,5 @@
   window.FratechCardRegistry[CARD.id]=CARD;
   window.FratechCards=window.FratechCards||{};
   window.FratechCards[CARD.id]=CARD;
-  try{console.log('[FratechStore] Card registrata: alexa-card v2.4');}catch(e){}
+  try{console.log('[FratechStore] Card registrata: alexa-card v2.5');}catch(e){}
 })();

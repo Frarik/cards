@@ -1,4 +1,7 @@
-/* frarik-version: 5.6 */
+/* frarik-version: 5.7 */
+/* v5.7: etichette dei campi nel popup Impostazioni (Prezzi, FV/Batteria,
+   Aspetto) ora maiuscolo/grassetto come nelle altre card — erano rimaste
+   testo normale, senza peso né maiuscolo. */
 /* v5.6: allineati i popup allo standard delle altre card (posta/differenziata/
    alexa): sfondo neutro #0a0816, bordo neutro, icona header neutra, titolo
    16px/900/maiuscolo, niente sottotitolo separato (info piegate nel titolo
@@ -344,7 +347,7 @@
   function openImpostazioni(card, el) {
     var h = H();
     var iSt = 'width:100%;padding:8px 10px;border-radius:8px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:3px';
-    var lSt = 'font-size:11px;color:#fff;display:block;margin-top:8px';
+    var lSt = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#fff;display:block;margin-top:8px';
 
     function lbl(t) { return '<label style="' + lSt + '">' + t + '</label>'; }
     function inp(id, val, ph) {
@@ -915,7 +918,7 @@
   }
 
   var CARD = {
-    id: 'bolletta', name: 'Bolletta Elettrica', icon: '⚡', version: '5.6',
+    id: 'bolletta', name: 'Bolletta Elettrica', icon: '⚡', version: '5.7',
     desc: 'Monitoraggio consumi, costi e previsioni bolletta elettrica. Richiede PKG Frarik Bolletta.',
     render: render, mount: mount, update: update, configure: null, frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_bolletta_versione',

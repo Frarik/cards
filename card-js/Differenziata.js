@@ -1,4 +1,7 @@
-/* frarik-version: 5.27 */
+/* frarik-version: 5.28 */
+/* v5.28: label "Altezza"/"Larghezza" dello slider dimensione card nel
+   popup Impostazioni ora maiuscolo/grassetto come le altre etichette
+   (era rimasta solo grassetto, non maiuscola). */
 /* v5.15: aggiunta anteprima live + slider dimensione card (altezza/larghezza)
    nel popup Impostazioni, stesso meccanismo di Meteo.js/posta-card
    (localStorage _frk_layout_ + evento frarik-card-layout); aggiunto
@@ -448,7 +451,7 @@
     function layoutRow(lbl, id, val) {
       var vLbl = val >= 100 ? 'Auto (100%)' : val + '%';
       return '<div style="display:flex;align-items:center;gap:8px;margin-top:10px">'
-        + '<span style="font-size:12px;font-weight:900;color:#fff;width:72px;flex-shrink:0">' + lbl + '</span>'
+        + '<span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#fff;width:72px;flex-shrink:0">' + lbl + '</span>'
         + '<input type="range" id="' + id + '" min="20" max="100" step="5" value="' + val + '" style="flex:1;accent-color:#fff;cursor:pointer">'
         + '<span id="' + id + '-lbl" style="font-size:12px;font-weight:900;color:#fff;width:54px;text-align:right;flex-shrink:0">' + vLbl + '</span>'
         + '</div>';
@@ -1083,7 +1086,7 @@ automation:
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.27',
+    version: '5.28',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',

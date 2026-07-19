@@ -1,5 +1,8 @@
-/* frarik-version: 5.7 */
+/* frarik-version: 5.8 */
 /* Centro Controllo Posta — Frarik card standalone */
+/* v5.8: label "Altezza"/"Larghezza" dello slider dimensione card nel
+   popup impostazioni ora maiuscolo/grassetto come le altre etichette
+   (era rimasta solo grassetto, non maiuscola). */
 /* v5.7: bagliore radiale in alto a sinistra reso più visibile (opacità
    .08 → .16) per essere riconoscibile a colpo d'occhio, stesso valore
    ora usato anche dalla card Differenziata per restare identiche. */
@@ -1006,7 +1009,7 @@ if(!customElements.get('posta-card')){
         .prev-wrap{border-radius:14px;overflow:hidden;background:rgba(255,255,255,.02);padding:10px;display:flex;justify-content:center}
         .lsect{padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
         .layout-row{display:flex;align-items:center;gap:8px;margin-top:10px}
-        .layout-lbl{font-size:12px;font-weight:900;color:#fff;width:72px;flex-shrink:0}
+        .layout-lbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#fff;width:72px;flex-shrink:0}
         .layout-val{font-size:12px;font-weight:900;color:#fff;width:54px;text-align:right;flex-shrink:0}
         input[type=range].lslider{flex:1;cursor:pointer;accent-color:#fff;height:4px}
         @media(max-width:620px){.sov-2col{flex-direction:column!important;overflow-y:auto!important;overflow-x:hidden!important}.sbdy{width:100%!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,.07)!important;overflow-y:visible!important;flex-shrink:0!important}.sov-prev{min-width:0!important;overflow-y:visible!important;width:100%!important}}
