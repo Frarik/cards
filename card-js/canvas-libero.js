@@ -1,4 +1,9 @@
-/* frarik-version: 1.0 */
+/* frarik-version: 1.1 */
+/* v1.1: aggiunto un quarto tipo di elemento, "Azione" (🔘): un bottone che al
+   tap chiama un servizio su un'entità qualsiasi (script/scena → "Attiva",
+   switch/luce/input_boolean → "Toggle"), per card tipo "premo e parte lo
+   script quando esco di casa". Prima versione aveva solo elementi passivi
+   (Testo/Icona/Forma), nessuno cliccabile. */
 /* v1.0: prima versione — card "Canvas Libero": dimensione del canvas (larghezza/
    altezza) scelta dall'utente, elementi Testo/Icona/Forma posizionabili
    liberamente trascinandoli (mouse e touch) e ridimensionabili dall'angolo;
@@ -59,12 +64,20 @@
     if (e.tipo === 'forma') {
       return '<div style="width:100%;height:100%;background:' + (e.colore || '#1e293b') + ';border-radius:' + (e.radius != null ? e.radius : 12) + 'px"></div>';
     }
+    if (e.tipo === 'azione') {
+      const bg = e.bgColore || '#1d4ed8', fg = e.colore || '#ffffff';
+      return '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:6px;background:' + bg + ';border-radius:' + (e.radius != null ? e.radius : 12) + 'px;color:' + fg + ';font-size:' + (e.fontSize || 13) + 'px;font-weight:' + (e.grassetto !== false ? '800' : '400') + ';cursor:pointer;user-select:none;transition:transform .1s;text-transform:none;padding:0 8px;box-sizing:border-box;overflow:hidden;white-space:nowrap">'
+        + (e.emoji ? '<span>' + esc(e.emoji) + '</span>' : '')
+        + (e.testo ? '<span style="overflow:hidden;text-overflow:ellipsis">' + esc(e.testo) + '</span>' : '')
+        + '</div>';
+    }
     return '';
   }
 
   function elHtmlRO(e, h, idx) {
     const style = 'position:absolute;left:' + e.x + 'px;top:' + e.y + 'px;width:' + e.w + 'px;height:' + e.h + 'px;box-sizing:border-box';
-    return '<div class="cl-el-ro" data-idx="' + idx + '" style="' + style + '">' + elementInnerHtml(e, h) + '</div>';
+    const attrs = e.tipo === 'azione' ? ' data-sya="run-action" data-idx="' + idx + '"' : '';
+    return '<div class="cl-el-ro" data-idx="' + idx + '" style="' + style + '"' + attrs + '>' + elementInnerHtml(e, h) + '</div>';
   }
 
   /* ── RENDER CARD ── */
@@ -182,10 +195,11 @@
     };
 
     const toolbarHtml = labelInput('cl-name', 'Nome card', state.name, 'text')
-      + '<div style="display:flex;gap:8px;margin:10px 0">'
-      + '<button id="cl-add-testo" style="flex:1;padding:9px;border-radius:10px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#fff;font-size:12px;font-weight:800;cursor:pointer">+ 🔤 Testo</button>'
-      + '<button id="cl-add-icona" style="flex:1;padding:9px;border-radius:10px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#fff;font-size:12px;font-weight:800;cursor:pointer">+ 😀 Icona</button>'
-      + '<button id="cl-add-forma" style="flex:1;padding:9px;border-radius:10px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#fff;font-size:12px;font-weight:800;cursor:pointer">+ ⬜ Forma</button>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:8px;margin:10px 0">'
+      + '<button id="cl-add-testo" style="flex:1;min-width:80px;padding:9px;border-radius:10px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#fff;font-size:12px;font-weight:800;cursor:pointer">+ 🔤 Testo</button>'
+      + '<button id="cl-add-icona" style="flex:1;min-width:80px;padding:9px;border-radius:10px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#fff;font-size:12px;font-weight:800;cursor:pointer">+ 😀 Icona</button>'
+      + '<button id="cl-add-forma" style="flex:1;min-width:80px;padding:9px;border-radius:10px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#fff;font-size:12px;font-weight:800;cursor:pointer">+ ⬜ Forma</button>'
+      + '<button id="cl-add-azione" style="flex:1;min-width:80px;padding:9px;border-radius:10px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#fff;font-size:12px;font-weight:800;cursor:pointer">+ 🔘 Azione</button>'
       + '</div>'
       + layoutRowPx('Larghezza canvas', 'cl-cw', state.canvasW, 120, 900)
       + layoutRowPx('Altezza canvas', 'cl-ch', state.canvasH, 80, 600)
@@ -217,6 +231,13 @@
       } else if (e.tipo === 'forma') {
         out += colorInput('cl-p-colore', 'Colore', e.colore || '#1e293b')
           + labelInput('cl-p-radius', 'Raggio angoli (px)', e.radius != null ? e.radius : 12, 'number');
+      } else if (e.tipo === 'azione') {
+        out += field('cl-p-entity', 'Entità da attivare', e.entity, 'script.esco_di_casa')
+          + selectRow('cl-p-azione', 'Azione', e.azione || 'turn_on', [['turn_on', 'Attiva / Esegui (script, scena, switch...)'], ['toggle', 'Accendi-Spegni (toggle)']])
+          + labelInput('cl-p-emoji', 'Emoji (opzionale)', e.emoji || '', 'text')
+          + labelInput('cl-p-testo', 'Etichetta (opzionale)', e.testo || '', 'text')
+          + '<div style="display:flex;gap:8px">' + colorInput('cl-p-colore', 'Colore testo', e.colore || '#ffffff') + colorInput('cl-p-bg', 'Colore sfondo bottone', e.bgColore || '#1d4ed8') + '</div>'
+          + '<div style="display:flex;gap:8px">' + labelInput('cl-p-fs', 'Dimensione testo (px)', e.fontSize || 13, 'number') + labelInput('cl-p-radius', 'Raggio angoli (px)', e.radius != null ? e.radius : 12, 'number') + '</div>';
       }
       out += boxClose;
       out += '<div style="display:flex;gap:8px;margin-top:8px">'
@@ -362,7 +383,7 @@
 
     function renderChips() {
       const box = ov.querySelector('#cl-chips'); if (!box) return;
-      const iconFor = { testo: '🔤', icona: '😀', forma: '⬜' };
+      const iconFor = { testo: '🔤', icona: '😀', forma: '⬜', azione: '🔘' };
       if (!state.elementi.length) {
         box.innerHTML = '<div style="font-size:11px;font-weight:700;color:#fff;opacity:.55">Nessun elemento — aggiungine uno dalla barra sopra il canvas</div>';
         return;
@@ -414,6 +435,8 @@
       const colorOnInp = ov.querySelector('#cl-p-colorOn'); if (colorOnInp) colorOnInp.addEventListener('input', function () { e.coloreOn = colorOnInp.value; renderCanvas(); });
       const colorOffInp = ov.querySelector('#cl-p-colorOff'); if (colorOffInp) colorOffInp.addEventListener('input', function () { e.coloreOff = colorOffInp.value; renderCanvas(); });
       const radiusInp = ov.querySelector('#cl-p-radius'); if (radiusInp) radiusInp.addEventListener('input', function () { e.radius = parseInt(radiusInp.value, 10) || 0; renderCanvas(); });
+      const azioneSel = ov.querySelector('#cl-p-azione'); if (azioneSel) azioneSel.addEventListener('change', function () { e.azione = azioneSel.value; renderCanvas(); });
+      const bgInp2 = ov.querySelector('#cl-p-bg'); if (bgInp2) bgInp2.addEventListener('input', function () { e.bgColore = bgInp2.value; renderCanvas(); });
       const frontBtn = ov.querySelector('#cl-p-front'); if (frontBtn) frontBtn.addEventListener('click', function () { moveSelected(1); });
       const backBtn = ov.querySelector('#cl-p-back'); if (backBtn) backBtn.addEventListener('click', function () { moveSelected(-1); });
       const delBtn = ov.querySelector('#cl-p-del'); if (delBtn) delBtn.addEventListener('click', deleteSelected);
@@ -436,6 +459,7 @@
       const e = { id: 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), tipo: tipo, x: 10, y: 10 };
       if (tipo === 'testo') { e.w = 120; e.h = 28; e.modo = 'fisso'; e.testo = 'Testo'; e.colore = '#ffffff'; e.fontSize = 14; e.grassetto = false; e.allinea = 'left'; state.elementi.push(e); }
       else if (tipo === 'icona') { e.w = 36; e.h = 36; e.emoji = '⭐'; e.colore = '#ffffff'; e.statoOn = 'on'; e.coloreOn = '#4ade80'; e.coloreOff = '#f87171'; state.elementi.push(e); }
+      else if (tipo === 'azione') { e.w = 110; e.h = 40; e.entity = ''; e.azione = 'turn_on'; e.emoji = '▶️'; e.testo = 'Esegui'; e.colore = '#ffffff'; e.bgColore = '#1d4ed8'; e.fontSize = 13; e.grassetto = true; e.radius = 12; state.elementi.push(e); }
       else { e.w = 120; e.h = 70; e.colore = '#1e293b'; e.radius = 12; state.elementi.unshift(e); }
       state.selIdx = state.elementi.indexOf(e);
       renderCanvas(); renderChips(); renderProps();
@@ -448,6 +472,7 @@
     const addTestoBtn = ov.querySelector('#cl-add-testo'); if (addTestoBtn) addTestoBtn.addEventListener('click', function () { addElement('testo'); });
     const addIconaBtn = ov.querySelector('#cl-add-icona'); if (addIconaBtn) addIconaBtn.addEventListener('click', function () { addElement('icona'); });
     const addFormaBtn = ov.querySelector('#cl-add-forma'); if (addFormaBtn) addFormaBtn.addEventListener('click', function () { addElement('forma'); });
+    const addAzioneBtn = ov.querySelector('#cl-add-azione'); if (addAzioneBtn) addAzioneBtn.addEventListener('click', function () { addElement('azione'); });
 
     const cancelBtn = ov.querySelector('#cl-cancel'); if (cancelBtn) cancelBtn.addEventListener('click', function () { cleanupDrag(); ov._close(); });
     const saveBtn = ov.querySelector('#cl-save');
@@ -479,13 +504,25 @@
     el._clbHandler = function (e) {
       const sya = e.target.closest('[data-sya]'); if (!sya) return;
       if (sya.dataset.sya === 'cfg') { openCfg(card, el); return; }
+      if (sya.dataset.sya === 'run-action') {
+        const idx = parseInt(sya.dataset.idx, 10);
+        const elm = (cfgFor(card).elementi || [])[idx];
+        if (elm && elm.entity) {
+          const domain = elm.entity.split('.')[0];
+          if (elm.azione === 'toggle') callSvc('homeassistant', 'toggle', { entity_id: elm.entity });
+          else callSvc(domain, 'turn_on', { entity_id: elm.entity });
+          sya.style.transform = 'scale(.94)';
+          setTimeout(function () { sya.style.transform = ''; }, 150);
+        }
+        return;
+      }
     };
     el.addEventListener('click', el._clbHandler);
   }
 
   /* ── CARD ── */
   var CARD = {
-    id: 'canvas-libero', name: 'Canvas Libero', icon: '🧩', version: '1.0',
+    id: 'canvas-libero', name: 'Canvas Libero', icon: '🧩', version: '1.1',
     desc: 'Canvas libero: crea la tua card personalizzata trascinando testo, icone e blocchi colorati, ognuno collegabile a qualsiasi sensore Home Assistant.',
     colSpan: 2, rowSpan: 2, frarik_no_edit: true,
     render: function (card) { return render(card); },
