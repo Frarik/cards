@@ -1,4 +1,7 @@
-/* frarik-version: 2.8 */
+/* frarik-version: 2.9 */
+/* v2.9: il popup Impostazioni ora è a due colonne (impostazioni a sinistra,
+   anteprima live + dimensione card subito visibili a destra, 50/50) invece
+   di avere l'anteprima in fondo a una colonna unica scrollabile. */
 /* v2.8: raggruppati i controlli del popup Impostazioni (Automazioni, Orario
    e giorni, Soglie) in riquadri con contorno bianco, come nelle altre card. */
 /* v2.7: allineati popup ed etichette allo standard delle altre card (sfondo
@@ -371,15 +374,16 @@
         +'<span id="'+id+'-lbl" style="font-size:12px;font-weight:900;color:#fff;width:54px;text-align:right;flex-shrink:0">'+vLbl+'</span>'
         +'</div>';
     }
-    var aspettoHtml = pSec('📐 Aspetto')
+    var previewHtml = '<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#fff">Anteprima live</div>'
+      + '<div id="dc-prev-'+rid2+'" style="border-radius:14px;overflow:hidden;background:rgba(255,255,255,.02);margin-top:8px;padding:10px;display:flex;justify-content:center;transform-origin:top left"></div>'
+      + '<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#fff;margin-top:16px">Dimensione card</div>'
       + layoutRow('Altezza', 'dc-scale-'+rid2, tScale)
-      + layoutRow('Larghezza', 'dc-w-'+rid2, tW)
-      + '<div style="border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);padding:10px;overflow:auto;max-height:300px;margin:10px 0 4px"><div id="dc-prev-'+rid2+'" style="transform-origin:top left"></div></div>';
+      + layoutRow('Larghezza', 'dc-w-'+rid2, tW);
 
     var boxOpen = '<div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid #fff">';
     var boxClose = '</div>';
 
-    var content = pSec('⚡ Automazioni')
+    var settingsHtml = pSec('⚡ Automazioni')
       + boxOpen
       + tog('input_boolean.frarik_db_repack_orario', isOn(h,'input_boolean.frarik_db_repack_orario'), 'Repack automatico a orario')
       + tog('input_boolean.frarik_db_repack_dimensione', isOn(h,'input_boolean.frarik_db_repack_dimensione'), 'Repack per dimensione massima')
@@ -406,8 +410,12 @@
       + boxClose
       + pSec('⚙ Repack Manuale')
       + '<button id="dc-repack-'+rid2+'" style="width:100%;padding:12px;border-radius:11px;border:none;cursor:pointer;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,#38bdf8,#0ea5e9);font-family:system-ui;margin-top:4px">🔄 Esegui Repack Ora</button>'
-      + aspettoHtml
       + '<button id="dc-save-'+rid2+'" style="width:100%;margin-top:8px;padding:13px;border-radius:12px;background:#38bdf8;border:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:system-ui">💾 Salva impostazioni</button>';
+
+    var content = '<div style="display:flex;gap:20px;align-items:flex-start">'
+      + '<div style="flex:1;min-width:0">' + settingsHtml + '</div>'
+      + '<div style="flex:1;min-width:0;max-width:340px">' + previewHtml + '</div>'
+      + '</div>';
 
     var ov = mkOv(popShell('⚙', 'Impostazioni', rid2+'x', content), rid2+'x');
 
@@ -496,7 +504,7 @@
   }
 
   var CARD = {
-    id: 'database-card', name: 'Database HA', icon: '🗄️', version: '2.8',
+    id: 'database-card', name: 'Database HA', icon: '🗄️', version: '2.9',
     desc: 'Monitoraggio database HA: dimensione, repack automatico, statistiche.',
     colSpan: 2, rowSpan: 3,
     frarik_no_edit: true,
