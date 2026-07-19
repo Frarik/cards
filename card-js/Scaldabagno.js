@@ -1,4 +1,4 @@
-/* frarik-version: 2.4 */
+/* frarik-version: 2.5 */
 /* v2.4: popup Energia/Impostazioni allineati allo standard delle altre card
    (sfondo/bordo/icona/titolo neutri, niente sottotitoli); bagliore card e
    sfondo allineati (era legato al colore di stato, ora blu fisso .16 come
@@ -8,6 +8,10 @@
    popup Impostazioni con zoom/larghezza card e anteprima live. Aggiunta la
    funzione callSvc mancante (i pulsanti Salva/Reset non hanno mai
    funzionato: chiamavano una funzione non definita nel file). */
+/* v2.5: applicato in modo sistematico maiuscolo+grassetto a TUTTO il testo di
+   card e popup (non solo alle etichette) tramite una regola CSS che copre
+   ogni elemento discendente del corpo card e del contenuto popup, incluse
+   frasi/hint/valori che prima restavano normali. */
 (function () {
   'use strict';
 
@@ -173,6 +177,7 @@
     const css = '<style>'
       + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
       + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
+      + '#' + rid + ' .fc-card *{text-transform:uppercase!important;font-weight:800!important}'
       + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.16) 0%,transparent 65%);pointer-events:none}'
       + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(' + colRgb + ',.1);border:1px solid rgba(' + colRgb + ',.2)}'
@@ -270,7 +275,7 @@
     return ov;
   }
 
-  const POP_CSS = '<style>@keyframes fcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.fcpc{overflow-y:auto;scrollbar-width:none}.fcpc::-webkit-scrollbar{display:none}</style>';
+  const POP_CSS = '<style>@keyframes fcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.fcpc{overflow-y:auto;scrollbar-width:none}.fcpc::-webkit-scrollbar{display:none}.fcpc *{text-transform:uppercase!important;font-weight:800!important}</style>';
 
   function popShell(icon, title, closeId, content) {
     return POP_CSS
@@ -1460,7 +1465,7 @@ automation:
         + '.wd-tit{font-size:14px;font-weight:800}'
         + '.wd-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}'
         + '.wd-x{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none}'
-        + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}'
+        + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}.wd-body *{text-transform:uppercase!important;font-weight:800!important}'
         + '.wd-body::-webkit-scrollbar{display:none}'
         + '.wd-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.18);margin-bottom:10px}'
         + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}'
@@ -1585,7 +1590,7 @@ automation:
 
   /* ── REGISTRATION ── */
   const CARD = {
-    id: 'scaldabagno', name: 'Scaldabagno', icon: '🛁', version: '2.4',
+    id: 'scaldabagno', name: 'Scaldabagno', icon: '🛁', version: '2.5',
     desc: 'Scaldabagno elettrico — temperatura acqua, riscaldamento, consumo, energia e costi.',
     render: render, mount: mount, update: update, configure: null, frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_scaldabagno_versione',

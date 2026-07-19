@@ -1,4 +1,8 @@
-/* frarik-version: 5.28 */
+/* frarik-version: 5.29 */
+/* v5.29: applicato in modo sistematico maiuscolo+grassetto a TUTTO il testo di
+   card e popup (non solo alle etichette) tramite una regola CSS che copre
+   ogni elemento discendente del corpo card e del contenuto popup, incluse
+   frasi/hint/valori che prima restavano normali. */
 /* v5.28: label "Altezza"/"Larghezza" dello slider dimensione card nel
    popup Impostazioni ora maiuscolo/grassetto come le altre etichette
    (era rimasta solo grassetto, non maiuscola). */
@@ -176,7 +180,7 @@
     ov._close = close;
     return ov;
   }
-  const POP_CSS = '<style>@keyframes fcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.fcpc{overflow-y:auto;scrollbar-width:none}.fcpc::-webkit-scrollbar{display:none}</style>';
+  const POP_CSS = '<style>@keyframes fcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.fcpc{overflow-y:auto;scrollbar-width:none}.fcpc::-webkit-scrollbar{display:none}.fcpc *{text-transform:uppercase!important;font-weight:800!important}</style>';
   function popShell(icon, title, closeId, content) {
     return POP_CSS + '<div style="width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
       + '<div style="display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">'
@@ -249,6 +253,7 @@
       + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:var(--card-r,20px);overflow:hidden}'
       + '#' + rid + '::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.16) 0%,transparent 65%);pointer-events:none}'
       + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:transparent;border-radius:0;overflow:hidden;position:relative}'
+      + '#' + rid + ' .fc-card *{text-transform:uppercase!important;font-weight:800!important}'
       + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(' + ACC_RGB + ',.1);border:1px solid rgba(' + ACC_RGB + ',.2)}'
       + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
@@ -963,7 +968,7 @@ automation:
         + '.wd-ico{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;flex-shrink:0}'
         + '.wd-tit{flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px}'
         + '.wd-x{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18)}'
-        + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}'
+        + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}.wd-body *{text-transform:uppercase!important;font-weight:800!important}'
         + '.wd-body::-webkit-scrollbar{display:none}'
         + '.wd-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.18);margin-bottom:10px}'
         + '.wd-lbl{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:3px}'
@@ -1086,7 +1091,7 @@ automation:
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.28',
+    version: '5.29',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',

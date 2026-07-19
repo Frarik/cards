@@ -1,5 +1,9 @@
-/* frarik-version: 5.8 */
+/* frarik-version: 5.9 */
 /* Centro Controllo Posta — Frarik card standalone */
+/* v5.9: applicato in modo sistematico maiuscolo+grassetto a TUTTO il testo di
+   card e popup (non solo alle etichette) tramite una regola CSS che copre
+   ogni elemento discendente del corpo card e del contenuto popup, incluse
+   frasi/hint/valori che prima restavano normali. */
 /* v5.8: label "Altezza"/"Larghezza" dello slider dimensione card nel
    popup impostazioni ora maiuscolo/grassetto come le altre etichette
    (era rimasta solo grassetto, non maiuscola). */
@@ -1178,6 +1182,7 @@ if(!customElements.get('posta-card')){
 
 .card{height:100%;display:flex;flex-direction:column;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}
 .card::before{content:'';position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.16) 0%,transparent 65%);pointer-events:none}
+.card *{text-transform:uppercase!important;font-weight:800!important}
 
 /* header */
 .hdr{display:flex;align-items:center;gap:9px;padding:12px 15px 10px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}
@@ -1256,6 +1261,7 @@ PostaCard.openWizard=function(hass,onDone,_tpl,opts){
     .mtit{flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px;font-family:system-ui,sans-serif}
     .mxbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
     .mbody{flex:1;overflow-y:auto;padding:16px 18px 4px;scrollbar-width:none}
+    .mbody *{text-transform:uppercase!important;font-weight:800!important}
     .mbody::-webkit-scrollbar{display:none}
     .sensbox{padding:14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid #fff;display:flex;flex-direction:column;gap:18px}
     .wsec{display:flex;flex-direction:column;gap:9px}

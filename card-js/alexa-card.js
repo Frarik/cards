@@ -1,4 +1,8 @@
-/* frarik-version: 2.5 */
+/* frarik-version: 2.6 */
+/* v2.6: applicato in modo sistematico maiuscolo+grassetto a TUTTO il testo di
+   card e popup (non solo alle etichette) tramite una regola CSS che copre
+   ogni elemento discendente del corpo card e del contenuto popup, incluse
+   frasi/hint/valori che prima restavano normali. */
 /* v2.2: allineata allo standard Frarik (posta-card/Meteo/Differenziata).
    Popup unificati: stesso sfondo #0a0816, icona neutra (era colorata a
    tema), titolo maiuscolo 16px/900, rimossa la sottotitolo sotto al
@@ -249,6 +253,7 @@
       +'#'+rid+'{position:relative;width:100%;height:100%;min-height:375px;font-family:system-ui,sans-serif;display:block}'
       +'#'+rid+' .fc-card{display:flex;flex-direction:column;height:100%;min-height:375px;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
       +'#'+rid+' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.16) 0%,transparent 65%);pointer-events:none}'
+      +'#'+rid+' .fc-card *{text-transform:uppercase!important;font-weight:800!important}'
       +'#'+rid+' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       +'#'+rid+' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;background:rgba('+rgb+',.12);border:1px solid rgba('+rgb+',.25)}'
       +'#'+rid+' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text}'
@@ -315,7 +320,7 @@
     ov._close=close; return ov;
   }
 
-  var POP_CSS='<style>@keyframes fcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.fcpc2{overflow-y:auto;scrollbar-width:none}.fcpc2::-webkit-scrollbar{display:none}</style>';
+  var POP_CSS='<style>@keyframes fcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.fcpc2{overflow-y:auto;scrollbar-width:none}.fcpc2::-webkit-scrollbar{display:none}.fcpc2 *{text-transform:uppercase!important;font-weight:800!important}</style>';
 
   function popShell(icon,title,closeId,content){
     return POP_CSS+'<div style="width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
@@ -619,7 +624,7 @@
 
   /* ── REGISTRATION ── */
   var CARD={
-    id:'alexa-card',name:'Alexa Media',icon:'🔊',version:'2.5',
+    id:'alexa-card',name:'Alexa Media',icon:'🔊',version:'2.6',
     desc:'Alexa: album art, equalizzatore, sorgente, preset volume, timer countdown, TTS inline.',
     colSpan:2,rowSpan:3,frarik_no_edit:true,
     render:function(card){return render(card);},
@@ -630,5 +635,5 @@
   window.FratechCardRegistry[CARD.id]=CARD;
   window.FratechCards=window.FratechCards||{};
   window.FratechCards[CARD.id]=CARD;
-  try{console.log('[FratechStore] Card registrata: alexa-card v2.5');}catch(e){}
+  try{console.log('[FratechStore] Card registrata: alexa-card v2.6');}catch(e){}
 })();
