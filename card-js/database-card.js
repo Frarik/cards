@@ -1,4 +1,6 @@
-/* frarik-version: 2.7 */
+/* frarik-version: 2.8 */
+/* v2.8: raggruppati i controlli del popup Impostazioni (Automazioni, Orario
+   e giorni, Soglie) in riquadri con contorno bianco, come nelle altre card. */
 /* v2.7: allineati popup ed etichette allo standard delle altre card (sfondo
    #0a0816, icona/bordo neutri, titolo maiuscolo, niente sottotitoli); bagliore
    card più visibile (.08→.16); pulsante "Salva impostazioni" ora blu pieno
@@ -374,17 +376,25 @@
       + layoutRow('Larghezza', 'dc-w-'+rid2, tW)
       + '<div style="border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);padding:10px;overflow:auto;max-height:300px;margin:10px 0 4px"><div id="dc-prev-'+rid2+'" style="transform-origin:top left"></div></div>';
 
+    var boxOpen = '<div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid #fff">';
+    var boxClose = '</div>';
+
     var content = pSec('⚡ Automazioni')
+      + boxOpen
       + tog('input_boolean.frarik_db_repack_orario', isOn(h,'input_boolean.frarik_db_repack_orario'), 'Repack automatico a orario')
       + tog('input_boolean.frarik_db_repack_dimensione', isOn(h,'input_boolean.frarik_db_repack_dimensione'), 'Repack per dimensione massima')
       + tog('input_boolean.frarik_db_notifiche_push', isOn(h,'input_boolean.frarik_db_notifiche_push'), 'Notifiche push')
+      + boxClose
       + pSec('🕐 Orario e giorni')
+      + boxOpen
       + '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
       + '<span style="font-size:13px;color:#fff">Orario repack</span>'
       + '<input type="time" id="dc-orario-'+rid2+'" style="'+iBase+';width:110px;padding:6px 8px;text-align:center;font-family:system-ui" value="'+orario+'">'
       + '</div>'
       + daysHtml
+      + boxClose
       + pSec('📏 Soglie')
+      + boxOpen
       + '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
       + '<span style="font-size:13px;color:#fff">Giorni da mantenere</span>'
       + '<input type="number" id="dc-gm-'+rid2+'" style="'+iBase+';width:90px;padding:6px 8px;text-align:right;font-family:system-ui" value="'+giM+'" min="1" max="365" step="1">'
@@ -393,6 +403,7 @@
       + '<span style="font-size:13px;color:#fff">Dimensione massima (MB)</span>'
       + '<input type="number" id="dc-dm-'+rid2+'" style="'+iBase+';width:90px;padding:6px 8px;text-align:right;font-family:system-ui" value="'+dimMax+'" min="1" max="1000000" step="100">'
       + '</div>'
+      + boxClose
       + pSec('⚙ Repack Manuale')
       + '<button id="dc-repack-'+rid2+'" style="width:100%;padding:12px;border-radius:11px;border:none;cursor:pointer;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,#38bdf8,#0ea5e9);font-family:system-ui;margin-top:4px">🔄 Esegui Repack Ora</button>'
       + aspettoHtml
@@ -485,7 +496,7 @@
   }
 
   var CARD = {
-    id: 'database-card', name: 'Database HA', icon: '🗄️', version: '2.7',
+    id: 'database-card', name: 'Database HA', icon: '🗄️', version: '2.8',
     desc: 'Monitoraggio database HA: dimensione, repack automatico, statistiche.',
     colSpan: 2, rowSpan: 3,
     frarik_no_edit: true,
