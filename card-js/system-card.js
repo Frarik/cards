@@ -1,4 +1,9 @@
-﻿/* frarik-version: 5.9 */
+﻿/* frarik-version: 6.0 */
+/* v6.0: anteprima live del popup Configura ora a colonne pari 50/50 (era
+   420px fisso vs flessibile, sproporzionato); il pulsante "⚙️ Gestione" in
+   card ora apre direttamente Configura (con anteprima+dimensione subito
+   visibili) invece di Notifiche, con un pulsante "🔔 Notifiche &
+   automazioni" per raggiungerle da lì. */
 /* v5.9: campi sensori del popup Configura ora raggruppati in riquadri con
    contorno bianco (come le altre card), invece di essere solo separati da
    un'etichetta di sezione. */
@@ -692,7 +697,7 @@
       if(a==='popup-perf'){ openPerfPopup(cfgFor(card)); return; }
       if(a==='popup-energia'){ openEnergiaPopup(cfgFor(card)); return; }
       if(a==='popup-ha'){ openHAPopup(cfgFor(card)); return; }
-      if(a==='popup-notif'){ openNotifPopup(card,el); return; }
+      if(a==='popup-notif'){ openCfg(card,el); return; }
     };
     el.addEventListener('click',el._scHandler);
     el._scBound=CARD.version;
@@ -779,7 +784,8 @@
       +boxOpen
       +field('sy-pk-ventola','Switch ventola fisica',cf.pk_ventola,'switch.presa_ventola_armadietto_sala')
       +boxClose
-      +'<div style="display:flex;gap:8px;margin-top:14px"><button id="sy-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button><button id="sy-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#fff">Salva</button></div>';
+      +'<button id="sy-goto-notif" style="width:100%;margin-top:14px;padding:11px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:700;cursor:pointer">🔔 Notifiche & automazioni</button>'
+      +'<div style="display:flex;gap:8px;margin-top:8px"><button id="sy-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button><button id="sy-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#fff">Salva</button></div>';
 
     const ov=document.createElement('div');
     ov.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
@@ -791,8 +797,8 @@
           +'<button id="sy-hdr-close" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);flex-shrink:0">✕</button>'
         +'</div>'
         +'<div class="fcc" style="display:flex;flex:1;overflow:hidden;min-height:0">'
-          +'<div class="fcf" style="width:420px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none">'+formHtml+'</div>'
-          +'<div class="fcp" style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">'
+          +'<div class="fcf" style="flex:1;min-width:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none">'+formHtml+'</div>'
+          +'<div class="fcp" style="flex:1;min-width:0;max-width:340px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">'
             +'<div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>'
             +'<div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><div id="sy-prev-inner"></div></div>'
             +'<div style="padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">'
@@ -821,6 +827,8 @@
     ov.querySelector('#sy-cardw').addEventListener('input',function(){ ov.querySelector('#sy-cardw-lbl').textContent=this.value>=100?'Auto (100%)':this.value+'%'; schedPrev(); });
     const close=function(){ try{ document.body.removeChild(ov); }catch(e){} };
     ov.querySelector('#sy-hdr-close').addEventListener('click',close);
+    var goNotif=ov.querySelector('#sy-goto-notif');
+    if(goNotif) goNotif.addEventListener('click',function(){ close(); setTimeout(function(){ openNotifPopup(card,el); },80); });
     allFieldIds.forEach(function(fid){
       var inp2=ov.querySelector('#'+fid),drop=ov.querySelector('#'+fid+'-d');
       if(!inp2||!drop) return;
@@ -2323,7 +2331,7 @@ automation:
   }
 
   var CARD={
-    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'5.9',
+    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'6.0',
     desc:'Mini-PC/Server: SVG animato mini-PC, CPU/RAM/Temp/Potenza in evidenza. Popup: Prestazioni (ring CPU/RAM/Disco/Swap + load + rete), Energia & Costi, Sistema HA (uptime/aggiornamenti/entità), Gestione automazioni. Sensori autodetect + PKG completo.',
     colSpan:2, rowSpan:3,
     frarik_no_edit:true,
