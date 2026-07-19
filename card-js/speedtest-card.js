@@ -1,4 +1,7 @@
-/* frarik-version: 1.5 */
+/* frarik-version: 1.6 */
+/* v1.6: anteprima live del popup Configura ora a colonne pari 50/50 (era
+   230px fisso, sproporzionato); il timer di sicurezza dopo "Avvia Test"
+   portato da 120s a 30s su richiesta esplicita. */
 /* v1.5: FIX BUG — il timer di sicurezza dopo "Avvia Test" resettava lo stato
    a "idle" dopo soli 10 secondi, molto prima che un vero speedtest (20-40s+)
    fosse completato: la card sembrava annullare il test e tornare a mostrare
@@ -348,7 +351,7 @@
 
     const formHtml = '<div style="display:flex;gap:20px;align-items:flex-start">'
       +'<div style="flex:1;min-width:0">'+settingsHtml+'</div>'
-      +'<div style="width:230px;flex-shrink:0">'+previewHtml+'</div>'
+      +'<div style="flex:1;min-width:0;max-width:340px">'+previewHtml+'</div>'
       +'</div>';
 
     const ov = mkOv(popShell('🌐','Configura Speedtest','fsc-cfg-close',formHtml),'fsc-cfg-close');
@@ -460,14 +463,10 @@
         el._fspSig   = '';
         el.innerHTML = render(card);
         mount(card, null, el);
-        /* Failsafe: un vero speedtest richiede in genere 20-40s (a volte di
-           più). Questo timer serve solo a sbloccare la card se il sensore non
-           si aggiorna mai (es. servizio fallito), non è la durata attesa del
-           test — va quindi tenuto ben più lungo del tempo reale del test. */
         _spTimer = setTimeout(function () {
           _spTestTs = 0; _spTimer = null;
           try { el._fspSig=''; el.innerHTML=render(card); mount(card,null,el); } catch(e){}
-        }, 120000);
+        }, 30000);
         return;
       }
       if (a === 'cfg') { openCfg(card, el); return; }
@@ -477,7 +476,7 @@
 
   /* ── CARD ── */
   var CARD = {
-    id: 'speedtest-card', name: 'Speedtest', icon: '🌐', version: '1.5',
+    id: 'speedtest-card', name: 'Speedtest', icon: '🌐', version: '1.6',
     desc: 'Monitoraggio connessione: scaricamento, caricamento, ping, jitter, bufferbloat. Richiede integrazione Ookla Speedtest.',
     colSpan: 2, rowSpan: 3, frarik_no_edit: true,
     render: function(card){ return render(card); },
