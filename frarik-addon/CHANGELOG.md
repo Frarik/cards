@@ -1,5 +1,34 @@
 # Changelog
 
+## 2.1.4 — 2026-07-20
+
+### fix: Crea Card — i bottoni "Genera JS"/"Formatta"/"Copia"/"Salva in locale" non facevano nulla
+
+- Il bundler (Rollup, via `vite build`) elimina come codice morto qualsiasi
+  funzione top-level mai referenziata da un identificatore JS reale — le
+  funzioni richiamate SOLO tramite l'attributo `data-action="..."` (stringa,
+  non riferimento diretto) devono essere elencate esplicitamente nel blocco
+  `Object.assign(window, {...})` in fondo al file perché restino
+  raggiungibili. `_vnssCreaFormat`, `_vnssCreaGenerate`, `_vnssCreaCopyCode`,
+  `_vnssCreaSaveLocal` non c'erano: il bottone premeva, ma la funzione (e
+  tutto ciò che chiamava solo lei, incluso il prompt inviato a Vanessa)
+  non esisteva più nel bundle pubblicato — nessun errore visibile, solo
+  nessun effetto. Aggiunte alla lista.
+- L'anteprima live (YAML → disegno) non era toccata da questo bug perché
+  raggiunta tramite una catena di chiamate dirette, non tramite data-action.
+
+### feat: Crea Card — la card generata ora usa lo stile Frarik, non quello originale
+
+- Per lo YAML nativo Lovelace/HACS: prima veniva chiesto a Vanessa di
+  clonare l'aspetto ESATTO della card originale. Ora viene ricostruita nel
+  design system Frarik (stesso header con icona, pannelli, bottoni,
+  palette delle altre card della dashboard) mantenendo solo il
+  comportamento (entità, azioni, logica condizionale) — per uniformità con
+  tutte le altre card create finora.
+- Il prompt di sistema condiviso da entrambe le modalità ora include anche
+  la struttura del design system (non solo i colori): pattern header con
+  icon-box, pannelli dati, bottoni.
+
 ## 2.1.3 — 2026-07-20
 
 ### fix: Crea Card — anteprima Lovelace mostrava "non installata su HACS" per card in realtà installate

@@ -17645,15 +17645,21 @@ function _vnssCreaLivePreview(){
   fail('⚠️ Serve "elementi:" (lista testo/icona/forma/azione) oppure "type:" (card Lovelace/HACS)');
 }
 function _vnssCreaBuildSystemPrompt(){
-  return 'Sei Vanessa: ora generi codice per la Frarik Dashboard. Segui ESATTAMENTE lo standard "FratechStore":\n'
+  return 'Sei Vanessa: ora generi codice per la Frarik Dashboard. Segui ESATTAMENTE lo standard "FratechStore" — tutte le card Frarik devono avere lo STESSO look, non stili diversi l\'una dall\'altra:\n'
     +'- Un solo file .js, vanilla JS puro (niente librerie esterne, niente build, niente React).\n'
     +'- Wrappa tutto in una IIFE: (function(){ \'use strict\'; ... })();\n'
     +'- Alla fine registra: window.FratechCardRegistry = window.FratechCardRegistry || {}; window.FratechCardRegistry[CARD.id] = CARD;\n'
     +'- CARD = { id, name, icon, version:\'1.0.0\', desc, render(card,hass){ /* ritorna stringa HTML */ }, update(card,hass,el){ el.innerHTML=this.render(card,hass); this.mount?.(card,hass,el); }, mount(card,hass,el){ /* event listener qui, mai in render */ } }\n'
     +'- Accesso stato protetto: hass?.states?.[id] ?? \'—\' (hass può essere null). Per chiamare un servizio usa la funzione globale già disponibile: callSvc(domain, service, entityId, data).\n'
-    +'- Palette Frarik: sfondo card rgba(10,14,26,1); pannelli interni rgba(255,255,255,.04) con bordo rgba(255,255,255,.08); testo primario #fff; testo secondario rgba(255,255,255,.55); accenti #38bdf8 #6366f1 #4ade80 #f87171.\n'
-    +'- Font: var(--primary-font-family,\'Inter\',system-ui,sans-serif). Contenitori fluidi (width:100%, min-width:0), niente larghezze fisse tranne dove l\'utente ha esplicitamente scelto px (es. il canvas).\n'
-    +'- Rispondi SOLO con il codice JS completo del file. Nessuna spiegazione, nessun testo prima o dopo, nessun blocco markdown ```.';
+    +'- Font: var(--primary-font-family,\'Inter\',system-ui,sans-serif). Contenitori fluidi (width:100%, min-width:0), niente larghezze fisse.\n\n'
+    +'DESIGN SYSTEM FRARIK (usa ESATTAMENTE questi valori, sono condivisi da tutte le card della dashboard):\n'
+    +'- Palette: sfondo card rgba(10,14,26,1); pannelli interni rgba(255,255,255,.04) con bordo rgba(255,255,255,.08); testo primario #fff sempre pieno (mai rgba con opacità ridotta sul testo principale); testo secondario rgba(255,255,255,.55); label/titoli MAIUSCOLO+GRASSETTO; accenti #38bdf8 (info/stato), #6366f1 (azione primaria), #4ade80 (on/ok), #fb923c (warning), #f87171 (off/errore).\n'
+    +'- Contenitore: <div style="height:100%;width:100%;box-sizing:border-box;display:flex;flex-direction:column;background:rgba(10,14,26,1);border-radius:inherit;color:#fff;overflow:hidden">\n'
+    +'- Header (in cima, se la card ha un titolo): riga con icon-box 42x42px arrotondato (sfondo rgba(56,189,248,.15), bordo rgba(56,189,248,.3), l\'emoji/icona dentro) + titolo 15px/700 bianco + sottotitolo 9px maiuscolo grigio sotto + badge di stato a pillola sulla destra (pallino colorato + testo maiuscolo, colore in base allo stato acceso/spento).\n'
+    +'- Pannelli dati: griglia di riquadri rgba(255,255,255,.04) bordo rgba(255,255,255,.08) radius 12px, con dentro una label piccola maiuscola (8px/700, colore accento) sopra un valore grande (24-28px/800 bianco).\n'
+    +'- Bottoni azione: radius 12px, gradiente dell\'accento scelto (es. linear-gradient(135deg,#6366f1,#4f46e5)), testo bianco 700, ombra morbida dell\'accento.\n\n'
+    +'Se la card di partenza ha uno stile visivo tutto suo (colori diversi, font diversi, layout a griglia particolare): NON riprodurlo — ricostruiscila secondo QUESTO design system, mantenendo solo il comportamento (entità collegate, azioni, logica condizionale su stato/tempo).\n\n'
+    +'Rispondi SOLO con il codice JS completo del file. Nessuna spiegazione, nessun testo prima o dopo, nessun blocco markdown ```.';
 }
 function _vnssCreaBuildPrompt(config){
   const elementi=config.elementi||[];
@@ -17673,11 +17679,10 @@ function _vnssCreaBuildPrompt(config){
 }
 function _vnssCreaBuildPromptLovelace(config,id,rawYaml){
   return 'Qui sotto la configurazione YAML ORIGINALE di una card Home Assistant/Lovelace (può essere una card custom da HACS, es. button-card, mushroom, mini-graph-card, ecc. — probabilmente ne conosci già la sintassi). '
-    +'L\'utente l\'ha incollata in un editor con anteprima live nativa (la vede già renderizzata davvero) e vuole una copia INDIPENDENTE come card FratechStore: stesso aspetto visivo ESATTO (colori, font, layout, animazioni) e stesso comportamento (tap_action/hold_action → stessa identica chiamata di servizio, stessa eventuale conferma, stessa logica di stile/testo che dipende dallo stato dell\'entità).\n\n'
-    +'IMPORTANTE: qui l\'utente ha già scelto un suo stile visivo specifico — NON sostituirlo con la palette standard Frarik, riproducilo fedelmente così com\'è.\n\n'
-    +'Se la configurazione usa template stile button-card [[[ codice ]]]: sono blocchi JavaScript letterali valutati con `entity` (l\'oggetto stato dell\'entità configurata: {state, attributes, ...}), `states`, `variables`, `hass` disponibili nello scope, che ritornano una stringa (HTML per custom_fields, un valore CSS per gli styles). Traduci quella stessa logica dentro render()/mount() in JS vanilla, leggendo lo stato reale da hass.states.\n\n'
+    +'L\'utente l\'ha incollata in un editor con anteprima live nativa (la vede già renderizzata davvero) e vuole una copia INDIPENDENTE come card FratechStore, RISTILIZZATA secondo il design system Frarik descritto sopra (così risulta identica alle altre card della dashboard) — stesso comportamento (tap_action/hold_action → stessa identica chiamata di servizio, stessa eventuale conferma, stessa logica condizionale su stato/tempo dell\'entità), NON lo stesso aspetto grafico: colori/font/layout della configurazione originale vanno sostituiti con quelli del design system Frarik.\n\n'
+    +'Se la configurazione usa template stile button-card [[[ codice ]]]: sono blocchi JavaScript letterali valutati con `entity` (l\'oggetto stato dell\'entità configurata: {state, attributes, ...}), `states`, `variables`, `hass` disponibili nello scope, che ritornano una stringa (HTML per custom_fields, un valore CSS per gli styles). Traduci quella stessa LOGICA (cosa succede, non come appare) dentro render()/mount() in JS vanilla, leggendo lo stato reale da hass.states, ma rivestendola con l\'estetica Frarik.\n\n'
     +'CARD.id = "'+id+'", CARD.name = "'+(config.name||id)+'".\n\n'
-    +'YAML originale:\n'+rawYaml;
+    +'YAML originale (solo come riferimento per capire entità/servizi/logica, non per lo stile):\n'+rawYaml;
 }
 async function _vnssCreaGenerate(){
   if(!_vnssCreaConfig){ showToast('⚠️ Sistema prima lo YAML (controlla gli errori)'); return; }
@@ -19693,6 +19698,7 @@ Object.assign(window, {
   _openJsdPopup, _editJsdBadge, _fillJsdPicker, _jsdPickCard,
   _vanessaRenderSettings, _vanessaSave, _vanessaTest, _vanessaValidateKey,
   _vanessaRunCard, _vanessaSimulateCard, _vanessaUndoCard, _vanessaCardPopup, _vanessaClearLog, _vnssToggleVacation,
+  _vnssCreaFormat, _vnssCreaGenerate, _vnssCreaCopyCode, _vnssCreaSaveLocal,
   _pkgUninstallFromHA, _pkgViewOnHA, _pkgGenericInstall, _pkgPostInstall,
   _pkgParseInputs, _pkgShowWizard, _frarikEntityAutocomplete,
   _ghsPkgInstallFromGH, _pkgInstallLocalToHA, _pkgUpdateCard, _ghsPkgUpdFromPending, _ghsPkgMarkUpdated,
