@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.1.11 — 2026-07-20
+
+### fix: Crea Card — card generata sempre "spenta" e il click sembrava non fare nulla
+
+- Le card FratechStore reali ricevono da render(card,hass)/mount un hass
+  SEMPLIFICATO dove `hass.states[entità]` è direttamente la stringa di
+  stato ("on"/"off"), non un oggetto `{state, attributes}` (vedi
+  `Istruzioni card/CREAZIONE-CARD.md` §3). Le funzioni di supporto erano
+  state portate da Canvas Libero, che invece usa una fonte diversa
+  (`window.frarikHass()`, hass "vero" con stati a oggetto) — nel codice
+  generato leggevano quindi sempre `hass.states[entità].state`, che su
+  una stringa vale sempre `undefined`: la card mostrava sempre lo stato
+  "spento" indipendentemente da quello reale, e dopo un click il nuovo
+  stato non veniva mai riconosciuto — sembrava che il tocco non facesse
+  nulla, anche quando il comando HA veniva davvero eseguito.
+- `_vnssCreaS`/`_vnssCreaAttr` ora riconoscono ENTRAMBE le forme (stringa
+  diretta o oggetto con `.state`/`.attributes`), con fallback su
+  `window.hs`/`window.ha` — corretto sia per l'anteprima sia per le card
+  effettivamente generate e salvate.
+
 ## 2.1.10 — 2026-07-20
 
 ### fix: Crea Card — "Genera JS (gratis)" dava "... is not defined" nell'anteprima

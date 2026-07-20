@@ -17345,8 +17345,22 @@ function _vnssRenderMainTab(tab){
    Porting mirato (non riuso: canvas-libero.js è un IIFE isolato) del modello
    a elementi di Canvas Libero (card-js/canvas-libero.js) — stesso schema
    testo/icona/forma/azione, stesso rilevamento automatico dal dominio. */
-function _vnssCreaS(h, id) { const s = h && id && h.states && h.states[id]; return s ? s.state : null; }
-function _vnssCreaAttr(h, id, attr) { const s = h && id && h.states && h.states[id]; return (s && s.attributes && s.attributes[attr] != null) ? s.attributes[attr] : null; }
+/* Gestisce ENTRAMBE le forme di hass: quella semplificata che la dashboard passa
+   davvero a render(card,hass)/mount (hass.states[id] è una STRINGA — vedi
+   Istruzioni card/CREAZIONE-CARD.md §3), e quella "vera" di Home Assistant
+   (hass.states[id] = {state, attributes}) usata da _getBestHass() per l'anteprima. */
+function _vnssCreaS(h, id) {
+  if (!id) return null;
+  try { if (h && h.states && h.states[id] != null) { var s = h.states[id]; return (typeof s === 'object') ? (s.state != null ? s.state : null) : s; } } catch (e) {}
+  try { if (typeof window !== 'undefined' && window.hs && window.hs[id] != null) return window.hs[id]; } catch (e) {}
+  return null;
+}
+function _vnssCreaAttr(h, id, attr) {
+  if (!id) return null;
+  try { if (h && h.states && h.states[id] && typeof h.states[id] === 'object' && h.states[id].attributes && h.states[id].attributes[attr] != null) return h.states[id].attributes[attr]; } catch (e) {}
+  try { if (typeof window !== 'undefined' && window.ha && window.ha[id] && window.ha[id][attr] != null) return window.ha[id][attr]; } catch (e) {}
+  return null;
+}
 function _vnssCreaDomainActions(entityId){
   const domain=(entityId||'').split('.')[0];
   const map={
@@ -17506,10 +17520,10 @@ function _vnssCreaTryParseButtonCard(config){
   return { entity, name: config.name||entity, secondaryEntity };
 }
 function _vnssCreaGenRenderCompact(entity, entity2, label, hass){
-  var isOn = !!(hass && hass.states && hass.states[entity] && hass.states[entity].state==='on');
+  var isOn = _vnssCreaS(hass, entity) === 'on';
   var iconColor = isOn ? '#fbbf24' : 'rgba(255,255,255,.35)';
   var statusText = isOn ? 'ACCESA' : 'SPENTA';
-  var sec2On = !!(entity2 && hass && hass.states && hass.states[entity2] && hass.states[entity2].state==='on');
+  var sec2On = entity2 ? (_vnssCreaS(hass, entity2) === 'on') : false;
   var secColor = sec2On ? '#4ade80' : 'rgba(255,255,255,.3)';
   return '<div id="_vnssRow" style="height:100%;width:100%;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:0 16px;background:rgba(10,14,26,1);border-radius:inherit;cursor:pointer">'
     +'<div style="width:34px;height:34px;border-radius:10px;flex-shrink:0;background:'+iconColor+'22;border:1px solid '+iconColor+'55;display:flex;align-items:center;justify-content:center;font-size:18px;color:'+iconColor+'">💡</div>'
@@ -17533,7 +17547,7 @@ function _vnssCreaGenMountCompact(entity, entity2, el){
   });
 }
 function _vnssCreaGenerateButtonCardCode(parsed, id){
-  const helpers=[_vnssCreaGenRenderCompact,_vnssCreaGenMountCompact].map(fn=>fn.toString()).join('\n\n');
+  const helpers=[_vnssCreaS,_vnssCreaGenRenderCompact,_vnssCreaGenMountCompact].map(fn=>fn.toString()).join('\n\n');
   const renderName=_vnssCreaGenRenderCompact.name, mountName=_vnssCreaGenMountCompact.name;
   return [
     '/* Card generata da Crea Card (Frarik Dashboard) — da YAML button-card, generazione deterministica senza AI */',
