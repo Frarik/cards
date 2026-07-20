@@ -17549,6 +17549,7 @@ function _vnssHtmlCreaCard(){
         <div id="vnss-crea-code-hdr">
           <span class="vnss-crea-pane-lbl">Codice JS generato</span>
           <div style="display:flex;gap:6px">
+            <button class="vnss-crea-act-btn" data-action="_vnssCreaRefreshJsPreview" title="Rimostra l'anteprima sopra con le modifiche fatte qui">🔄 Aggiorna anteprima</button>
             <button class="vnss-crea-act-btn" data-action="_vnssCreaCopyCode">📋 Copia</button>
             <button class="vnss-crea-act-btn" data-action="_vnssCreaSaveLocal" style="background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.32);color:#4ade80">💾 Salva in locale</button>
           </div>
@@ -17611,6 +17612,7 @@ function _vnssCreaLivePreview(){
   prevWrap.style.cssText='';
   const old=document.getElementById('vnss-crea-canvas'); if(old) old.remove();
   const oldLov=document.getElementById('vnss-crea-lovelace'); if(oldLov) oldLov.remove();
+  const oldJs=document.getElementById('vnss-crea-jspreview'); if(oldJs) oldJs.remove();
   const fail=(msg)=>{ if(errEl) errEl.textContent=msg; if(genBtn) genBtn.style.display='none'; _vnssCreaConfig=null; };
   const txt=ta.value.trim();
   if(!txt){ if(ph) ph.style.display=''; if(errEl) errEl.textContent=''; if(genBtn) genBtn.style.display='none'; _vnssCreaConfig=null; return; }
@@ -17701,14 +17703,75 @@ async function _vnssCreaGenerate(){
     const codeTa=document.getElementById('vnss-crea-code'), wrap=document.getElementById('vnss-crea-code-wrap');
     if(codeTa) codeTa.value=code;
     if(wrap){ wrap.style.display='block'; wrap.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+    _vnssCreaShowJsPreview(code);
     if(errEl) errEl.textContent='';
-    showToast('✨ Codice generato — controllalo prima di salvare');
+    showToast('✨ Codice generato — questa è già la card vera, controllala prima di salvare');
   }catch(e){
     if(errEl) errEl.textContent='❌ '+e.message;
     showToast('❌ Vanessa non è riuscita a generare il codice');
   }finally{
     if(btn){ btn.disabled=false; btn.textContent='✨ Genera JS con Vanessa'; }
   }
+}
+/* Installa il codice generato (senza salvarlo nello Store) e mostra il render REALE della
+   card al posto dell'anteprima YAML, nello stesso riquadro — così l'utente vede esattamente
+   cosa comparirebbe sulla dashboard prima di decidere se salvare. */
+function _vnssCreaShowJsPreview(code){
+  const prevWrap=document.getElementById('vnss-crea-prev-wrap');
+  const ph=document.getElementById('vnss-crea-placeholder');
+  const errEl=document.getElementById('vnss-crea-err');
+  if(!prevWrap) return;
+  _vnssCreaPrevGen++;
+  if(_vnssCreaPrevTimer){ clearInterval(_vnssCreaPrevTimer); _vnssCreaPrevTimer=null; }
+  if(prevWrap._yamlRO){ try{ prevWrap._yamlRO.disconnect(); }catch(_){} prevWrap._yamlRO=null; }
+  if(prevWrap._yamlScrollOff){ try{ prevWrap._yamlScrollOff(); }catch(_){} prevWrap._yamlScrollOff=null; }
+  try{ _cleanupYamlOverlay('crea'); }catch(_){}
+  prevWrap.style.cssText='';
+  const oldCanvas=document.getElementById('vnss-crea-canvas'); if(oldCanvas) oldCanvas.remove();
+  const oldLov=document.getElementById('vnss-crea-lovelace'); if(oldLov) oldLov.remove();
+  const oldJs=document.getElementById('vnss-crea-jspreview'); if(oldJs) oldJs.remove();
+  if(ph) ph.style.display='none';
+
+  const res=_installCardCode(code);
+  if(res.err||!res.newCards||!res.newCards.length){
+    if(errEl) errEl.textContent='❌ Anteprima JS non disponibile: '+(res.err?res.err.message:'il codice non registra nessuna card');
+    return;
+  }
+  const id=res.newCards[0];
+  const CARD=window.FratechCardRegistry[id];
+  if(!CARD||typeof CARD.render!=='function'){ if(errEl) errEl.textContent='❌ La card generata non espone render()'; return; }
+
+  const holder=document.createElement('div');
+  holder.id='vnss-crea-jspreview';
+  holder.style.cssText='width:100%;min-height:120px;border-radius:14px;overflow:hidden;background:transparent';
+  prevWrap.appendChild(holder);
+
+  const fakeCard={id:'crea-preview', label:CARD.name||id, icon:CARD.icon||'✨'};
+  const doRender=()=>{
+    const hass=_getBestHass();
+    try{
+      holder.innerHTML=CARD.render(fakeCard,hass);
+      CARD.mount?.(fakeCard,hass,holder);
+    }catch(e){
+      holder.innerHTML='<div style="padding:16px;color:#f87171;font-size:11px">⚠️ Errore nel render: '+eh(e.message)+'</div>';
+    }
+  };
+  doRender();
+  const myGen=_vnssCreaPrevGen;
+  _vnssCreaPrevTimer=setInterval(()=>{
+    if(myGen!==_vnssCreaPrevGen||!holder.isConnected){ clearInterval(_vnssCreaPrevTimer); _vnssCreaPrevTimer=null; return; }
+    const hass=_getBestHass();
+    try{ CARD.update ? CARD.update(fakeCard,hass,holder) : doRender(); }catch(_){}
+  },2000);
+  if(errEl) errEl.textContent='';
+}
+/* Rilegge la textarea del codice (magari modificata a mano) e ri-mostra l'anteprima JS. */
+function _vnssCreaRefreshJsPreview(){
+  const ta=document.getElementById('vnss-crea-code');
+  if(!ta||!ta.value.trim()){ showToast('⚠️ Nessun codice da mostrare'); return; }
+  _vnssCreaCode=ta.value;
+  _vnssCreaShowJsPreview(ta.value);
+  showToast('🔄 Anteprima aggiornata');
 }
 function _vnssCreaCopyCode(){
   const ta=document.getElementById('vnss-crea-code'); if(!ta||!ta.value) return;
@@ -19698,7 +19761,7 @@ Object.assign(window, {
   _openJsdPopup, _editJsdBadge, _fillJsdPicker, _jsdPickCard,
   _vanessaRenderSettings, _vanessaSave, _vanessaTest, _vanessaValidateKey,
   _vanessaRunCard, _vanessaSimulateCard, _vanessaUndoCard, _vanessaCardPopup, _vanessaClearLog, _vnssToggleVacation,
-  _vnssCreaFormat, _vnssCreaGenerate, _vnssCreaCopyCode, _vnssCreaSaveLocal,
+  _vnssCreaFormat, _vnssCreaGenerate, _vnssCreaCopyCode, _vnssCreaSaveLocal, _vnssCreaRefreshJsPreview,
   _pkgUninstallFromHA, _pkgViewOnHA, _pkgGenericInstall, _pkgPostInstall,
   _pkgParseInputs, _pkgShowWizard, _frarikEntityAutocomplete,
   _ghsPkgInstallFromGH, _pkgInstallLocalToHA, _pkgUpdateCard, _ghsPkgUpdFromPending, _ghsPkgMarkUpdated,

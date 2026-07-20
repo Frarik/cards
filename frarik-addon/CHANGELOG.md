@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.1.5 — 2026-07-20
+
+### feat: Crea Card — dopo "Genera" l'anteprima mostra la card JS vera, non più lo YAML
+
+- Dopo aver generato il codice, il riquadro "Anteprima Live" (dove prima
+  c'era il render dello YAML) viene sostituito dal render REALE della
+  card appena generata: il codice viene installato (senza salvarlo nello
+  Store) e si chiama `render()`/`mount()`/`update()` come fa la dashboard
+  vera, con aggiornamento periodico dallo stato live.
+- Aggiunto un bottone "🔄 Aggiorna anteprima" accanto a "Copia"/"Salva in
+  locale": se si modifica il codice a mano nella casella sotto, permette
+  di rivedere l'anteprima con le modifiche prima di salvare.
+- Tornando a modificare lo YAML l'anteprima torna automaticamente a
+  quella YAML (nessuna anteprima "fantasma" della generazione precedente).
+
 ## 2.1.4 — 2026-07-20
 
 ### fix: Crea Card — i bottoni "Genera JS"/"Formatta"/"Copia"/"Salva in locale" non facevano nulla
