@@ -17716,7 +17716,49 @@ NON descriverti lo stile a parole: sotto trovi il CODICE REALE di una card Frari
   window.FratechCardRegistry[CARD.id] = CARD;
 })();
 
-Fine dell'esempio. Questo NON è un template da applicare sempre e comunque — è un catalogo dei componenti/colori/stile Frarik da cui pescare (header con icon-box, pannello dati, bottone gradiente, badge di stato) quando la card che ti viene chiesta li richiede davvero. Se la card richiesta è più semplice/compatta dell'esempio (es. una singola riga con icona+nome+piccolo stato, senza bisogno di pannelli separati), il risultato deve restare altrettanto semplice/compatto: usa SOLO i colori/font/raggi/spaziature di questo stile, non l'intera composizione a blocchi se l'originale non la giustifica. La densità/complessità del layout finale deve rispecchiare quella della card richiesta, non quella dell'esempio.
+Secondo esempio: stessi colori/font di sopra, ma versione COMPATTA a riga singola (icona + nome/stato + un piccolo controllo secondario), utile quando la card richiesta è semplice come un interruttore con nome — usa QUESTA come base quando la card di partenza è piccola/densa, non la prima:
+
+(function(){
+  'use strict';
+
+  const CARD = {
+    id:'esempio-compatto', name:'Esempio compatto', icon:'💡', version:'1.0.0', desc:'Riga singola cliccabile',
+
+    render(card, hass){
+      const isOn = hass?.states?.[card.entity] === 'on';
+      const iconColor = isOn ? '#fbbf24' : 'rgba(255,255,255,.35)';
+      const statusText = isOn ? 'ACCESA' : 'SPENTA';
+      const sec2On = card.entity2 ? hass?.states?.[card.entity2] === 'on' : false;
+      const secColor = sec2On ? '#4ade80' : 'rgba(255,255,255,.3)';
+      return '<div id="row-'+card.id+'" style="height:100%;width:100%;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:0 16px;background:rgba(10,14,26,1);border-radius:inherit;cursor:pointer">'
+        +'<div style="width:34px;height:34px;border-radius:10px;flex-shrink:0;background:'+iconColor+'22;border:1px solid '+iconColor+'55;display:flex;align-items:center;justify-content:center;font-size:18px;color:'+iconColor+'">'+(card.icon||'💡')+'</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:13px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(card.label||'Nome')+'</div>'
+          +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.4)">'+statusText+'</div>'
+        +'</div>'
+        +(card.entity2?('<button id="sec-'+card.id+'" style="width:30px;height:30px;border-radius:8px;border:none;background:rgba(255,255,255,.06);color:'+secColor+';font-size:15px;flex-shrink:0;cursor:pointer">🤖</button>'):'')
+      +'</div>';
+    },
+
+    update(card, hass, el){ el.innerHTML = this.render(card, hass); this.mount(card, hass, el); },
+
+    mount(card, hass, el){
+      el.querySelector('#row-'+card.id)?.addEventListener('click', (e)=>{
+        if(e.target.closest('#sec-'+card.id)) return;
+        if(card.entity) callSvc(card.entity.split('.')[0], 'toggle', card.entity);
+      });
+      el.querySelector('#sec-'+card.id)?.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        if(card.entity2) callSvc(card.entity2.split('.')[0], 'toggle', card.entity2);
+      });
+    }
+  };
+
+  window.FratechCardRegistry = window.FratechCardRegistry || {};
+  window.FratechCardRegistry[CARD.id] = CARD;
+})();
+
+Fine degli esempi. Nessuno dei due è un template fisso da applicare sempre — sono due riferimenti tra cui scegliere in base a quanto è densa la card richiesta: il primo (header+pannelli+bottone) per card con più informazioni distinte, il secondo (riga compatta con icona+nome/stato+eventuale controllo secondario) per card semplici tipo un interruttore. Se la card richiesta è compatta come nel secondo esempio, usa quella struttura, non la prima. In entrambi i casi prendi SOLO i colori/font/raggi/spaziature di questo stile — la densità/complessità del layout finale deve rispecchiare quella della card richiesta, non quella dell'esempio che scegli come riferimento.
 
 Se la card di partenza ha uno stile visivo tutto suo (colori diversi, font diversi): NON riprodurlo — usa i colori/font di questo stile, mantenendo però la STESSA struttura/composizione/densità dell'originale (quanti elementi, come sono disposti, quanto è grande/piccola la card) e lo stesso comportamento (entità collegate, azioni, logica condizionale su stato/tempo).
 
@@ -18629,7 +18671,7 @@ async function _vanessaValidateKey(){
       const d=await r.json();
       models=(d.data||[]).map(m=>m.id).filter(id=>/gpt/.test(id)).sort();
     } else if(provider==='claude'){
-      const r=await fetch('https://api.anthropic.com/v1/models',{headers:{'x-api-key':key,'anthropic-version':'2023-06-01'}});
+      const r=await fetch('https://api.anthropic.com/v1/models',{headers:{'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}});
       if(!r.ok){ const t=await r.text(); throw new Error(`${r.status}: ${JSON.parse(t)?.error?.message||t.slice(0,80)}`); }
       const d=await r.json();
       models=(d.data||[]).map(m=>m.id).sort().reverse();
@@ -18785,7 +18827,7 @@ async function _vanessaCallAI(prompt,opts){
     return d.choices?.[0]?.message?.content||'';
   }
   if(provider==='claude'){
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model,max_tokens:maxTokens,system,messages:[{role:'user',content:prompt}]})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model,max_tokens:maxTokens,system,messages:[{role:'user',content:prompt}]})});
     if(!r.ok){ const t=await r.text(); throw new Error(`Claude ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();
     return d.content?.[0]?.text||'';

@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.1.8 — 2026-07-20
+
+### fix: Vanessa — provider Claude dava sempre "Failed to fetch"
+
+- Le chiamate dirette dal browser a `api.anthropic.com` (sia il test/
+  validazione chiave sia la generazione vera e propria) venivano
+  rifiutate dal CORS di Anthropic: manca l'header esplicito che
+  Anthropic richiede per consentire l'accesso diretto da un sito web
+  (`anthropic-dangerous-direct-browser-access: true`). Aggiunto a
+  entrambe le chiamate (`_vanessaValidateKey`, `_vanessaCallAI`).
+
+### feat: Crea Card — aggiunto un secondo esempio di riferimento compatto
+
+- Oltre all'esempio "header + pannelli + bottone" per card ricche di
+  dati, ora il prompt include anche un esempio a riga singola (icona +
+  nome/stato + eventuale controllo secondario), pensato per interruttori
+  semplici — così il modello ha un riferimento pronto invece di dover
+  inventare la struttura compatta da zero.
+
 ## 2.1.7 — 2026-07-20
 
 ### fix: Crea Card — la card generata ingrandiva/ristrutturava card che nell'originale erano compatte
