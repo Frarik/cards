@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.1.6 — 2026-07-20
+
+### fix: Crea Card — la card generata non assomigliava alle altre card Frarik
+
+- Il prompt di sistema descriveva lo stile Frarik solo a parole (colori,
+  dimensioni). Risultato: header con colori sbagliati, pannelli piatti,
+  poco somigliante alle card reali della dashboard.
+- Sostituita la descrizione con il CODICE REALE di una card di riferimento
+  (header con icon-box, pannelli dati, bottone gradiente — stesse funzioni
+  `_header`/`_panel`/`_btnPrimary` della guida `Istruzioni card/CREAZIONE-CARD.md`),
+  che Vanessa ora copia/adatta invece di reinterpretare una descrizione
+  testuale. Stessa tecnica già raccomandata nella guida stessa per chi crea
+  card a mano: mostrare codice esistente funziona meglio che descriverlo.
+
 ## 2.1.5 — 2026-07-20
 
 ### feat: Crea Card — dopo "Genera" l'anteprima mostra la card JS vera, non più lo YAML

@@ -1756,7 +1756,9 @@ Totale: ${o.length} decisioni`;try{const l=e.notifyEntityId.replace(/^notify\./,
       </div>
     </div>`}function c$(){const e=document.getElementById("vnss-crea-inp");if(e&&(Da&&(e.value=Da),ud(),e.addEventListener("input",()=>{Da=e.value,ud(),clearTimeout(am),am=setTimeout(sm,200)}),e.addEventListener("scroll",d$),Da&&setTimeout(sm,200),vl)){const t=document.getElementById("vnss-crea-code"),n=document.getElementById("vnss-crea-code-wrap");t&&(t.value=vl),n&&(n.style.display="block")}}function ud(){const e=document.getElementById("vnss-crea-inp"),t=document.getElementById("vnss-crea-lines");!e||!t||(t.textContent=Array.from({length:e.value.split(`
 `).length},(n,i)=>i+1).join(`
-`))}function d$(){const e=document.getElementById("vnss-crea-inp"),t=document.getElementById("vnss-crea-lines");e&&t&&(t.scrollTop=e.scrollTop)}function u$(){const e=document.getElementById("vnss-crea-inp");if(e)try{const t=yt.load(e.value);if(!t||typeof t!="object"){I("❌ YAML non valido");return}e.value=yt.dump(t,{indent:2,lineWidth:-1}).replace(/\n$/,""),Da=e.value,ud()}catch(t){I("❌ "+t.message)}}function sm(){const e=document.getElementById("vnss-crea-inp"),t=document.getElementById("vnss-crea-prev-wrap"),n=document.getElementById("vnss-crea-placeholder"),i=document.getElementById("vnss-crea-err"),o=document.getElementById("vnss-crea-gen-btn");if(!e||!t)return;if(vn++,Ue&&(clearInterval(Ue),Ue=null),t._yamlRO){try{t._yamlRO.disconnect()}catch{}t._yamlRO=null}if(t._yamlScrollOff){try{t._yamlScrollOff()}catch{}t._yamlScrollOff=null}try{wo("crea")}catch{}t.style.cssText="";const a=document.getElementById("vnss-crea-canvas");a&&a.remove();const s=document.getElementById("vnss-crea-lovelace");s&&s.remove();const r=document.getElementById("vnss-crea-jspreview");r&&r.remove();const l=u=>{i&&(i.textContent=u),o&&(o.style.display="none"),To=null},c=e.value.trim();if(!c){n&&(n.style.display=""),i&&(i.textContent=""),o&&(o.style.display="none"),To=null;return}let d;try{d=yt.load(c)}catch(u){l("❌ "+u.message);return}if(!d||typeof d!="object"){l("❌ YAML non valido");return}if(Array.isArray(d.elementi)&&d.elementi.length){if(!/^[a-z0-9-]+$/.test(d.id||"")){l('⚠️ Manca "id" valido (solo a-z 0-9 -)');return}const u=d.elementi.find(p=>!p||!["testo","icona","forma","azione"].includes(p.tipo));if(u){l("❌ elemento con tipo non valido: "+(u&&u.tipo));return}i&&(i.textContent=""),n&&(n.style.display="none"),o&&(o.style.display=""),To={mode:"elementi",config:d,id:d.id,rawYaml:c},t.insertAdjacentHTML("beforeend",a$(d,Ke()));return}if(typeof d.type=="string"&&d.type.trim()){i&&(i.textContent=""),n&&(n.style.display="none"),o&&(o.style.display="");const u=s$(d.id||d.name||d.entity||d.type);To={mode:"lovelace",config:d,id:u,rawYaml:c},r$(d,t);return}l('⚠️ Serve "elementi:" (lista testo/icona/forma/azione) oppure "type:" (card Lovelace/HACS)')}function p$(){return`Sei Vanessa: ora generi codice per la Frarik Dashboard. Segui ESATTAMENTE lo standard "FratechStore" — tutte le card Frarik devono avere lo STESSO look, non stili diversi l'una dall'altra:
+`))}function d$(){const e=document.getElementById("vnss-crea-inp"),t=document.getElementById("vnss-crea-lines");e&&t&&(t.scrollTop=e.scrollTop)}function u$(){const e=document.getElementById("vnss-crea-inp");if(e)try{const t=yt.load(e.value);if(!t||typeof t!="object"){I("❌ YAML non valido");return}e.value=yt.dump(t,{indent:2,lineWidth:-1}).replace(/\n$/,""),Da=e.value,ud()}catch(t){I("❌ "+t.message)}}function sm(){const e=document.getElementById("vnss-crea-inp"),t=document.getElementById("vnss-crea-prev-wrap"),n=document.getElementById("vnss-crea-placeholder"),i=document.getElementById("vnss-crea-err"),o=document.getElementById("vnss-crea-gen-btn");if(!e||!t)return;if(vn++,Ue&&(clearInterval(Ue),Ue=null),t._yamlRO){try{t._yamlRO.disconnect()}catch{}t._yamlRO=null}if(t._yamlScrollOff){try{t._yamlScrollOff()}catch{}t._yamlScrollOff=null}try{wo("crea")}catch{}t.style.cssText="";const a=document.getElementById("vnss-crea-canvas");a&&a.remove();const s=document.getElementById("vnss-crea-lovelace");s&&s.remove();const r=document.getElementById("vnss-crea-jspreview");r&&r.remove();const l=u=>{i&&(i.textContent=u),o&&(o.style.display="none"),To=null},c=e.value.trim();if(!c){n&&(n.style.display=""),i&&(i.textContent=""),o&&(o.style.display="none"),To=null;return}let d;try{d=yt.load(c)}catch(u){l("❌ "+u.message);return}if(!d||typeof d!="object"){l("❌ YAML non valido");return}if(Array.isArray(d.elementi)&&d.elementi.length){if(!/^[a-z0-9-]+$/.test(d.id||"")){l('⚠️ Manca "id" valido (solo a-z 0-9 -)');return}const u=d.elementi.find(p=>!p||!["testo","icona","forma","azione"].includes(p.tipo));if(u){l("❌ elemento con tipo non valido: "+(u&&u.tipo));return}i&&(i.textContent=""),n&&(n.style.display="none"),o&&(o.style.display=""),To={mode:"elementi",config:d,id:d.id,rawYaml:c},t.insertAdjacentHTML("beforeend",a$(d,Ke()));return}if(typeof d.type=="string"&&d.type.trim()){i&&(i.textContent=""),n&&(n.style.display="none"),o&&(o.style.display="");const u=s$(d.id||d.name||d.entity||d.type);To={mode:"lovelace",config:d,id:u,rawYaml:c},r$(d,t);return}l('⚠️ Serve "elementi:" (lista testo/icona/forma/azione) oppure "type:" (card Lovelace/HACS)')}function p$(){return`Sei Vanessa: ora generi codice per la Frarik Dashboard. Segui ESATTAMENTE lo standard "FratechStore" — tutte le card Frarik devono avere lo STESSO look, non stili diversi l'una dall'altra.
+
+REGOLE:
 - Un solo file .js, vanilla JS puro (niente librerie esterne, niente build, niente React).
 - Wrappa tutto in una IIFE: (function(){ 'use strict'; ... })();
 - Alla fine registra: window.FratechCardRegistry = window.FratechCardRegistry || {}; window.FratechCardRegistry[CARD.id] = CARD;
@@ -1764,14 +1766,68 @@ Totale: ${o.length} decisioni`;try{const l=e.notifyEntityId.replace(/^notify\./,
 - Accesso stato protetto: hass?.states?.[id] ?? '—' (hass può essere null). Per chiamare un servizio usa la funzione globale già disponibile: callSvc(domain, service, entityId, data).
 - Font: var(--primary-font-family,'Inter',system-ui,sans-serif). Contenitori fluidi (width:100%, min-width:0), niente larghezze fisse.
 
-DESIGN SYSTEM FRARIK (usa ESATTAMENTE questi valori, sono condivisi da tutte le card della dashboard):
-- Palette: sfondo card rgba(10,14,26,1); pannelli interni rgba(255,255,255,.04) con bordo rgba(255,255,255,.08); testo primario #fff sempre pieno (mai rgba con opacità ridotta sul testo principale); testo secondario rgba(255,255,255,.55); label/titoli MAIUSCOLO+GRASSETTO; accenti #38bdf8 (info/stato), #6366f1 (azione primaria), #4ade80 (on/ok), #fb923c (warning), #f87171 (off/errore).
-- Contenitore: <div style="height:100%;width:100%;box-sizing:border-box;display:flex;flex-direction:column;background:rgba(10,14,26,1);border-radius:inherit;color:#fff;overflow:hidden">
-- Header (in cima, se la card ha un titolo): riga con icon-box 42x42px arrotondato (sfondo rgba(56,189,248,.15), bordo rgba(56,189,248,.3), l'emoji/icona dentro) + titolo 15px/700 bianco + sottotitolo 9px maiuscolo grigio sotto + badge di stato a pillola sulla destra (pallino colorato + testo maiuscolo, colore in base allo stato acceso/spento).
-- Pannelli dati: griglia di riquadri rgba(255,255,255,.04) bordo rgba(255,255,255,.08) radius 12px, con dentro una label piccola maiuscola (8px/700, colore accento) sopra un valore grande (24-28px/800 bianco).
-- Bottoni azione: radius 12px, gradiente dell'accento scelto (es. linear-gradient(135deg,#6366f1,#4f46e5)), testo bianco 700, ombra morbida dell'accento.
+NON descriverti lo stile a parole: sotto trovi il CODICE REALE di una card Frarik già pubblicata, che segue esattamente lo standard. Copia queste stesse funzioni/markup (puoi incollarle quasi identiche nel tuo file, adattando solo dati/entità/azioni) — non reinventare header, pannelli o badge da zero:
 
-Se la card di partenza ha uno stile visivo tutto suo (colori diversi, font diversi, layout a griglia particolare): NON riprodurlo — ricostruiscila secondo QUESTO design system, mantenendo solo il comportamento (entità collegate, azioni, logica condizionale su stato/tempo).
+(function(){
+  'use strict';
+
+  function _header(icon,title,subtitle,statusText,statusColor){
+    return '<div style="display:flex;align-items:center;gap:12px;padding:16px 18px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
+      +'<div style="width:42px;height:42px;border-radius:12px;flex-shrink:0;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);display:flex;align-items:center;justify-content:center;font-size:20px">'+icon+'</div>'
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:15px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+title+'</div>'
+        +'<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.35);margin-top:2px">'+subtitle+'</div>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:99px;border:1px solid '+statusColor+'55;background:'+statusColor+'18;flex-shrink:0">'
+        +'<div style="width:7px;height:7px;border-radius:50%;background:'+statusColor+';box-shadow:0 0 6px '+statusColor+'"></div>'
+        +'<span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:'+statusColor+'">'+statusText+'</span>'
+      +'</div></div>';
+  }
+  function _panel(label,value,hint,accent){
+    return '<div style="background:rgba(255,255,255,.04);border-radius:12px;border:1px solid rgba(255,255,255,.08);padding:12px 14px">'
+      +'<div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:'+(accent||'rgba(255,255,255,.35)')+';margin-bottom:8px">'+label+'</div>'
+      +'<div style="font-size:28px;font-weight:800;color:#fff;line-height:1;letter-spacing:-1px">'+value+'</div>'
+      +(hint?'<div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:4px">'+hint+'</div>':'')
+      +'</div>';
+  }
+  function _btnPrimary(label,id,color){
+    color=color||'#6366f1';
+    return '<button id="'+id+'" style="width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,'+color+','+color+'cc);color:#fff;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.3px;box-shadow:0 6px 20px '+color+'44">'+label+'</button>';
+  }
+
+  const CARD = {
+    id:'esempio-card', name:'Esempio', icon:'💡', version:'1.0.0', desc:'Esempio di riferimento',
+
+    render(card, hass){
+      const isOn = hass?.states?.[card.entity] === 'on';
+      const statusColor = isOn ? '#4ade80' : 'rgba(255,255,255,.4)';
+      const statusText  = isOn ? 'ATTIVO' : 'SPENTO';
+      return '<div style="height:100%;width:100%;box-sizing:border-box;display:flex;flex-direction:column;background:rgba(10,14,26,1);border-radius:inherit;font-family:var(--primary-font-family,Inter,system-ui);color:#fff;overflow:hidden">'
+        +_header(card.icon||'💡', card.label||'Nome', 'SOTTOTITOLO', statusText, statusColor)
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px;flex:1">'
+          +_panel('STATO', statusText, '', '#38bdf8')
+          +_panel('ALTRO VALORE', '—', 'descrizione', '#a78bfa')
+        +'</div>'
+        +'<div style="padding:0 16px 16px">'+_btnPrimary('▶ Azione','act-'+card.id)+'</div>'
+      +'</div>';
+    },
+
+    update(card, hass, el){ el.innerHTML = this.render(card, hass); this.mount(card, hass, el); },
+
+    mount(card, hass, el){
+      el.querySelector('#act-'+card.id)?.addEventListener('click', ()=>{
+        if(card.entity) callSvc(card.entity.split('.')[0], 'toggle', card.entity);
+      });
+    }
+  };
+
+  window.FratechCardRegistry = window.FratechCardRegistry || {};
+  window.FratechCardRegistry[CARD.id] = CARD;
+})();
+
+Fine dell'esempio. Il tuo file deve avere lo stesso look (stesso header con icon-box, stessa griglia di pannelli, stesso bottone gradiente) — cambia solo i dati/entità/azioni secondo quanto ti viene chiesto sotto.
+
+Se la card di partenza ha uno stile visivo tutto suo (colori diversi, font diversi, layout particolare): NON riprodurlo — ricostruiscila con QUESTO stesso stile, mantenendo solo il comportamento (entità collegate, azioni, logica condizionale su stato/tempo).
 
 Rispondi SOLO con il codice JS completo del file. Nessuna spiegazione, nessun testo prima o dopo, nessun blocco markdown \`\`\`.`}function f$(e){const t=e.elementi||[];return"Qui sotto la definizione di una card in JSON (proviene da uno YAML scritto dall'utente in un editor con anteprima live). Genera una card FratechStore che riproduce ESATTAMENTE questi elementi: stesso posizionamento/dimensioni relative (un contenitore di "+(e.canvasW||320)+"x"+(e.canvasH||220)+"px con sfondo "+(e.bgColor||"#0b1220")+`, layout assoluto o un equivalente flex/grid — il risultato visivo deve corrispondere), stesse entità collegate, stessi colori/testi/icone, e per ogni elemento "azione" lo stesso identico comportamento in base al dominio.
 
