@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.1.3 — 2026-07-20
+
+### fix: Crea Card — anteprima Lovelace mostrava "non installata su HACS" per card in realtà installate
+
+- La prima versione dell'anteprima YAML nativo creava l'elemento custom
+  (es. `button-card`) direttamente nel documento di Frarik. Per card HACS
+  complesse quell'elemento lì non risultava mai registrato (anche se
+  installata davvero), risultando sempre nell'avviso "non installata".
+- Ora l'anteprima prova prima a creare la card nel realm di
+  `window.parent` (stessa tecnica già in uso, collaudata, nella tab
+  "Card YAML" dello Store: `_createHACard` + overlay `position:fixed`
+  sincronizzato alla posizione del riquadro anteprima) e usa il render
+  diretto nel documento di Frarik solo come fallback quando il parent non
+  è raggiungibile.
+
 ## 2.1.2 — 2026-07-20
 
 ### feat: Crea Card — accetta anche YAML nativo Home Assistant/Lovelace (HACS incluso)

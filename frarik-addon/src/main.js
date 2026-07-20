@@ -17326,6 +17326,11 @@ function _vnssRenderMainTab(tab){
   });
   const content=document.getElementById('vnss-main-content'); if(!content) return;
   if(window._vnssLiveTick){ clearInterval(window._vnssLiveTick); window._vnssLiveTick=null; }
+  if(tab!=='crea'){
+    _vnssCreaPrevGen++;
+    if(_vnssCreaPrevTimer){ clearInterval(_vnssCreaPrevTimer); _vnssCreaPrevTimer=null; }
+    try{ _cleanupYamlOverlay('crea'); }catch(_){}
+  }
   if(tab==='dispositivi'){ content.innerHTML=_vnssHtmlDevices(); _vnssWireDevices(); }
   else if(tab==='live'){ content.innerHTML=_vnssHtmlLive(); _vnssWireLive(); }
   else if(tab==='registro'){
@@ -17421,16 +17426,73 @@ function _vnssCreaSlug(s){
   const base=String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
   return base||('card-'+Math.random().toString(36).slice(2,8));
 }
-/* Anteprima per YAML nativo Home Assistant/Lovelace (type: ..., anche custom:xxx da HACS) —
-   riusa il motore già presente per la tab "Card YAML" dello Store (_loadLovelaceResources,
-   _yamlCreateEl, _injectHACSSVars, _yamlRefreshHass), senza il trucco overlay/iframe usato
-   lì per il posizionamento nel modal ACP (qui non serve: basta l'append diretto). */
+/* Anteprima per YAML nativo Home Assistant/Lovelace (type: ..., anche custom:xxx da HACS).
+   Stessa logica di _ghsYamlLivePreview (tab "Card YAML" dello Store): prova PRIMA a creare
+   la card nel realm di window.parent (_createHACard) — necessario per card HACS complesse
+   (button-card, card_mod, ecc.), che se create nel documento di Frarik non trovano il loro
+   custom element registrato lì e restano "non installata su HACS" anche se lo sono davvero.
+   L'elemento vero vive nel DOM del parent e viene proiettato con un overlay position:fixed
+   sincronizzato alla posizione di prevWrap. Solo se il parent non è disponibile (window.parent
+   assente) si passa al render diretto via _yamlCreateEl. */
 async function _vnssCreaRenderLovelacePreview(config, prevWrap){
   const myGen=_vnssCreaPrevGen;
+  const errEl=document.getElementById('vnss-crea-err');
   try{
     _haCompatInit();
     if(!_lovelaceResourcesLoaded) await _loadLovelaceResources();
     if(myGen!==_vnssCreaPrevGen||!prevWrap.isConnected) return;
+
+    const pw=window.parent&&window.parent!==window?window.parent:null;
+    if(pw){
+      const cw=Math.max(prevWrap.offsetWidth||0,200);
+      const res=await _createHACard(_patchYamlConfig(config),cw);
+      if(myGen!==_vnssCreaPrevGen||!prevWrap.isConnected){ if(res) try{ res.ghost.remove(); }catch(_){} return; }
+      if(res){
+        const {el,ghost,haEl}=res;
+        prevWrap.innerHTML='';
+        prevWrap.style.cssText='flex:1;background:rgba(255,255,255,.02);overflow:auto;padding:14px;min-height:80px;position:relative;display:block';
+
+        const overlay=pw.document.createElement('div');
+        overlay.id='frarik-yaml-crea';
+        overlay.style.cssText='position:fixed;z-index:10;background:transparent;overflow:visible;display:none;';
+        pw.document.body.appendChild(overlay);
+        overlay.appendChild(el);
+        ghost.remove();
+        _relayHassEventsOnOverlay(overlay);
+        _fixOverlaySwipeDrag(overlay);
+
+        function syncP(){
+          if(!prevWrap.isConnected){ overlay.remove(); return; }
+          const fr=_findFrameElement();
+          if(!fr){ overlay.style.display='none'; return; }
+          const ir=fr.getBoundingClientRect();
+          if(ir.width<10||ir.height<10){ overlay.style.display='none'; return; }
+          const cr=prevWrap.getBoundingClientRect();
+          const L=ir.left+cr.left, T=ir.top+cr.top, W=cr.width;
+          if(W<=0){ overlay.style.display='none'; return; }
+          overlay.style.cssText='position:fixed;z-index:10;background:transparent;overflow:visible;display:block;'
+            +'left:'+L+'px;top:'+T+'px;width:'+W+'px;pointer-events:auto;';
+          el.style.width=W+'px';
+          const h=el.offsetHeight||el.scrollHeight||0;
+          if(h>10) prevWrap.style.minHeight=h+'px';
+        }
+        syncP();
+        const ro=new ResizeObserver(syncP); ro.observe(prevWrap); prevWrap._yamlRO=ro;
+        const sh=()=>syncP();
+        window.addEventListener('scroll',sh,{passive:true,capture:true});
+        pw.addEventListener('resize',sh,{passive:true});
+        prevWrap._yamlScrollOff=()=>{ window.removeEventListener('scroll',sh,{capture:true}); pw.removeEventListener('resize',sh); };
+        if(_vnssCreaPrevTimer) clearInterval(_vnssCreaPrevTimer);
+        _vnssCreaPrevTimer=setInterval(()=>{
+          if(myGen!==_vnssCreaPrevGen){ clearInterval(_vnssCreaPrevTimer); _vnssCreaPrevTimer=null; return; }
+          try{ el.hass=haEl&&haEl.hass?haEl.hass:_getBestHass(); }catch(_){}
+          syncP();
+        },1000);
+        return;
+      }
+    }
+
+    // Fallback (nessun window.parent accessibile): render diretto nel documento di Frarik.
     const holder=document.createElement('div');
     holder.id='vnss-crea-lovelace';
     holder.style.cssText='display:block;width:100%;padding:4px';
@@ -17439,7 +17501,7 @@ async function _vnssCreaRenderLovelacePreview(config, prevWrap){
     el.style.cssText='display:block;width:100%';
     holder.appendChild(el);
     if(myGen!==_vnssCreaPrevGen||!prevWrap.isConnected) return;
-    prevWrap.appendChild(holder);
+    prevWrap.innerHTML=''; prevWrap.appendChild(holder);
     _yamlRefreshHass(holder);
     if(_vnssCreaPrevTimer) clearInterval(_vnssCreaPrevTimer);
     _vnssCreaPrevTimer=setInterval(()=>{
@@ -17448,7 +17510,6 @@ async function _vnssCreaRenderLovelacePreview(config, prevWrap){
       _yamlRefreshHass(h);
     },800);
   }catch(e){
-    const errEl=document.getElementById('vnss-crea-err');
     if(errEl) errEl.textContent='⚠️ '+e.message;
   }
 }
@@ -17544,6 +17605,10 @@ function _vnssCreaLivePreview(){
   // invalida eventuali render Lovelace async in corso + rimuove anteprime precedenti
   _vnssCreaPrevGen++;
   if(_vnssCreaPrevTimer){ clearInterval(_vnssCreaPrevTimer); _vnssCreaPrevTimer=null; }
+  if(prevWrap._yamlRO){ try{ prevWrap._yamlRO.disconnect(); }catch(_){} prevWrap._yamlRO=null; }
+  if(prevWrap._yamlScrollOff){ try{ prevWrap._yamlScrollOff(); }catch(_){} prevWrap._yamlScrollOff=null; }
+  try{ _cleanupYamlOverlay('crea'); }catch(_){}
+  prevWrap.style.cssText='';
   const old=document.getElementById('vnss-crea-canvas'); if(old) old.remove();
   const oldLov=document.getElementById('vnss-crea-lovelace'); if(oldLov) oldLov.remove();
   const fail=(msg)=>{ if(errEl) errEl.textContent=msg; if(genBtn) genBtn.style.display='none'; _vnssCreaConfig=null; };
