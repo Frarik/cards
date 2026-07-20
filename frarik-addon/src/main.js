@@ -17416,12 +17416,48 @@ function _vnssCreaRenderCanvas(config,hass){
 
 /* ── Crea Card: editor YAML + anteprima live + generazione via Vanessa ── */
 let _vnssCreaYamlContent='', _vnssCreaTimer=null, _vnssCreaConfig=null, _vnssCreaCode='';
+let _vnssCreaPrevGen=0, _vnssCreaPrevTimer=null;
+function _vnssCreaSlug(s){
+  const base=String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  return base||('card-'+Math.random().toString(36).slice(2,8));
+}
+/* Anteprima per YAML nativo Home Assistant/Lovelace (type: ..., anche custom:xxx da HACS) —
+   riusa il motore già presente per la tab "Card YAML" dello Store (_loadLovelaceResources,
+   _yamlCreateEl, _injectHACSSVars, _yamlRefreshHass), senza il trucco overlay/iframe usato
+   lì per il posizionamento nel modal ACP (qui non serve: basta l'append diretto). */
+async function _vnssCreaRenderLovelacePreview(config, prevWrap){
+  const myGen=_vnssCreaPrevGen;
+  try{
+    _haCompatInit();
+    if(!_lovelaceResourcesLoaded) await _loadLovelaceResources();
+    if(myGen!==_vnssCreaPrevGen||!prevWrap.isConnected) return;
+    const holder=document.createElement('div');
+    holder.id='vnss-crea-lovelace';
+    holder.style.cssText='display:block;width:100%;padding:4px';
+    _injectHACSSVars(holder);
+    const el=await _yamlCreateEl(config);
+    el.style.cssText='display:block;width:100%';
+    holder.appendChild(el);
+    if(myGen!==_vnssCreaPrevGen||!prevWrap.isConnected) return;
+    prevWrap.appendChild(holder);
+    _yamlRefreshHass(holder);
+    if(_vnssCreaPrevTimer) clearInterval(_vnssCreaPrevTimer);
+    _vnssCreaPrevTimer=setInterval(()=>{
+      const h=document.getElementById('vnss-crea-lovelace');
+      if(!h||!h.isConnected){ clearInterval(_vnssCreaPrevTimer); _vnssCreaPrevTimer=null; return; }
+      _yamlRefreshHass(h);
+    },800);
+  }catch(e){
+    const errEl=document.getElementById('vnss-crea-err');
+    if(errEl) errEl.textContent='⚠️ '+e.message;
+  }
+}
 
 function _vnssHtmlCreaCard(){
   return `
     <div style="padding:14px">
       <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.7;margin-bottom:10px">
-        Scrivi la card come lista di <b style="color:rgba(192,132,252,.85)">elementi</b> (stesso modello di Canvas Libero: <code style="color:rgba(192,132,252,.7)">testo · icona · forma · azione</code>), guarda l'anteprima live, poi premi <b style="color:rgba(192,132,252,.85)">✨ Genera JS</b> perché Vanessa scriva una card Frarik indipendente che replica lo stesso comportamento. Il codice resta a te: decidi tu se salvarlo solo in locale o pubblicarlo dallo Store.
+        Due modi di scrivere la card: una lista di <b style="color:rgba(192,132,252,.85)">elementi</b> (stesso modello di Canvas Libero: <code style="color:rgba(192,132,252,.7)">testo · icona · forma · azione</code>), oppure incolla direttamente uno <b style="color:rgba(192,132,252,.85)">YAML Home Assistant/Lovelace</b> esistente (anche card HACS tipo <code style="color:rgba(192,132,252,.7)">custom:button-card</code>) — l'anteprima riconosce da sola quale dei due hai scritto. Poi premi <b style="color:rgba(192,132,252,.85)">✨ Genera JS</b> perché Vanessa scriva una card Frarik indipendente che replica lo stesso identico aspetto e comportamento. Il codice resta a te: decidi tu se salvarlo solo in locale o pubblicarlo dallo Store.
       </div>
       <div id="vnss-crea-wrap">
         <div id="vnss-crea-left">
@@ -17505,22 +17541,43 @@ function _vnssCreaLivePreview(){
   const errEl=document.getElementById('vnss-crea-err');
   const genBtn=document.getElementById('vnss-crea-gen-btn');
   if(!ta||!prevWrap) return;
+  // invalida eventuali render Lovelace async in corso + rimuove anteprime precedenti
+  _vnssCreaPrevGen++;
+  if(_vnssCreaPrevTimer){ clearInterval(_vnssCreaPrevTimer); _vnssCreaPrevTimer=null; }
   const old=document.getElementById('vnss-crea-canvas'); if(old) old.remove();
+  const oldLov=document.getElementById('vnss-crea-lovelace'); if(oldLov) oldLov.remove();
   const fail=(msg)=>{ if(errEl) errEl.textContent=msg; if(genBtn) genBtn.style.display='none'; _vnssCreaConfig=null; };
   const txt=ta.value.trim();
   if(!txt){ if(ph) ph.style.display=''; if(errEl) errEl.textContent=''; if(genBtn) genBtn.style.display='none'; _vnssCreaConfig=null; return; }
   let config;
   try{ config=jsyaml.load(txt); }catch(e){ fail('❌ '+e.message); return; }
   if(!config||typeof config!=='object'){ fail('❌ YAML non valido'); return; }
-  if(!/^[a-z0-9-]+$/.test(config.id||'')){ fail('⚠️ Manca "id" valido (solo a-z 0-9 -)'); return; }
-  if(!Array.isArray(config.elementi)||!config.elementi.length){ fail('⚠️ Manca "elementi" (lista di testo/icona/forma/azione)'); return; }
-  const badType=config.elementi.find(e=>!e||!['testo','icona','forma','azione'].includes(e.tipo));
-  if(badType){ fail('❌ elemento con tipo non valido: '+(badType&&badType.tipo)); return; }
-  if(errEl) errEl.textContent='';
-  if(ph) ph.style.display='none';
-  if(genBtn) genBtn.style.display='';
-  _vnssCreaConfig=config;
-  prevWrap.insertAdjacentHTML('beforeend', _vnssCreaRenderCanvas(config, _getBestHass()));
+
+  // Modalità 1: "elementi" (schema di Canvas Libero — testo/icona/forma/azione)
+  if(Array.isArray(config.elementi)&&config.elementi.length){
+    if(!/^[a-z0-9-]+$/.test(config.id||'')){ fail('⚠️ Manca "id" valido (solo a-z 0-9 -)'); return; }
+    const badType=config.elementi.find(e=>!e||!['testo','icona','forma','azione'].includes(e.tipo));
+    if(badType){ fail('❌ elemento con tipo non valido: '+(badType&&badType.tipo)); return; }
+    if(errEl) errEl.textContent='';
+    if(ph) ph.style.display='none';
+    if(genBtn) genBtn.style.display='';
+    _vnssCreaConfig={mode:'elementi', config, id:config.id, rawYaml:txt};
+    prevWrap.insertAdjacentHTML('beforeend', _vnssCreaRenderCanvas(config, _getBestHass()));
+    return;
+  }
+
+  // Modalità 2: YAML nativo Home Assistant/Lovelace (type: ..., anche custom:xxx da HACS)
+  if(typeof config.type==='string'&&config.type.trim()){
+    if(errEl) errEl.textContent='';
+    if(ph) ph.style.display='none';
+    if(genBtn) genBtn.style.display='';
+    const id=_vnssCreaSlug(config.id||config.name||config.entity||config.type);
+    _vnssCreaConfig={mode:'lovelace', config, id, rawYaml:txt};
+    _vnssCreaRenderLovelacePreview(config, prevWrap);
+    return;
+  }
+
+  fail('⚠️ Serve "elementi:" (lista testo/icona/forma/azione) oppure "type:" (card Lovelace/HACS)');
 }
 function _vnssCreaBuildSystemPrompt(){
   return 'Sei Vanessa: ora generi codice per la Frarik Dashboard. Segui ESATTAMENTE lo standard "FratechStore":\n'
@@ -17549,13 +17606,24 @@ function _vnssCreaBuildPrompt(config){
     +'CARD.id = "'+config.id+'", CARD.name = "'+(config.name||config.id)+'", CARD.icon = "'+(config.icon||'✨')+'".\n\n'
     +'Elementi (JSON):\n'+JSON.stringify(elementi,null,2);
 }
+function _vnssCreaBuildPromptLovelace(config,id,rawYaml){
+  return 'Qui sotto la configurazione YAML ORIGINALE di una card Home Assistant/Lovelace (può essere una card custom da HACS, es. button-card, mushroom, mini-graph-card, ecc. — probabilmente ne conosci già la sintassi). '
+    +'L\'utente l\'ha incollata in un editor con anteprima live nativa (la vede già renderizzata davvero) e vuole una copia INDIPENDENTE come card FratechStore: stesso aspetto visivo ESATTO (colori, font, layout, animazioni) e stesso comportamento (tap_action/hold_action → stessa identica chiamata di servizio, stessa eventuale conferma, stessa logica di stile/testo che dipende dallo stato dell\'entità).\n\n'
+    +'IMPORTANTE: qui l\'utente ha già scelto un suo stile visivo specifico — NON sostituirlo con la palette standard Frarik, riproducilo fedelmente così com\'è.\n\n'
+    +'Se la configurazione usa template stile button-card [[[ codice ]]]: sono blocchi JavaScript letterali valutati con `entity` (l\'oggetto stato dell\'entità configurata: {state, attributes, ...}), `states`, `variables`, `hass` disponibili nello scope, che ritornano una stringa (HTML per custom_fields, un valore CSS per gli styles). Traduci quella stessa logica dentro render()/mount() in JS vanilla, leggendo lo stato reale da hass.states.\n\n'
+    +'CARD.id = "'+id+'", CARD.name = "'+(config.name||id)+'".\n\n'
+    +'YAML originale:\n'+rawYaml;
+}
 async function _vnssCreaGenerate(){
   if(!_vnssCreaConfig){ showToast('⚠️ Sistema prima lo YAML (controlla gli errori)'); return; }
   const btn=document.getElementById('vnss-crea-gen-btn');
   const errEl=document.getElementById('vnss-crea-err');
   if(btn){ btn.disabled=true; btn.textContent='⏳ Vanessa sta scrivendo…'; }
   try{
-    const prompt=_vnssCreaBuildPrompt(_vnssCreaConfig);
+    const {mode,config,id,rawYaml}=_vnssCreaConfig;
+    const prompt = mode==='lovelace'
+      ? _vnssCreaBuildPromptLovelace(config,id,rawYaml)
+      : _vnssCreaBuildPrompt(config);
     let code=await _vanessaCallAI(prompt,{system:_vnssCreaBuildSystemPrompt(),maxTokens:7000});
     code=code.replace(/^```(?:js|javascript)?\s*/i,'').replace(/```\s*$/,'').trim();
     if(!code||!/FratechCardRegistry/.test(code)) throw new Error('Risposta non valida (nessun codice riconoscibile)');

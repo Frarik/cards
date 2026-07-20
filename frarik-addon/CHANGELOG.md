@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.1.2 — 2026-07-20
+
+### feat: Crea Card — accetta anche YAML nativo Home Assistant/Lovelace (HACS incluso)
+
+- Il tab "✨ Crea Card" di Vanessa riconosce ora due schemi: la lista di
+  `elementi` (Canvas Libero) oppure un YAML Lovelace vero e proprio con
+  `type:` (es. `custom:button-card`, mushroom, ecc.). L'anteprima usa in
+  questo caso lo stesso motore già in uso nella tab "Card YAML" dello Store
+  (`_loadLovelaceResources`/`_yamlCreateEl`), quindi mostra il rendering
+  reale della card HACS, non un'approssimazione.
+- Il prompt inviato a Vanessa in questa modalità include lo YAML originale
+  e istruisce di riprodurre fedelmente lo stile visivo già scelto
+  dall'utente (niente sostituzione con la palette standard Frarik) più il
+  comportamento di `tap_action`/`hold_action` e, per i template stile
+  button-card (`[[[ ... ]]]`), la stessa logica tradotta in JS vanilla.
+
 ## 2.1.1 — 2026-07-20
 
 ### feat: Vanessa — nuovo tab "✨ Crea Card" (YAML → anteprima live → JS)
