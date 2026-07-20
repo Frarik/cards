@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.1.9 — 2026-07-20
+
+### feat: Crea Card — nuovo bottone "⚡ Genera JS (gratis)", nessuna AI richiesta
+
+- Aggiunta una generazione **deterministica**, senza chiamate AI, per i
+  due casi già collaudati: schema `elementi` (100% noto, riusa esattamente
+  le stesse funzioni già usate per l'anteprima) e YAML `custom:button-card`
+  col pattern comune (entità + tap_action toggle + eventuale pulsante
+  secondario in un custom_field annidato, es. un'automazione collegata).
+  Il risultato usa la stessa card compatta a riga singola vista
+  nell'esempio, con i colori Frarik.
+- Il bottone "✨ Genera con Vanessa (AI)" resta disponibile come opzione
+  per YAML più insoliti che il riconoscimento automatico non copre (in
+  quel caso "Genera JS (gratis)" avvisa e suggerisce di provare l'AI).
+- Aggiunto anche `autocomplete="new-password"` al campo chiave API di
+  Vanessa: alcuni browser suggerivano di autocompilare una password
+  salvata al posto della chiave vera.
+
 ## 2.1.8 — 2026-07-20
 
 ### fix: Vanessa — provider Claude dava sempre "Failed to fetch"

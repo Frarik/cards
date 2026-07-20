@@ -17275,7 +17275,7 @@ function _vnssRenderSetupGate(pane, dinoSvg){
       <div id="vnss-key-status" style="font-size:10px;font-weight:700"></div>
     </div>
     <div style="display:flex;gap:8px">
-      <input type="password" id="vnss-key" style="${inp};flex:1" placeholder="Incolla qui la chiave API" value="${eh((v.apiKeys&&v.apiKeys[cur])||v.apiKey||'')}">
+      <input type="password" id="vnss-key" autocomplete="new-password" style="${inp};flex:1" placeholder="Incolla qui la chiave API" value="${eh((v.apiKeys&&v.apiKeys[cur])||v.apiKey||'')}">
       <button id="vnss-validate-btn" style="background:rgba(74,222,128,.12);border:1.5px solid rgba(74,222,128,.3);color:#4ade80;border-radius:10px;padding:0 16px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 Valida</button>
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:6px">La chiave viene salvata localmente e non condivisa</div>
@@ -17419,6 +17419,160 @@ function _vnssCreaRenderCanvas(config,hass){
   return '<div id="vnss-crea-canvas" style="width:'+canvasW+'px;height:'+canvasH+'px;background:'+bgColor+'">'+elsHtml+'</div>';
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   GENERAZIONE DETERMINISTICA (senza AI, gratis) — copre i due casi già
+   collaudati: schema "elementi" (100% noto) e YAML button-card col
+   pattern comune entità+tap toggle+eventuale pulsante secondario.
+   Le funzioni *Gen* qui sotto sono vere funzioni: vengono incorporate nel
+   file generato via .toString(), quindi il codice prodotto è ESATTAMENTE
+   quello già testato per l'anteprima — nessun rischio di escaping a mano. */
+function _vnssCreaGenRender(elementi, canvasW, canvasH, bgColor, hass){
+  var elsHtml = elementi.map(function(e,i){ return _vnssCreaElHtml(e,hass,i); }).join('');
+  return '<div style="width:100%;height:100%;overflow:auto;background:rgba(10,14,26,1);border-radius:inherit;display:flex;align-items:center;justify-content:center">'
+    +'<div style="position:relative;flex-shrink:0;width:'+canvasW+'px;height:'+canvasH+'px;background:'+bgColor+'">'+elsHtml+'</div>'
+    +'</div>';
+}
+function _vnssCreaGenMount(elementi, el){
+  elementi.forEach(function(e,i){
+    if(e.tipo!=='azione'||!e.entity) return;
+    var node=el.querySelector('[data-idx="'+i+'"]'); if(!node) return;
+    var info=_vnssCreaDomainActions(e.entity);
+    if(info.kind==='cover'){
+      node.querySelectorAll('[data-sub]').forEach(function(seg){
+        seg.addEventListener('click', function(){
+          var sub=seg.dataset.sub;
+          callSvc('cover', sub==='open'?'open_cover':sub==='close'?'close_cover':'stop_cover', e.entity);
+        });
+      });
+    } else if(info.kind==='lock'){
+      node.querySelectorAll('[data-sub]').forEach(function(seg){
+        seg.addEventListener('click', function(){ callSvc('lock', seg.dataset.sub==='lock'?'lock':'unlock', e.entity); });
+      });
+    } else if(info.kind==='toggle'){
+      node.addEventListener('click', function(){ callSvc('homeassistant','toggle', e.entity); });
+    } else if(info.kind==='run'){
+      node.addEventListener('click', function(){ callSvc(info.svcDomain, info.svc, e.entity); });
+    }
+  });
+}
+function _vnssCreaGenerateElementiCode(config){
+  const elementi=Array.isArray(config.elementi)?config.elementi:[];
+  const id=config.id, name=config.name||id, icon=config.icon||'✨';
+  const canvasW=config.canvasW||320, canvasH=config.canvasH||220, bgColor=config.bgColor||'#0b1220';
+  const helpers=[_vnssCreaS,_vnssCreaAttr,_vnssCreaDomainActions,_vnssCreaSegBtn,_vnssCreaElementHtml,_vnssCreaElHtml,_vnssCreaGenRender,_vnssCreaGenMount]
+    .map(fn=>fn.toString()).join('\n\n');
+  return [
+    '/* Card generata da Crea Card (Frarik Dashboard) — schema elementi, generazione deterministica senza AI */',
+    '(function(){',
+    "  'use strict';",
+    '  function eh(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }',
+    '  var ELEMENTI = '+JSON.stringify(elementi)+';',
+    helpers,
+    '  var CARD = {',
+    '    id: '+JSON.stringify(id)+', name: '+JSON.stringify(name)+', icon: '+JSON.stringify(icon)+', version: "1.0.0",',
+    '    desc: "Card generata da Crea Card (schema elementi)",',
+    '    render: function(card, hass){ return _vnssCreaGenRender(ELEMENTI, '+canvasW+', '+canvasH+', '+JSON.stringify(bgColor)+', hass); },',
+    '    update: function(card, hass, el){ el.innerHTML = this.render(card, hass); this.mount(card, hass, el); },',
+    '    mount: function(card, hass, el){ _vnssCreaGenMount(ELEMENTI, el); }',
+    '  };',
+    '  window.FratechCardRegistry = window.FratechCardRegistry || {};',
+    '  window.FratechCardRegistry[CARD.id] = CARD;',
+    '})();'
+  ].join('\n\n');
+}
+
+/* Riconosce il pattern comune di button-card: un'entità principale con tap_action
+   di toggle, ed eventualmente un pulsante secondario (es. un'automazione collegata)
+   dentro un custom_field annidato con la sua card. Se non riconosce il pattern
+   ritorna null — meglio suggerire "Genera con Vanessa" per i casi più insoliti. */
+function _vnssCreaTryParseButtonCard(config){
+  if(!config||!/button-card/i.test(config.type||'')) return null;
+  const entity=config.entity;
+  if(!entity) return null;
+  const tap=config.tap_action||{};
+  const isToggle = tap.action==='toggle' || (['call-service','perform-action'].includes(tap.action) && /\.toggle$/.test(tap.service||tap.perform_action||''));
+  if(tap.action && !isToggle) return null;
+  let secondaryEntity=null;
+  const cf=config.custom_fields||{};
+  for(const k in cf){
+    const v=cf[k];
+    if(v && typeof v==='object' && v.card && v.card.entity){ secondaryEntity=v.card.entity; break; }
+  }
+  return { entity, name: config.name||entity, secondaryEntity };
+}
+function _vnssCreaGenRenderCompact(entity, entity2, label, hass){
+  var isOn = !!(hass && hass.states && hass.states[entity] && hass.states[entity].state==='on');
+  var iconColor = isOn ? '#fbbf24' : 'rgba(255,255,255,.35)';
+  var statusText = isOn ? 'ACCESA' : 'SPENTA';
+  var sec2On = !!(entity2 && hass && hass.states && hass.states[entity2] && hass.states[entity2].state==='on');
+  var secColor = sec2On ? '#4ade80' : 'rgba(255,255,255,.3)';
+  return '<div id="_vnssRow" style="height:100%;width:100%;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:0 16px;background:rgba(10,14,26,1);border-radius:inherit;cursor:pointer">'
+    +'<div style="width:34px;height:34px;border-radius:10px;flex-shrink:0;background:'+iconColor+'22;border:1px solid '+iconColor+'55;display:flex;align-items:center;justify-content:center;font-size:18px;color:'+iconColor+'">💡</div>'
+    +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:13px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+label+'</div>'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.4)">'+statusText+'</div>'
+    +'</div>'
+    +(entity2?('<button id="_vnssSec" style="width:30px;height:30px;border-radius:8px;border:none;background:rgba(255,255,255,.06);color:'+secColor+';font-size:15px;flex-shrink:0;cursor:pointer">🤖</button>'):'')
+  +'</div>';
+}
+function _vnssCreaGenMountCompact(entity, entity2, el){
+  var row=el.querySelector('#_vnssRow');
+  if(row) row.addEventListener('click', function(e){
+    if(entity2 && e.target.closest('#_vnssSec')) return;
+    callSvc(entity.split('.')[0], 'toggle', entity);
+  });
+  var sec=el.querySelector('#_vnssSec');
+  if(sec) sec.addEventListener('click', function(e){
+    e.stopPropagation();
+    callSvc(entity2.split('.')[0], 'toggle', entity2);
+  });
+}
+function _vnssCreaGenerateButtonCardCode(parsed, id){
+  const helpers=[_vnssCreaGenRenderCompact,_vnssCreaGenMountCompact].map(fn=>fn.toString()).join('\n\n');
+  return [
+    '/* Card generata da Crea Card (Frarik Dashboard) — da YAML button-card, generazione deterministica senza AI */',
+    '(function(){',
+    "  'use strict';",
+    '  var ENTITY = '+JSON.stringify(parsed.entity)+';',
+    '  var ENTITY2 = '+JSON.stringify(parsed.secondaryEntity||null)+';',
+    '  var LABEL = '+JSON.stringify(parsed.name)+';',
+    helpers,
+    '  var CARD = {',
+    '    id: '+JSON.stringify(id)+', name: LABEL, icon: "💡", version: "1.0.0",',
+    '    desc: "Card generata da Crea Card (da YAML button-card)",',
+    '    render: function(card, hass){ return _vnssCreaGenRenderCompact(ENTITY, ENTITY2, LABEL, hass); },',
+    '    update: function(card, hass, el){ el.innerHTML = this.render(card, hass); this.mount(card, hass, el); },',
+    '    mount: function(card, hass, el){ _vnssCreaGenMountCompact(ENTITY, ENTITY2, el); }',
+    '  };',
+    '  window.FratechCardRegistry = window.FratechCardRegistry || {};',
+    '  window.FratechCardRegistry[CARD.id] = CARD;',
+    '})();'
+  ].join('\n\n');
+}
+/* Bottone principale "⚡ Genera JS (gratis)": prova prima questa via deterministica;
+   solo se il pattern non è riconosciuto suggerisce il bottone AI come alternativa. */
+function _vnssCreaGenerateFree(){
+  if(!_vnssCreaConfig){ showToast('⚠️ Sistema prima lo YAML (controlla gli errori)'); return; }
+  const {mode,config,id}=_vnssCreaConfig;
+  const errEl=document.getElementById('vnss-crea-err');
+  let code=null;
+  if(mode==='elementi'){
+    code=_vnssCreaGenerateElementiCode(config);
+  } else if(mode==='lovelace'){
+    const parsed=_vnssCreaTryParseButtonCard(config);
+    if(!parsed){ showToast('⚠️ YAML troppo particolare per la conversione automatica — prova "Genera con Vanessa (AI)"'); return; }
+    code=_vnssCreaGenerateButtonCardCode(parsed, id);
+  }
+  if(!code){ showToast('⚠️ Conversione automatica non disponibile per questo YAML'); return; }
+  _vnssCreaCode=code;
+  const codeTa=document.getElementById('vnss-crea-code'), wrap=document.getElementById('vnss-crea-code-wrap');
+  if(codeTa) codeTa.value=code;
+  if(wrap){ wrap.style.display='block'; wrap.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+  _vnssCreaShowJsPreview(code);
+  if(errEl) errEl.textContent='';
+  showToast('⚡ Card generata (nessuna AI, gratis) — controllala prima di salvare');
+}
+
 /* ── Crea Card: editor YAML + anteprima live + generazione via Vanessa ── */
 let _vnssCreaYamlContent='', _vnssCreaTimer=null, _vnssCreaConfig=null, _vnssCreaCode='';
 let _vnssCreaPrevGen=0, _vnssCreaPrevTimer=null;
@@ -17532,7 +17686,10 @@ function _vnssHtmlCreaCard(){
           </div>
           <div id="vnss-crea-foot">
             <div id="vnss-crea-err"></div>
-            <button id="vnss-crea-gen-btn" class="vnss-crea-gen-btn" data-action="_vnssCreaGenerate" style="display:none">✨ Genera JS con Vanessa</button>
+            <div id="vnss-crea-gen-btns" style="display:none;gap:6px">
+              <button id="vnss-crea-genfree-btn" class="vnss-crea-gen-btn" data-action="_vnssCreaGenerateFree" style="background:rgba(74,222,128,.14);border-color:rgba(74,222,128,.4);color:#4ade80" title="Nessuna chiamata AI, istantaneo e gratis">⚡ Genera JS (gratis)</button>
+              <button id="vnss-crea-gen-btn" class="vnss-crea-gen-btn" data-action="_vnssCreaGenerate" title="Usa l'AI di Vanessa — utile per YAML più insoliti">✨ Genera con Vanessa (AI)</button>
+            </div>
           </div>
         </div>
         <div id="vnss-crea-right">
@@ -17601,7 +17758,7 @@ function _vnssCreaLivePreview(){
   const prevWrap=document.getElementById('vnss-crea-prev-wrap');
   const ph=document.getElementById('vnss-crea-placeholder');
   const errEl=document.getElementById('vnss-crea-err');
-  const genBtn=document.getElementById('vnss-crea-gen-btn');
+  const genBtn=document.getElementById('vnss-crea-gen-btns');
   if(!ta||!prevWrap) return;
   // invalida eventuali render Lovelace async in corso + rimuove anteprime precedenti
   _vnssCreaPrevGen++;
@@ -17627,7 +17784,7 @@ function _vnssCreaLivePreview(){
     if(badType){ fail('❌ elemento con tipo non valido: '+(badType&&badType.tipo)); return; }
     if(errEl) errEl.textContent='';
     if(ph) ph.style.display='none';
-    if(genBtn) genBtn.style.display='';
+    if(genBtn) genBtn.style.display='flex';
     _vnssCreaConfig={mode:'elementi', config, id:config.id, rawYaml:txt};
     prevWrap.insertAdjacentHTML('beforeend', _vnssCreaRenderCanvas(config, _getBestHass()));
     return;
@@ -17637,7 +17794,7 @@ function _vnssCreaLivePreview(){
   if(typeof config.type==='string'&&config.type.trim()){
     if(errEl) errEl.textContent='';
     if(ph) ph.style.display='none';
-    if(genBtn) genBtn.style.display='';
+    if(genBtn) genBtn.style.display='flex';
     const id=_vnssCreaSlug(config.id||config.name||config.entity||config.type);
     _vnssCreaConfig={mode:'lovelace', config, id, rawYaml:txt};
     _vnssCreaRenderLovelacePreview(config, prevWrap);
@@ -18250,7 +18407,7 @@ function _vnssHtmlConfig(){
           <div id="vnss-key-status" style="font-size:10px;font-weight:700"></div>
         </div>
         <div style="display:flex;gap:8px">
-          <input type="password" id="vnss-key" style="${inp};flex:1" value="${eh((v.apiKeys&&v.apiKeys[cur])||v.apiKey||'')}" placeholder="Incolla la chiave API">
+          <input type="password" id="vnss-key" autocomplete="new-password" style="${inp};flex:1" value="${eh((v.apiKeys&&v.apiKeys[cur])||v.apiKey||'')}" placeholder="Incolla la chiave API">
           <button id="vnss-validate-btn" style="background:rgba(74,222,128,.12);border:1.5px solid rgba(74,222,128,.28);color:#4ade80;border-radius:10px;padding:0 14px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 Valida</button>
         </div>
       </div>
@@ -19866,7 +20023,7 @@ Object.assign(window, {
   _openJsdPopup, _editJsdBadge, _fillJsdPicker, _jsdPickCard,
   _vanessaRenderSettings, _vanessaSave, _vanessaTest, _vanessaValidateKey,
   _vanessaRunCard, _vanessaSimulateCard, _vanessaUndoCard, _vanessaCardPopup, _vanessaClearLog, _vnssToggleVacation,
-  _vnssCreaFormat, _vnssCreaGenerate, _vnssCreaCopyCode, _vnssCreaSaveLocal, _vnssCreaRefreshJsPreview,
+  _vnssCreaFormat, _vnssCreaGenerate, _vnssCreaGenerateFree, _vnssCreaCopyCode, _vnssCreaSaveLocal, _vnssCreaRefreshJsPreview,
   _pkgUninstallFromHA, _pkgViewOnHA, _pkgGenericInstall, _pkgPostInstall,
   _pkgParseInputs, _pkgShowWizard, _frarikEntityAutocomplete,
   _ghsPkgInstallFromGH, _pkgInstallLocalToHA, _pkgUpdateCard, _ghsPkgUpdFromPending, _ghsPkgMarkUpdated,
