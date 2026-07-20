@@ -17716,9 +17716,9 @@ NON descriverti lo stile a parole: sotto trovi il CODICE REALE di una card Frari
   window.FratechCardRegistry[CARD.id] = CARD;
 })();
 
-Fine dell'esempio. Il tuo file deve avere lo stesso look (stesso header con icon-box, stessa griglia di pannelli, stesso bottone gradiente) — cambia solo i dati/entità/azioni secondo quanto ti viene chiesto sotto.
+Fine dell'esempio. Questo NON è un template da applicare sempre e comunque — è un catalogo dei componenti/colori/stile Frarik da cui pescare (header con icon-box, pannello dati, bottone gradiente, badge di stato) quando la card che ti viene chiesta li richiede davvero. Se la card richiesta è più semplice/compatta dell'esempio (es. una singola riga con icona+nome+piccolo stato, senza bisogno di pannelli separati), il risultato deve restare altrettanto semplice/compatto: usa SOLO i colori/font/raggi/spaziature di questo stile, non l'intera composizione a blocchi se l'originale non la giustifica. La densità/complessità del layout finale deve rispecchiare quella della card richiesta, non quella dell'esempio.
 
-Se la card di partenza ha uno stile visivo tutto suo (colori diversi, font diversi, layout particolare): NON riprodurlo — ricostruiscila con QUESTO stesso stile, mantenendo solo il comportamento (entità collegate, azioni, logica condizionale su stato/tempo).
+Se la card di partenza ha uno stile visivo tutto suo (colori diversi, font diversi): NON riprodurlo — usa i colori/font di questo stile, mantenendo però la STESSA struttura/composizione/densità dell'originale (quanti elementi, come sono disposti, quanto è grande/piccola la card) e lo stesso comportamento (entità collegate, azioni, logica condizionale su stato/tempo).
 
 Rispondi SOLO con il codice JS completo del file. Nessuna spiegazione, nessun testo prima o dopo, nessun blocco markdown \`\`\`.`;
 }
@@ -17740,10 +17740,14 @@ function _vnssCreaBuildPrompt(config){
 }
 function _vnssCreaBuildPromptLovelace(config,id,rawYaml){
   return 'Qui sotto la configurazione YAML ORIGINALE di una card Home Assistant/Lovelace (può essere una card custom da HACS, es. button-card, mushroom, mini-graph-card, ecc. — probabilmente ne conosci già la sintassi). '
-    +'L\'utente l\'ha incollata in un editor con anteprima live nativa (la vede già renderizzata davvero) e vuole una copia INDIPENDENTE come card FratechStore, RISTILIZZATA secondo il design system Frarik descritto sopra (così risulta identica alle altre card della dashboard) — stesso comportamento (tap_action/hold_action → stessa identica chiamata di servizio, stessa eventuale conferma, stessa logica condizionale su stato/tempo dell\'entità), NON lo stesso aspetto grafico: colori/font/layout della configurazione originale vanno sostituiti con quelli del design system Frarik.\n\n'
-    +'Se la configurazione usa template stile button-card [[[ codice ]]]: sono blocchi JavaScript letterali valutati con `entity` (l\'oggetto stato dell\'entità configurata: {state, attributes, ...}), `states`, `variables`, `hass` disponibili nello scope, che ritornano una stringa (HTML per custom_fields, un valore CSS per gli styles). Traduci quella stessa LOGICA (cosa succede, non come appare) dentro render()/mount() in JS vanilla, leggendo lo stato reale da hass.states, ma rivestendola con l\'estetica Frarik.\n\n'
+    +'L\'utente l\'ha incollata in un editor con anteprima live nativa (la vede già renderizzata davvero) e vuole una copia INDIPENDENTE come card FratechStore.\n\n'
+    +'ATTENZIONE — cosa cambiare e cosa NO:\n'
+    +'- CAMBIA SOLO i "token" visivi: colori (usa la palette Frarik del prompt di sistema), font, raggio angoli, spaziature, badge/pillole in stile Frarik al posto di quelli originali.\n'
+    +'- NON CAMBIARE la struttura/layout/densità dell\'originale. Se la card di partenza è COMPATTA (una singola riga bassa, icona + nome + un piccolo testo di stato, magari un piccolo pulsante/icona secondaria a lato, l\'intera card cliccabile per fare toggle) il risultato deve restare ALTRETTANTO COMPATTO — NON trasformarla in un pannello grande con header separato, riquadri dati e bottoni giganti solo perché l\'esempio di riferimento nel prompt di sistema li mostra: quell\'esempio serve a mostrare LO STILE (colori/bordi/tipografia) di quei componenti quando servono, non è un template da applicare sempre. Guarda le dimensioni dichiarate nell\'originale (height, styles.grid, grid-template-areas, custom_fields) per capire quanto deve essere densa/minimale la card, e replica quella stessa densità.\n'
+    +'- Il comportamento va riprodotto ESATTAMENTE: stesso tap_action/hold_action (stessa chiamata di servizio, stessa eventuale conferma), stessa logica condizionale su stato/tempo dell\'entità, stessi eventuali controlli secondari (es. un\'automazione collegata) nella stessa posizione/dimensione relativa che avevano nell\'originale.\n\n'
+    +'Se la configurazione usa template stile button-card [[[ codice ]]]: sono blocchi JavaScript letterali valutati con `entity` (l\'oggetto stato dell\'entità configurata: {state, attributes, ...}), `states`, `variables`, `hass` disponibili nello scope, che ritornano una stringa (HTML per custom_fields, un valore CSS per gli styles). Traduci quella stessa LOGICA (cosa succede, non come appare) dentro render()/mount() in JS vanilla, leggendo lo stato reale da hass.states, ma rivestendola con i colori/font Frarik.\n\n'
     +'CARD.id = "'+id+'", CARD.name = "'+(config.name||id)+'".\n\n'
-    +'YAML originale (solo come riferimento per capire entità/servizi/logica, non per lo stile):\n'+rawYaml;
+    +'YAML originale (guardalo anche per capire quanto deve essere compatta la card, non solo per entità/servizi/logica):\n'+rawYaml;
 }
 async function _vnssCreaGenerate(){
   if(!_vnssCreaConfig){ showToast('⚠️ Sistema prima lo YAML (controlla gli errori)'); return; }

@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.1.7 — 2026-07-20
+
+### fix: Crea Card — la card generata ingrandiva/ristrutturava card che nell'originale erano compatte
+
+- Il prompt precedente diceva esplicitamente di sostituire anche il
+  "layout" della configurazione originale, non solo colori/font. Risultato:
+  una card button-card compatta (una riga, icona+nome+piccolo stato,
+  intera card cliccabile, piccolo pulsante automazione a lato) veniva
+  trasformata in un pannello grande con header separato, due riquadri
+  dati e due bottoni — una card completamente diversa nella struttura,
+  non solo nei colori.
+- Corretto: ora il prompt separa esplicitamente cosa va cambiato (colori,
+  font, raggi, spaziature — i "token" dello stile Frarik) da cosa va
+  mantenuto identico (struttura, densità, quanti elementi, quanto è
+  grande/piccola la card, stesso comportamento). L'esempio di codice
+  Frarik nel prompt di sistema è ora presentato esplicitamente come un
+  catalogo di componenti da usare solo quando servono davvero, non un
+  template a blocchi da applicare sempre.
+
 ## 2.1.6 — 2026-07-20
 
 ### fix: Crea Card — la card generata non assomigliava alle altre card Frarik
