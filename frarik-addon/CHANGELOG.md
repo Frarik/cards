@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.1.10 — 2026-07-20
+
+### fix: Crea Card — "Genera JS (gratis)" dava "... is not defined" nell'anteprima
+
+- Le funzioni incorporate nel file generato tramite `.toString()` restano
+  coerenti tra loro dopo la minificazione (il bundler rinomina gli
+  identificatori, ma lo fa in modo coerente sia nella dichiarazione sia
+  nelle chiamate interne). Il problema erano i punti in cui il nome della
+  funzione da chiamare veniva scritto **a mano** come testo (nel wrapper
+  `render`/`mount` del CARD generato): dopo la minificazione quel nome
+  scritto a mano non corrispondeva più al nome reale della funzione
+  incorporata, con errore "... is not defined" nell'anteprima JS.
+- Corretto leggendo il nome vero a runtime con `fn.name` invece di
+  scriverlo come stringa fissa, in entrambi i generatori (`elementi` e
+  `button-card`). Aggiunto anche l'helper `eh` (escape HTML) alla lista
+  delle funzioni incorporate nello schema `elementi`, per lo stesso
+  motivo: prima veniva ridichiarato a mano nel file generato con un nome
+  che poteva non corrispondere a quello effettivamente chiamato dal
+  codice incorporato.
+
 ## 2.1.9 — 2026-07-20
 
 ### feat: Crea Card — nuovo bottone "⚡ Genera JS (gratis)", nessuna AI richiesta

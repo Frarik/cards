@@ -17459,21 +17459,26 @@ function _vnssCreaGenerateElementiCode(config){
   const elementi=Array.isArray(config.elementi)?config.elementi:[];
   const id=config.id, name=config.name||id, icon=config.icon||'✨';
   const canvasW=config.canvasW||320, canvasH=config.canvasH||220, bgColor=config.bgColor||'#0b1220';
-  const helpers=[_vnssCreaS,_vnssCreaAttr,_vnssCreaDomainActions,_vnssCreaSegBtn,_vnssCreaElementHtml,_vnssCreaElHtml,_vnssCreaGenRender,_vnssCreaGenMount]
-    .map(fn=>fn.toString()).join('\n\n');
+  // IMPORTANTE: dopo la minificazione i nomi reali di queste funzioni possono essere
+  // diversi da come sono scritti qui nel sorgente (esbuild rinomina gli identificatori).
+  // .toString() incorpora sempre il nome VERO e coerente con le chiamate interne tra
+  // loro; per le chiamate che scriviamo qui a mano (render/mount del CARD) usiamo
+  // .name per leggere il nome reale a runtime, mai testo scritto a mano.
+  const helperFns=[eh,_vnssCreaS,_vnssCreaAttr,_vnssCreaDomainActions,_vnssCreaSegBtn,_vnssCreaElementHtml,_vnssCreaElHtml,_vnssCreaGenRender,_vnssCreaGenMount];
+  const helpers=helperFns.map(fn=>fn.toString()).join('\n\n');
+  const renderName=_vnssCreaGenRender.name, mountName=_vnssCreaGenMount.name;
   return [
     '/* Card generata da Crea Card (Frarik Dashboard) — schema elementi, generazione deterministica senza AI */',
     '(function(){',
     "  'use strict';",
-    '  function eh(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }',
     '  var ELEMENTI = '+JSON.stringify(elementi)+';',
     helpers,
     '  var CARD = {',
     '    id: '+JSON.stringify(id)+', name: '+JSON.stringify(name)+', icon: '+JSON.stringify(icon)+', version: "1.0.0",',
     '    desc: "Card generata da Crea Card (schema elementi)",',
-    '    render: function(card, hass){ return _vnssCreaGenRender(ELEMENTI, '+canvasW+', '+canvasH+', '+JSON.stringify(bgColor)+', hass); },',
+    '    render: function(card, hass){ return '+renderName+'(ELEMENTI, '+canvasW+', '+canvasH+', '+JSON.stringify(bgColor)+', hass); },',
     '    update: function(card, hass, el){ el.innerHTML = this.render(card, hass); this.mount(card, hass, el); },',
-    '    mount: function(card, hass, el){ _vnssCreaGenMount(ELEMENTI, el); }',
+    '    mount: function(card, hass, el){ '+mountName+'(ELEMENTI, el); }',
     '  };',
     '  window.FratechCardRegistry = window.FratechCardRegistry || {};',
     '  window.FratechCardRegistry[CARD.id] = CARD;',
@@ -17529,6 +17534,7 @@ function _vnssCreaGenMountCompact(entity, entity2, el){
 }
 function _vnssCreaGenerateButtonCardCode(parsed, id){
   const helpers=[_vnssCreaGenRenderCompact,_vnssCreaGenMountCompact].map(fn=>fn.toString()).join('\n\n');
+  const renderName=_vnssCreaGenRenderCompact.name, mountName=_vnssCreaGenMountCompact.name;
   return [
     '/* Card generata da Crea Card (Frarik Dashboard) — da YAML button-card, generazione deterministica senza AI */',
     '(function(){',
@@ -17540,9 +17546,9 @@ function _vnssCreaGenerateButtonCardCode(parsed, id){
     '  var CARD = {',
     '    id: '+JSON.stringify(id)+', name: LABEL, icon: "💡", version: "1.0.0",',
     '    desc: "Card generata da Crea Card (da YAML button-card)",',
-    '    render: function(card, hass){ return _vnssCreaGenRenderCompact(ENTITY, ENTITY2, LABEL, hass); },',
+    '    render: function(card, hass){ return '+renderName+'(ENTITY, ENTITY2, LABEL, hass); },',
     '    update: function(card, hass, el){ el.innerHTML = this.render(card, hass); this.mount(card, hass, el); },',
-    '    mount: function(card, hass, el){ _vnssCreaGenMountCompact(ENTITY, ENTITY2, el); }',
+    '    mount: function(card, hass, el){ '+mountName+'(ENTITY, ENTITY2, el); }',
     '  };',
     '  window.FratechCardRegistry = window.FratechCardRegistry || {};',
     '  window.FratechCardRegistry[CARD.id] = CARD;',
