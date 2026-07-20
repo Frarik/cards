@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.1.1 — 2026-07-20
+
+### feat: Vanessa — nuovo tab "✨ Crea Card" (YAML → anteprima live → JS)
+
+- Nuovo tab dentro Vanessa: si scrive la card come lista di elementi YAML
+  (stesso modello di Canvas Libero — `testo`/`icona`/`forma`/`azione`, con
+  binding a entità e rilevamento automatico dell'azione dal dominio),
+  con anteprima live istantanea (nessuna chiamata AI finché non si genera).
+- Bottone "✨ Genera JS con Vanessa": Vanessa (stesso motore AI già
+  configurato per l'automazione) scrive una card FratechStore indipendente
+  che replica esattamente gli stessi elementi/entità/comportamenti.
+  Il codice generato resta editabile e sotto controllo dell'utente:
+  "💾 Salva in locale" lo registra nello Store locale (nessuna pubblicazione
+  automatica) da dove si può poi pubblicare con il flusso GitHub già esistente.
+- `_vanessaCallAI` ora accetta un secondo parametro opzionale `opts`
+  (`system`, `maxTokens`) per generare risposte più lunghe del solito JSON
+  di automazione, restando invariata per tutte le chiamate esistenti.
+
 ## 2.1.0 — 2026-07-19
 
 ### feat: Montalatte e Tostapane ora classificate come Elettrodomestici nello Store

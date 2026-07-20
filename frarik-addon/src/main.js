@@ -17332,7 +17332,271 @@ function _vnssRenderMainTab(tab){
     content.innerHTML=`<div id="vnss-tab-bar" style="display:flex;overflow-x:auto;scrollbar-width:none;padding:0 14px;border-bottom:1px solid rgba(255,255,255,.07)"></div><div id="vnss-tab-content" style="padding:16px 14px"></div>`;
     _vanessaRenderTabs();
   }
+  else if(tab==='crea'){ content.innerHTML=_vnssHtmlCreaCard(); _vnssWireCreaCard(); }
   else if(tab==='config'){ content.innerHTML=_vnssHtmlConfig(); _vnssWireConfig(); }
+}
+
+/* ── Crea Card: renderer di anteprima a sola lettura ──────────────────────
+   Porting mirato (non riuso: canvas-libero.js è un IIFE isolato) del modello
+   a elementi di Canvas Libero (card-js/canvas-libero.js) — stesso schema
+   testo/icona/forma/azione, stesso rilevamento automatico dal dominio. */
+function _vnssCreaS(h, id) { const s = h && id && h.states && h.states[id]; return s ? s.state : null; }
+function _vnssCreaAttr(h, id, attr) { const s = h && id && h.states && h.states[id]; return (s && s.attributes && s.attributes[attr] != null) ? s.attributes[attr] : null; }
+function _vnssCreaDomainActions(entityId){
+  const domain=(entityId||'').split('.')[0];
+  const map={
+    light:{kind:'toggle',icon:'💡'}, switch:{kind:'toggle',icon:'🔌'}, input_boolean:{kind:'toggle',icon:'⚙️'}, fan:{kind:'toggle',icon:'🌀'},
+    script:{kind:'run',icon:'▶️',svcDomain:'script',svc:'turn_on'}, scene:{kind:'run',icon:'🎬',svcDomain:'scene',svc:'turn_on'},
+    automation:{kind:'run',icon:'⚡',svcDomain:'automation',svc:'trigger'}, cover:{kind:'cover'}, lock:{kind:'lock'},
+  };
+  if(map[domain]) return map[domain];
+  if(domain) return {kind:'run',icon:'▶️',svcDomain:domain,svc:'turn_on'};
+  return {kind:'none'};
+}
+function _vnssCreaSegBtn(icon,sub,fg,fs){
+  return '<div data-sub="'+sub+'" style="flex:1;height:100%;display:flex;align-items:center;justify-content:center;font-size:'+fs+'px;color:'+fg+'">'+icon+'</div>';
+}
+function _vnssCreaElementHtml(e,h){
+  if(e.tipo==='testo'){
+    let txt;
+    if(e.modo==='entita'&&e.entity){
+      let v=e.attribute?_vnssCreaAttr(h,e.entity,e.attribute):_vnssCreaS(h,e.entity);
+      if(v==null){ txt='—'; }
+      else{
+        const n=parseFloat(v);
+        if(e.decimali!=null&&e.decimali!==''&&!isNaN(n)) v=n.toFixed(e.decimali);
+        txt=v+(e.unit?' '+e.unit:'');
+      }
+    } else { txt=e.testo||''; }
+    const justify=e.allinea==='center'?'center':e.allinea==='right'?'flex-end':'flex-start';
+    return '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:'+justify+';font-size:'+(e.fontSize||14)+'px;font-weight:'+(e.grassetto?'800':'400')+';color:'+(e.colore||'#ffffff')+';overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.1">'+eh(txt)+'</div>';
+  }
+  if(e.tipo==='icona'){
+    let col=e.colore||'#ffffff';
+    if(e.entity){ const st=_vnssCreaS(h,e.entity); col=(st===(e.statoOn||'on'))?(e.coloreOn||'#4ade80'):(e.coloreOff||'#f87171'); }
+    const sz=Math.max(10,Math.round(Math.min(e.w||30,e.h||30)*0.6));
+    return '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:'+sz+'px;line-height:1;color:'+col+'">'+eh(e.emoji||'❔')+'</div>';
+  }
+  if(e.tipo==='forma'){
+    return '<div style="width:100%;height:100%;background:'+(e.colore||'#1e293b')+';border-radius:'+(e.radius!=null?e.radius:12)+'px"></div>';
+  }
+  if(e.tipo==='azione'){
+    const info=_vnssCreaDomainActions(e.entity);
+    const bg=e.bgColore||'#1d4ed8', fg=e.colore||'#ffffff';
+    const radius=e.radius!=null?e.radius:12, fs=e.fontSize||13;
+    if(info.kind==='cover'){
+      return '<div style="width:100%;height:100%;display:flex;background:'+bg+';border-radius:'+radius+'px;overflow:hidden">'
+        +_vnssCreaSegBtn('▲','open',fg,fs)+'<div style="width:1px;background:rgba(255,255,255,.2)"></div>'
+        +_vnssCreaSegBtn('■','stop',fg,fs)+'<div style="width:1px;background:rgba(255,255,255,.2)"></div>'
+        +_vnssCreaSegBtn('▼','close',fg,fs)+'</div>';
+    }
+    if(info.kind==='lock'){
+      return '<div style="width:100%;height:100%;display:flex;background:'+bg+';border-radius:'+radius+'px;overflow:hidden">'
+        +_vnssCreaSegBtn('🔓','unlock',fg,fs)+'<div style="width:1px;background:rgba(255,255,255,.2)"></div>'
+        +_vnssCreaSegBtn('🔒','lock',fg,fs)+'</div>';
+    }
+    const isOn=info.kind==='toggle'&&e.entity?(_vnssCreaS(h,e.entity)==='on'):false;
+    const showBg=isOn?(e.bgColoreOn||'#16a34a'):bg;
+    const emoji=e.emoji||info.icon||'❔', label=e.testo||'';
+    return '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:6px;background:'+showBg+';border-radius:'+radius+'px;color:'+fg+';font-size:'+fs+'px;font-weight:'+(e.grassetto!==false?'800':'400')+';padding:0 8px;box-sizing:border-box;overflow:hidden;white-space:nowrap">'
+      +(emoji?'<span>'+eh(emoji)+'</span>':'')+(label?'<span style="overflow:hidden;text-overflow:ellipsis">'+eh(label)+'</span>':'')+'</div>';
+  }
+  return '';
+}
+function _vnssCreaElHtml(e,h,idx){
+  const style='position:absolute;left:'+(e.x||0)+'px;top:'+(e.y||0)+'px;width:'+(e.w||40)+'px;height:'+(e.h||30)+'px;box-sizing:border-box';
+  return '<div data-idx="'+idx+'" style="'+style+'">'+_vnssCreaElementHtml(e,h)+'</div>';
+}
+function _vnssCreaRenderCanvas(config,hass){
+  const canvasW=config.canvasW||320, canvasH=config.canvasH||220, bgColor=config.bgColor||'#0b1220';
+  const elementi=Array.isArray(config.elementi)?config.elementi:[];
+  const elsHtml=elementi.map((e,i)=>_vnssCreaElHtml(e,hass,i)).join('');
+  return '<div id="vnss-crea-canvas" style="width:'+canvasW+'px;height:'+canvasH+'px;background:'+bgColor+'">'+elsHtml+'</div>';
+}
+
+/* ── Crea Card: editor YAML + anteprima live + generazione via Vanessa ── */
+let _vnssCreaYamlContent='', _vnssCreaTimer=null, _vnssCreaConfig=null, _vnssCreaCode='';
+
+function _vnssHtmlCreaCard(){
+  return `
+    <div style="padding:14px">
+      <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.7;margin-bottom:10px">
+        Scrivi la card come lista di <b style="color:rgba(192,132,252,.85)">elementi</b> (stesso modello di Canvas Libero: <code style="color:rgba(192,132,252,.7)">testo · icona · forma · azione</code>), guarda l'anteprima live, poi premi <b style="color:rgba(192,132,252,.85)">✨ Genera JS</b> perché Vanessa scriva una card Frarik indipendente che replica lo stesso comportamento. Il codice resta a te: decidi tu se salvarlo solo in locale o pubblicarlo dallo Store.
+      </div>
+      <div id="vnss-crea-wrap">
+        <div id="vnss-crea-left">
+          <div class="vnss-crea-pane-hdr">
+            <span class="vnss-crea-pane-lbl">Configurazione YAML</span>
+            <button class="vnss-crea-act-btn" data-action="_vnssCreaFormat">⇄ Formatta</button>
+          </div>
+          <div id="vnss-crea-editor-area">
+            <div id="vnss-crea-lines" aria-hidden="true"></div>
+            <textarea id="vnss-crea-inp" spellcheck="false" placeholder="id: mia-card-nuova&#10;name: Mia Card Nuova&#10;icon: 🎯&#10;canvasW: 320&#10;canvasH: 220&#10;bgColor: '#0b1220'&#10;elementi:&#10;  - tipo: testo&#10;    x: 10&#10;    y: 10&#10;    w: 140&#10;    h: 30&#10;    modo: entita&#10;    entity: sensor.temperatura&#10;    unit: °C"></textarea>
+          </div>
+          <div id="vnss-crea-foot">
+            <div id="vnss-crea-err"></div>
+            <button id="vnss-crea-gen-btn" class="vnss-crea-gen-btn" data-action="_vnssCreaGenerate" style="display:none">✨ Genera JS con Vanessa</button>
+          </div>
+        </div>
+        <div id="vnss-crea-right">
+          <div class="vnss-crea-pane-hdr"><span class="vnss-crea-pane-lbl">Anteprima Live</span></div>
+          <div id="vnss-crea-prev-wrap">
+            <div id="vnss-crea-placeholder">
+              <div style="font-size:18px;font-family:monospace;opacity:.35;letter-spacing:-1px">⟨⟩</div>
+              <div>Inserisci lo YAML per vedere l'anteprima</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="vnss-crea-code-wrap">
+        <div id="vnss-crea-code-hdr">
+          <span class="vnss-crea-pane-lbl">Codice JS generato</span>
+          <div style="display:flex;gap:6px">
+            <button class="vnss-crea-act-btn" data-action="_vnssCreaCopyCode">📋 Copia</button>
+            <button class="vnss-crea-act-btn" data-action="_vnssCreaSaveLocal" style="background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.32);color:#4ade80">💾 Salva in locale</button>
+          </div>
+        </div>
+        <textarea id="vnss-crea-code" spellcheck="false"></textarea>
+      </div>
+    </div>`;
+}
+
+function _vnssWireCreaCard(){
+  const ta=document.getElementById('vnss-crea-inp');
+  if(!ta) return;
+  if(_vnssCreaYamlContent) ta.value=_vnssCreaYamlContent;
+  _vnssCreaSyncLines();
+  ta.addEventListener('input',()=>{
+    _vnssCreaYamlContent=ta.value;
+    _vnssCreaSyncLines();
+    clearTimeout(_vnssCreaTimer);
+    _vnssCreaTimer=setTimeout(_vnssCreaLivePreview,200);
+  });
+  ta.addEventListener('scroll',_vnssCreaSyncScroll);
+  if(_vnssCreaYamlContent) setTimeout(_vnssCreaLivePreview,200);
+  if(_vnssCreaCode){
+    const codeTa=document.getElementById('vnss-crea-code'), wrap=document.getElementById('vnss-crea-code-wrap');
+    if(codeTa) codeTa.value=_vnssCreaCode;
+    if(wrap) wrap.style.display='block';
+  }
+}
+function _vnssCreaSyncLines(){
+  const ta=document.getElementById('vnss-crea-inp'), ln=document.getElementById('vnss-crea-lines');
+  if(!ta||!ln) return;
+  ln.textContent=Array.from({length:ta.value.split('\n').length},(_,i)=>i+1).join('\n');
+}
+function _vnssCreaSyncScroll(){
+  const ta=document.getElementById('vnss-crea-inp'), ln=document.getElementById('vnss-crea-lines');
+  if(ta&&ln) ln.scrollTop=ta.scrollTop;
+}
+function _vnssCreaFormat(){
+  const ta=document.getElementById('vnss-crea-inp'); if(!ta) return;
+  try{
+    const obj=jsyaml.load(ta.value);
+    if(!obj||typeof obj!=='object'){ showToast('❌ YAML non valido'); return; }
+    ta.value=jsyaml.dump(obj,{indent:2,lineWidth:-1}).replace(/\n$/,'');
+    _vnssCreaYamlContent=ta.value; _vnssCreaSyncLines();
+  }catch(e){ showToast('❌ '+e.message); }
+}
+function _vnssCreaLivePreview(){
+  const ta=document.getElementById('vnss-crea-inp');
+  const prevWrap=document.getElementById('vnss-crea-prev-wrap');
+  const ph=document.getElementById('vnss-crea-placeholder');
+  const errEl=document.getElementById('vnss-crea-err');
+  const genBtn=document.getElementById('vnss-crea-gen-btn');
+  if(!ta||!prevWrap) return;
+  const old=document.getElementById('vnss-crea-canvas'); if(old) old.remove();
+  const fail=(msg)=>{ if(errEl) errEl.textContent=msg; if(genBtn) genBtn.style.display='none'; _vnssCreaConfig=null; };
+  const txt=ta.value.trim();
+  if(!txt){ if(ph) ph.style.display=''; if(errEl) errEl.textContent=''; if(genBtn) genBtn.style.display='none'; _vnssCreaConfig=null; return; }
+  let config;
+  try{ config=jsyaml.load(txt); }catch(e){ fail('❌ '+e.message); return; }
+  if(!config||typeof config!=='object'){ fail('❌ YAML non valido'); return; }
+  if(!/^[a-z0-9-]+$/.test(config.id||'')){ fail('⚠️ Manca "id" valido (solo a-z 0-9 -)'); return; }
+  if(!Array.isArray(config.elementi)||!config.elementi.length){ fail('⚠️ Manca "elementi" (lista di testo/icona/forma/azione)'); return; }
+  const badType=config.elementi.find(e=>!e||!['testo','icona','forma','azione'].includes(e.tipo));
+  if(badType){ fail('❌ elemento con tipo non valido: '+(badType&&badType.tipo)); return; }
+  if(errEl) errEl.textContent='';
+  if(ph) ph.style.display='none';
+  if(genBtn) genBtn.style.display='';
+  _vnssCreaConfig=config;
+  prevWrap.insertAdjacentHTML('beforeend', _vnssCreaRenderCanvas(config, _getBestHass()));
+}
+function _vnssCreaBuildSystemPrompt(){
+  return 'Sei Vanessa: ora generi codice per la Frarik Dashboard. Segui ESATTAMENTE lo standard "FratechStore":\n'
+    +'- Un solo file .js, vanilla JS puro (niente librerie esterne, niente build, niente React).\n'
+    +'- Wrappa tutto in una IIFE: (function(){ \'use strict\'; ... })();\n'
+    +'- Alla fine registra: window.FratechCardRegistry = window.FratechCardRegistry || {}; window.FratechCardRegistry[CARD.id] = CARD;\n'
+    +'- CARD = { id, name, icon, version:\'1.0.0\', desc, render(card,hass){ /* ritorna stringa HTML */ }, update(card,hass,el){ el.innerHTML=this.render(card,hass); this.mount?.(card,hass,el); }, mount(card,hass,el){ /* event listener qui, mai in render */ } }\n'
+    +'- Accesso stato protetto: hass?.states?.[id] ?? \'—\' (hass può essere null). Per chiamare un servizio usa la funzione globale già disponibile: callSvc(domain, service, entityId, data).\n'
+    +'- Palette Frarik: sfondo card rgba(10,14,26,1); pannelli interni rgba(255,255,255,.04) con bordo rgba(255,255,255,.08); testo primario #fff; testo secondario rgba(255,255,255,.55); accenti #38bdf8 #6366f1 #4ade80 #f87171.\n'
+    +'- Font: var(--primary-font-family,\'Inter\',system-ui,sans-serif). Contenitori fluidi (width:100%, min-width:0), niente larghezze fisse tranne dove l\'utente ha esplicitamente scelto px (es. il canvas).\n'
+    +'- Rispondi SOLO con il codice JS completo del file. Nessuna spiegazione, nessun testo prima o dopo, nessun blocco markdown ```.';
+}
+function _vnssCreaBuildPrompt(config){
+  const elementi=config.elementi||[];
+  const domainDoc='Comportamento "azione" da riprodurre ESATTAMENTE in base al dominio dell\'entità (prefisso prima del punto):\n'
+    +'  light/switch/input_boolean/fan → bottone che chiama toggle sul dominio; sfondo diverso se stato "on" (usa bgColoreOn se presente) rispetto a "off" (bgColore).\n'
+    +'  script → chiama script.turn_on sull\'entità. scene → scene.turn_on. automation → automation.trigger.\n'
+    +'  cover → tre pulsanti ▲ (cover.open_cover) ■ (cover.stop_cover) ▼ (cover.close_cover).\n'
+    +'  lock → due pulsanti 🔓 (lock.unlock) 🔒 (lock.lock).\n'
+    +'  qualsiasi altro dominio → bottone generico che chiama <dominio>.turn_on.';
+  return 'Qui sotto la definizione di una card in JSON (proviene da uno YAML scritto dall\'utente in un editor con anteprima live). '
+    +'Genera una card FratechStore che riproduce ESATTAMENTE questi elementi: stesso posizionamento/dimensioni relative (un contenitore di '
+    +(config.canvasW||320)+'x'+(config.canvasH||220)+'px con sfondo '+(config.bgColor||'#0b1220')+', layout assoluto o un equivalente flex/grid — il risultato visivo deve corrispondere), '
+    +'stesse entità collegate, stessi colori/testi/icone, e per ogni elemento "azione" lo stesso identico comportamento in base al dominio.\n\n'
+    +domainDoc+'\n\n'
+    +'CARD.id = "'+config.id+'", CARD.name = "'+(config.name||config.id)+'", CARD.icon = "'+(config.icon||'✨')+'".\n\n'
+    +'Elementi (JSON):\n'+JSON.stringify(elementi,null,2);
+}
+async function _vnssCreaGenerate(){
+  if(!_vnssCreaConfig){ showToast('⚠️ Sistema prima lo YAML (controlla gli errori)'); return; }
+  const btn=document.getElementById('vnss-crea-gen-btn');
+  const errEl=document.getElementById('vnss-crea-err');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Vanessa sta scrivendo…'; }
+  try{
+    const prompt=_vnssCreaBuildPrompt(_vnssCreaConfig);
+    let code=await _vanessaCallAI(prompt,{system:_vnssCreaBuildSystemPrompt(),maxTokens:7000});
+    code=code.replace(/^```(?:js|javascript)?\s*/i,'').replace(/```\s*$/,'').trim();
+    if(!code||!/FratechCardRegistry/.test(code)) throw new Error('Risposta non valida (nessun codice riconoscibile)');
+    _vnssCreaCode=code;
+    const codeTa=document.getElementById('vnss-crea-code'), wrap=document.getElementById('vnss-crea-code-wrap');
+    if(codeTa) codeTa.value=code;
+    if(wrap){ wrap.style.display='block'; wrap.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+    if(errEl) errEl.textContent='';
+    showToast('✨ Codice generato — controllalo prima di salvare');
+  }catch(e){
+    if(errEl) errEl.textContent='❌ '+e.message;
+    showToast('❌ Vanessa non è riuscita a generare il codice');
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='✨ Genera JS con Vanessa'; }
+  }
+}
+function _vnssCreaCopyCode(){
+  const ta=document.getElementById('vnss-crea-code'); if(!ta||!ta.value) return;
+  navigator.clipboard?.writeText(ta.value).then(()=>showToast('📋 Codice copiato')).catch(()=>showToast('❌ Copia non riuscita'));
+}
+function _vnssCreaSaveLocal(){
+  const ta=document.getElementById('vnss-crea-code');
+  if(!ta||!ta.value.trim()){ showToast('⚠️ Nessun codice da salvare'); return; }
+  const code=ta.value;
+  const doInstall=()=>{
+    const res=_installCardCode(code);
+    if(res.err){ showToast('❌ Codice non valido: '+res.err.message); return; }
+    if(!res.newCards||!res.newCards.length){ showToast('❌ Il codice non registra nessuna card (manca window.FratechCardRegistry[...])'); return; }
+    const id=res.newCards[0];
+    const reg=window.FratechCardRegistry[id]||{};
+    const meta={id, name:reg.name||id, icon:reg.icon||'✨', version:reg.version||'1.0.0', desc:reg.desc||''};
+    _jsStoreSave(id, meta, code, 'local');
+    showToast('💾 Salvata in locale — vai su Store → Card locali per aggiungerla o pubblicarla');
+  };
+  let existingId=null;
+  try{ const m=code.match(/id\s*:\s*['"]([a-z0-9-]+)['"]/); existingId=m&&m[1]; }catch(e){}
+  if(existingId && _jsStoreList().some(i=>(i.meta||{}).id===existingId)){
+    showConfirm('Esiste già una card locale con id "'+existingId+'". Sovrascriverla?', doInstall, 'Sovrascrivi');
+  } else {
+    doInstall();
+  }
 }
 
 function _vnssHtmlDevices(){
@@ -17929,6 +18193,7 @@ function _vanessaRenderSettings(){
     {id:'dispositivi',icon:'🎯',label:'Dispositivi'},
     {id:'live',icon:'📡',label:'Live'},
     {id:'registro',icon:'📋',label:'Registro'},
+    {id:'crea',icon:'✨',label:'Crea Card'},
     {id:'config',icon:'⚙️',label:'Config'},
   ];
 
@@ -17954,6 +18219,31 @@ function _vanessaRenderSettings(){
 [data-vnmt]:hover{transform:scale(1.04);background:rgba(124,58,237,.12)!important}
 .vnss-sec-card{transition:box-shadow .2s,transform .2s}.vnss-sec-card:hover{box-shadow:0 0 18px rgba(56,189,248,.14);transform:translateY(-1px)}
 input[type=text]:focus,input[type=password]:focus,textarea:focus,input[type=number]:focus,input[type=time]:focus{border-color:rgba(192,132,252,.7)!important;box-shadow:0 0 0 3px rgba(124,58,237,.15)!important}
+/* ═══ Crea Card — editor YAML + anteprima live ═══ */
+#vnss-crea-wrap{display:flex;height:440px;overflow:hidden;border-radius:14px;border:1px solid rgba(124,58,237,.22);background:#06060f;margin-bottom:12px}
+#vnss-crea-left{flex:0 0 44%;display:flex;flex-direction:column;min-width:0;border-right:1px solid rgba(124,58,237,.16)}
+#vnss-crea-right{flex:1;display:flex;flex-direction:column;min-width:0}
+.vnss-crea-pane-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 14px 8px;border-bottom:1px solid rgba(124,58,237,.14);background:rgba(124,58,237,.05);flex-shrink:0}
+.vnss-crea-pane-lbl{font-size:9px;font-weight:800;color:rgba(192,132,252,.7);letter-spacing:2px;text-transform:uppercase}
+#vnss-crea-editor-area{flex:1;display:flex;background:#06060f;min-height:0;overflow:hidden}
+#vnss-crea-lines{padding:11px 8px 11px 10px;font-size:11px;font-family:monospace;line-height:1.6;color:rgba(192,132,252,.4);text-align:right;overflow:hidden;user-select:none;border-right:1px solid rgba(124,58,237,.12);min-width:34px;white-space:pre;flex-shrink:0}
+#vnss-crea-inp{flex:1;background:transparent;border:none;resize:none;color:#e2d8f5;font-size:12px;font-family:monospace;line-height:1.6;padding:11px 14px;outline:none;overflow-y:auto;tab-size:2}
+#vnss-crea-inp::placeholder{color:rgba(255,255,255,.18);font-size:11px}
+#vnss-crea-inp::-webkit-scrollbar{width:3px}
+#vnss-crea-inp::-webkit-scrollbar-thumb{background:rgba(124,58,237,.3);border-radius:2px}
+#vnss-crea-foot{display:flex;align-items:center;gap:8px;padding:7px 14px 9px;border-top:1px solid rgba(124,58,237,.12);min-height:40px;flex-shrink:0}
+#vnss-crea-err{flex:1;font-size:10px;line-height:1.4;color:#f87171}
+.vnss-crea-act-btn{padding:4px 10px;border-radius:6px;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.28);color:rgba(192,132,252,.8);font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap}
+.vnss-crea-act-btn:hover{background:rgba(124,58,237,.22);color:#c084fc}
+.vnss-crea-gen-btn{padding:6px 15px;border-radius:8px;background:linear-gradient(135deg,rgba(124,58,237,.32),rgba(99,102,241,.22));border:1px solid rgba(192,132,252,.5);color:#c084fc;font-size:11px;font-weight:800;cursor:pointer;transition:all .18s;white-space:nowrap}
+.vnss-crea-gen-btn:hover{box-shadow:0 0 14px rgba(124,58,237,.35);background:linear-gradient(135deg,rgba(124,58,237,.44),rgba(99,102,241,.3))}
+.vnss-crea-gen-btn:disabled{opacity:.5;cursor:default;box-shadow:none}
+#vnss-crea-prev-wrap{flex:1;background:rgba(255,255,255,.02);overflow:auto;padding:14px;min-height:0;position:relative;display:flex;align-items:center;justify-content:center}
+#vnss-crea-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:11px;color:rgba(255,255,255,.2);text-align:center;padding:16px;line-height:1.6}
+#vnss-crea-canvas{position:relative;border-radius:10px;flex-shrink:0}
+#vnss-crea-code-wrap{margin-top:12px;border-radius:14px;border:1px solid rgba(124,58,237,.22);background:#06060f;overflow:hidden;display:none}
+#vnss-crea-code-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 14px 8px;border-bottom:1px solid rgba(124,58,237,.14);background:rgba(124,58,237,.05)}
+#vnss-crea-code{width:100%;max-height:280px;overflow:auto;background:transparent;border:none;color:#c4d8f5;font-size:11px;font-family:monospace;line-height:1.6;padding:12px 14px;resize:vertical;box-sizing:border-box;display:block}
 </style>
 
 <!-- HERO -->
@@ -17984,7 +18274,7 @@ input[type=text]:focus,input[type=password]:focus,textarea:focus,input[type=numb
 </div>
 
 <!-- NAV TABS -->
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px">
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:14px">
   ${tabs.map(t=>`<button data-vnmt="${t.id}" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:transparent;border:1.5px solid transparent;border-bottom-color:transparent;border-radius:12px;padding:9px 6px;cursor:pointer;transition:all .2s;color:rgba(255,255,255,.38)">
     <span style="font-size:18px">${t.icon}</span>
     <span style="font-size:10px;font-weight:800;letter-spacing:.02em">${t.label}</span>
@@ -18207,7 +18497,10 @@ function _vanessaClearLog(cardId){
   _vanessaRenderTabs();
 }
 
-async function _vanessaCallAI(prompt){
+async function _vanessaCallAI(prompt,opts){
+  opts=opts||{};
+  const maxTokens=opts.maxTokens||280;
+  const system=opts.system||'Sei Vanessa, AI di automazione domestica. Rispondi SEMPRE e SOLO con JSON valido, nessun altro testo.';
   const v=_vanessaGetCfg();
   const provider=v.provider||'gemini';
   const defaults={gemini:'gemini-2.0-flash',openai:'gpt-4o-mini',claude:'claude-haiku-4-5-20251001'};
@@ -18215,19 +18508,20 @@ async function _vanessaCallAI(prompt){
   const apiKey=(v.apiKeys&&v.apiKeys[provider])||v.apiKey||'';
   if(provider==='gemini'){
     const url=`https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:280}})});
+    const text=opts.system?(system+'\n\n'+prompt):prompt;
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text}]}],generationConfig:{temperature:0.1,maxOutputTokens:maxTokens}})});
     if(!r.ok){ const t=await r.text(); throw new Error(`Gemini ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();
     return d.candidates?.[0]?.content?.parts?.[0]?.text||'';
   }
   if(provider==='openai'){
-    const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model,messages:[{role:'system',content:'Sei Vanessa, AI di automazione domestica. Rispondi SEMPRE e SOLO con JSON valido, nessun altro testo.'},{role:'user',content:prompt}],temperature:0.1,max_tokens:280})});
+    const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model,messages:[{role:'system',content:system},{role:'user',content:prompt}],temperature:0.1,max_tokens:maxTokens})});
     if(!r.ok){ const t=await r.text(); throw new Error(`OpenAI ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();
     return d.choices?.[0]?.message?.content||'';
   }
   if(provider==='claude'){
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model,max_tokens:280,system:'Sei Vanessa, AI di automazione domestica. Rispondi SOLO con JSON valido su una riga. Nessun testo prima o dopo.',messages:[{role:'user',content:prompt}]})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model,max_tokens:maxTokens,system,messages:[{role:'user',content:prompt}]})});
     if(!r.ok){ const t=await r.text(); throw new Error(`Claude ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();
     return d.content?.[0]?.text||'';
