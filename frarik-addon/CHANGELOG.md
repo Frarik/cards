@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.1.17 — 2026-07-21
+
+### feat: Card YAML — supporto a gauge, glance e picture-elements native
+
+- Colma il secondo gap con Oikos ("Native HA card"): incollando uno YAML
+  Lovelace con `type: gauge`, `type: glance` o `type: picture-elements`
+  ora si vede la card renderizzata invece del generico "tipo non
+  supportato" — si aggiungono a `entities`/`markdown`/`picture-entity`/
+  `horizontal-stack`/`vertical-stack`/`grid`/`iframe` già supportati.
+- `gauge`: stessa lancetta SVG già usata dalla card gauge nativa di
+  Frarik, incluse le soglie colorate `severity: {green,yellow,red}`.
+- `glance`: griglia icona+stato+nome per più entità con titolo opzionale.
+- `picture-elements`: immagine di sfondo con overlay posizionati in
+  percentuale (`style.top`/`style.left`) — supporta `state-icon`, `icon`,
+  `state-label`, `text`, `image`; `service-button` e altri tipi più rari
+  restano nel fallback per ora.
+- Vale sia per l'anteprima nello Store → Card YAML sia per le card YAML
+  già piazzate su una pagina della dashboard (stesso motore `_yamlCreateEl`).
+
 ## 2.1.16 — 2026-07-21
 
 ### fix: Impostazioni — troppi bordi bianchi annidati

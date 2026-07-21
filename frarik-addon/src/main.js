@@ -10963,6 +10963,9 @@ async function _yamlCreateEl(cfg){
     case 'divider':           return _yamlDivider();
     case 'markdown':          return _yamlMarkdown(cfg);
     case 'picture-entity':    return _yamlPictureEntity(cfg);
+    case 'picture-elements':  return _yamlPictureElementsNative(cfg);
+    case 'gauge':             return _yamlGaugeCard(cfg);
+    case 'glance':            return _yamlGlance(cfg);
     case 'iframe':            return _yamlIframe(cfg);
     case 'button':            return _yamlCustomEl('hui-button-card',cfg);
     default:{
@@ -11112,6 +11115,87 @@ function _yamlPictureEntity(cfg){
 
 function _yamlText(str){ const el=document.createElement('div'); el.style.cssText='padding:4px;font-size:11px;color:#fff'; el.textContent=str; return el; }
 function _yamlFallback(type){ const el=document.createElement('div'); el.style.cssText='padding:6px;font-size:10px;color:#fff;border:1px dashed rgba(255,255,255,.1);border-radius:6px'; el.textContent='type: '+type; return el; }
+
+/* ═══ Card native HA reimplementate (non richiedono un componente HA vero) ═══
+   Aggiunte per colmare il gap con Oikos: prima "gauge"/"glance"/"picture-elements"
+   nativi finivano nel fallback generico "tipo non supportato". */
+function _yamlGaugeSeverityColor(val,sev){
+  if(!sev) return null;
+  if(sev.red!=null && val>=sev.red) return '#f87171';
+  if(sev.yellow!=null && val>=sev.yellow) return '#fbbf24';
+  if(sev.green!=null && val>=sev.green) return '#4ade80';
+  return null;
+}
+function _yamlGaugeCard(cfg){
+  const eid=cfg.entity||'';
+  const val=parseFloat(hs[eid]);
+  const min=cfg.min!=null?cfg.min:0, max=cfg.max!=null?cfg.max:100;
+  const color=_yamlGaugeSeverityColor(val,cfg.severity)||cfg.color||'#38bdf8';
+  const unit=cfg.unit!=null?cfg.unit:(ha[eid]?.unit_of_measurement||'');
+  const el=document.createElement('div');
+  el.style.cssText='width:100%;padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px;box-sizing:border-box';
+  el.innerHTML='<div style="width:150px;height:118px">'+gaugeSVG(isNaN(val)?0:val,min,max,color,unit)+'</div>'
+    +(cfg.name?'<div style="font-size:12px;font-weight:700;color:#fff;text-align:center">'+eh(cfg.name)+'</div>':'');
+  return el;
+}
+function _yamlGlance(cfg){
+  const wrap=document.createElement('div');
+  wrap.style.cssText='width:100%;padding:12px 8px;box-sizing:border-box';
+  let html='';
+  if(cfg.title) html+='<div style="padding:0 8px 10px;font-size:14px;font-weight:700;color:#fff">'+eh(cfg.title)+'</div>';
+  html+='<div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-around">';
+  (cfg.entities||[]).forEach(entry=>{
+    const eid=typeof entry==='string'?entry:entry.entity;
+    if(!eid) return;
+    const name=(typeof entry==='object'&&entry.name)||ha[eid]?.friendly_name||eid.split('.').pop().replace(/_/g,' ');
+    const icon=(typeof entry==='object'&&entry.icon)||ha[eid]?.icon||'';
+    const state=hs[eid]??'—';
+    let icHtml=''; try{ icHtml=_renderIcon(icon||(typeof _haAutoIcon==='function'?_haAutoIcon(eid):''),24,'#fff'); }catch(e){}
+    html+='<div style="display:flex;flex-direction:column;align-items:center;gap:4px;min-width:56px">'
+      +(icHtml?'<div>'+icHtml+'</div>':'')
+      +(cfg.show_name!==false?'<div style="font-size:10px;font-weight:700;color:#fff;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px">'+eh(name)+'</div>':'')
+      +(cfg.show_state!==false?'<div style="font-size:11px;font-weight:700;color:#fff">'+eh(isNaN(parseFloat(state))?_stateIt(state):state)+'</div>':'')
+      +'</div>';
+  });
+  html+='</div>';
+  wrap.innerHTML=html;
+  return wrap;
+}
+function _yamlPictureElementsNative(cfg){
+  const wrap=document.createElement('div');
+  wrap.style.cssText='position:relative;width:100%;overflow:hidden;border-radius:12px;min-height:80px';
+  const img=cfg.image||'';
+  wrap.innerHTML=img
+    ? '<img src="'+eh(img)+'" style="width:100%;display:block" onerror="this.style.opacity=\'.2\'">'
+    : '<div style="padding:20px;text-align:center;font-size:11px;color:#fff">🖼️ Manca "image:"</div>';
+  (cfg.elements||[]).forEach(elc=>{
+    const st=elc.style||{};
+    const eid=elc.entity;
+    const box=document.createElement('div');
+    box.style.cssText='position:absolute;transform:translate(-50%,-50%);text-align:center;'
+      +'top:'+(st.top||'50%')+';left:'+(st.left||'50%')+';color:'+(st.color||'#fff')+';';
+    if(elc.type==='state-icon'||elc.type==='icon'){
+      const isOn=eid&&hs[eid]==='on';
+      const col=st.color||(isOn?'#fbbf24':'#fff');
+      let icHtml=''; try{ icHtml=_renderIcon(elc.icon||(eid&&typeof _haAutoIcon==='function'?_haAutoIcon(eid):''),28,col); }catch(e){}
+      box.innerHTML=icHtml||'❔';
+    } else if(elc.type==='state-label'){
+      const v=eid?(hs[eid]??'—'):'';
+      box.style.fontSize=st['font-size']||'14px'; box.style.fontWeight='700';
+      box.textContent=(isNaN(parseFloat(v))?_stateIt(v):v)+(elc.suffix||'');
+    } else if(elc.type==='text'||elc.type==='text-label'){
+      box.style.fontSize=st['font-size']||'14px'; box.style.fontWeight='700';
+      box.textContent=elc.text||'';
+    } else if(elc.type==='image'){
+      box.style.transform='translate(-50%,-50%)';
+      box.innerHTML='<img src="'+eh(elc.image||'')+'" style="width:'+(elc.width||40)+'px;display:block">';
+    } else {
+      return;   // service-button e altri tipi non ancora gestiti
+    }
+    wrap.appendChild(box);
+  });
+  return wrap;
+}
 
 function _stopYamlCard(cardId){
   const w=document.getElementById('v-'+cardId);
