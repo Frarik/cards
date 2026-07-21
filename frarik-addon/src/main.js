@@ -11220,12 +11220,15 @@ async function _loadLovelaceResources(){
       return;
     }
     _lovelaceResourcesLoaded=true;
-    let loaded=0;
-    for(const r of res.result){
-      if(!r.url) continue;
+    // Caricamento in PARALLELO (non uno alla volta): con molte card HACS installate
+    // il caricamento sequenziale era lento e una risorsa lenta/bloccata ritardava
+    // tutte quelle dopo di lei nell'elenco — stesso problema risolto da Oikos nel
+    // suo changelog ("alcune installazioni ne vedevano solo 2-3").
+    const loadResults=await Promise.all(res.result.filter(r=>r.url).map(r=>{
       const url=r.url.startsWith('http')?r.url:BASE+r.url;
-      try{ await _loadHAScript(url,r.type); loaded++; }catch(e){}
-    }
+      return _loadHAScript(url,r.type).then(()=>true).catch(()=>false);
+    }));
+    const loaded=loadResults.filter(Boolean).length;
     // Registra le card che si sono auto-annunciate via window.customCards
     (window.customCards||[]).forEach(c=>{
       if(c&&c.type&&!window.FratechCardRegistry[c.type]) _registerLovelaceCard(c.type,c);

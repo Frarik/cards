@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.1.19 — 2026-07-21
+
+### fix: caricamento risorse HACS in parallelo, non una alla volta
+
+- `_loadLovelaceResources()` caricava gli script delle card HACS installate
+  **uno alla volta** (aspettava che ognuno finisse prima di iniziare il
+  successivo): con molte card installate era lento, e una risorsa
+  lenta/bloccata ritardava tutte quelle elencate dopo di lei — lo stesso
+  problema descritto nel changelog di Oikos ("alcune installazioni ne
+  vedevano solo 2-3").
+- Ora tutte le risorse partono insieme (`Promise.all`), non più in coda.
+
 ## 2.1.18 — 2026-07-21
 
 ### fix: ripristinato il bottone "Card YAML" — era codice morto senza nessun pulsante
