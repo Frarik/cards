@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.1.12 — 2026-07-21
+
+### remove: tab "Crea Card" di Vanessa
+
+- Rimosso interamente il tab "✨ Crea Card" (editor YAML, anteprima live,
+  generazione via AI e generazione deterministica gratis) introdotto
+  nelle versioni 2.1.1-2.1.11: dopo vari tentativi il risultato non era
+  soddisfacente e si è deciso di eliminarlo, non solo disattivarlo.
+  Vanessa torna ai suoi 4 tab originali (Dispositivi/Live/Registro/Config).
+- Mantenuti due fix indipendenti emersi nel frattempo, utili a prescindere
+  da questa funzione: l'header CORS per le chiamate a Claude
+  (`anthropic-dangerous-direct-browser-access`, altrimenti "Failed to
+  fetch" su qualunque uso di Claude in Vanessa) e `autocomplete="new-password"`
+  sul campo chiave API (evita che il browser suggerisca una password
+  salvata al posto della chiave).
+
 ## 2.1.11 — 2026-07-20
 
 ### fix: Crea Card — card generata sempre "spenta" e il click sembrava non fare nulla
