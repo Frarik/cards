@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.1.26 — 2026-07-21
+
+### fix: widget "Card" — via del trucco a "scala finta", adattamento fluido vero
+
+- Le due versioni precedenti (2.1.24/25) usavano un `transform:scale()`
+  calcolato in JS per far sembrare la card più grande/piccola — un
+  trucco "fotografico" che stirava o lasciava vuoti a seconda dei casi,
+  perché non è così che il ridimensionamento funziona nel resto
+  dell'app.
+- Sul dashboard reale, ridimensionare una card dal suo angolo
+  (`initResize`, modalità sezioni) non usa **nessuna** scala: imposta
+  solo larghezza/altezza in pixel sul contenitore, e il contenuto
+  della card (flessibile, in percentuale) si adatta da sé via CSS.
+  Il widget "Card" del salvaschermo ora fa esattamente questo: niente
+  più `transform`, solo `width:100%;height:100%` sul box del widget —
+  il contenuto si adatta dal vivo anche mentre si trascina l'angolo di
+  ridimensionamento, esattamente come sulla dashboard vera.
+
 ## 2.1.25 — 2026-07-21
 
 ### fix: widget "Card" del salvaschermo, la scala non uniforme stirava/schiacciava la card

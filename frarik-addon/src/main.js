@@ -17040,29 +17040,6 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
   /* Trova una card della dashboard per id */
   function _ssFindCard(id){ if(!id) return null; try{ for(const pg of _dashPages()){ const c=(pg.cards||[]).find(x=>x.id===id); if(c) return c; } }catch(e){} return null; }
 
-  /* Il contenuto interno delle card (font in vw/clamp legati alla FINESTRA non al box del
-     widget, icone/canvas di dimensione fissa) non segue il ridimensionamento del widget "card"
-     del salvaschermo: un box più piccolo del "naturale" TAGLIA il contenuto (overflow:hidden
-     della .card), uno più grande lascia solo spazio vuoto intorno a un contenuto rimasto piccolo.
-     Soluzione: la card viene sempre renderizzata alla sua dimensione di riferimento (quella di
-     default con cui un widget "card" viene aggiunto, vedi _SS_DEFAULT_SIZE.card) e poi scalata
-     come un'unica unità sulla dimensione reale del box. IMPORTANTE: la scala deve essere
-     UNIFORME (stesso fattore per larghezza e altezza) — un fattore diverso per asse (provato in
-     v2.1.24) stira/schiaccia visibilmente frame e testo quando il widget ha un rapporto
-     larghezza/altezza molto diverso da quello di riferimento. Si preserva quindi le proporzioni
-     e si centra la card scalata nel box (eventuale spazio vuoto ai lati, mai contenuto tagliato
-     né distorto). */
-  const _SS_CARD_REF_W=240, _SS_CARD_REF_H=170;
-  function _ssFitCard(el, boxW, boxH){
-    el.style.width=_SS_CARD_REF_W+'px';
-    el.style.height=_SS_CARD_REF_H+'px';
-    const scale=Math.max(0.05,Math.min(boxW/_SS_CARD_REF_W, boxH/_SS_CARD_REF_H));
-    el.style.transformOrigin='top left';
-    el.style.transform='scale('+scale+')';
-    el.style.marginLeft=Math.max(0,(boxW-_SS_CARD_REF_W*scale)/2)+'px';
-    el.style.marginTop=Math.max(0,(boxH-_SS_CARD_REF_H*scale)/2)+'px';
-  }
-
   function _ssWidgetBox(w){
     const wrap=ov&&ov.querySelector('#ss-widgets');
     const ww=(wrap&&wrap.clientWidth)||window.innerWidth||1280;
@@ -17100,18 +17077,6 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
     });
   }
 
-  /* Ricalcola solo la scala delle card widget già montate (es. dopo un resize della finestra),
-     senza smontarle/ricrearle — evita di riavviare inutilmente timer/grafici interni. */
-  function _ssRefitCardWidgets(){
-    const wrap=ov&&ov.querySelector('#ss-widgets'); if(!wrap) return;
-    _ssMigrateWidgets().filter(w=>w.type==='card').forEach(w=>{
-      const holder=wrap.querySelector('[data-ss-w="'+w.id+'"] .ss-w-inner'); if(!holder) return;
-      const el=holder.querySelector(':scope > .card'); if(!el) return;
-      const box=_ssWidgetBox(w);
-      _ssFitCard(el, box.width, box.height);
-    });
-  }
-
   /* ── Widget "card": possono essere più di una contemporaneamente ── */
   let _ssActiveCardIds=[];
   function _ssApplyCardWidgets(){
@@ -17126,10 +17091,11 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
       const instId=card.id+'_ss'+idx;
       try{
         const el=buildCard(Object.assign({},card,{id:instId,colSpan:1,rowSpan:1}));
-        el.style.gridColumn=''; el.style.gridRow='';
+        // stesso approccio del ridimensionamento "sezioni" del dashboard reale (initResize):
+        // niente scala finta, solo width/height al 100% del box — il contenuto fluido della
+        // card (flex/percentuali) si adatta da sé, live, anche mentre il widget viene trascinato.
+        el.style.width='100%'; el.style.height='100%'; el.style.gridColumn=''; el.style.gridRow='';
         holder.appendChild(el);
-        const box=_ssWidgetBox(w);
-        _ssFitCard(el, box.width, box.height);
         _ssActiveCardIds.push(instId);
       }catch(e){ console.warn('[Frarik] screensaver card widget:',e&&e.message); }
     });
@@ -17176,7 +17142,7 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
   }
   function reset(){ if(active) hide(); clearTimeout(idleTimer); const c=cfg(); if(!c.on) return; idleTimer=setTimeout(show, Math.max(10,c.sec|0)*1000); }
   ['mousemove','mousedown','keydown','touchstart','wheel','scroll'].forEach(ev=>document.addEventListener(ev,reset,{passive:true,capture:true}));
-  window.addEventListener('resize',()=>{ if(active){ _ssRenderWidgets(); _ssRefitCardWidgets(); } });
+  window.addEventListener('resize',()=>{ if(active) _ssRenderWidgets(); });
   if(document.readyState!=='loading') reset(); else document.addEventListener('DOMContentLoaded',reset);
   window.screensaverNow=function(){ active=false; _open(); };  // test forzato (anche in modifica)
 
@@ -17380,9 +17346,8 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
         const card=_ssFindCard(w.cardId); if(!card||typeof buildCard!=='function') return;
         try{
           const el=buildCard(Object.assign({},card,{id:'ed_'+w.id,colSpan:1,rowSpan:1}));
-          el.style.gridColumn=''; el.style.gridRow='';
+          el.style.width='100%'; el.style.height='100%'; el.style.gridColumn=''; el.style.gridRow='';
           holder.appendChild(el);
-          _ssFitCard(el, w.w, w.h);
           _edActiveCards.add(w.id);
         }catch(e){ console.warn('[Frarik] editor card preview:',e&&e.message); }
       });
@@ -17421,13 +17386,7 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
         div.style.width=w.w+'px'; div.style.height=w.h+'px';
       }
     }
-    function onUp(){
-      // a fine ridimensionamento di un widget "card", il contenuto va riscalato sulla nuova
-      // dimensione (durante il trascinamento il box esterno si aggiorna già dal vivo via CSS,
-      // ma il contenuto interno della card resta alla scala calcolata l'ultima volta)
-      if(drag&&drag.mode==='resize'){ const w=state.widgets[drag.idx]; if(w&&w.type==='card') renderCardPreviews(); }
-      drag=null;
-    }
+    function onUp(){ drag=null; }
     function onMouseMove(e){ onMove(e.clientX,e.clientY); }
     function onMouseUp(){ onUp(); }
     function onTouchMove(e){ if(!drag) return; const t=e.touches&&e.touches[0]; if(!t) return; e.preventDefault(); onMove(t.clientX,t.clientY); }
