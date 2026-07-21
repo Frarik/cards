@@ -333,22 +333,26 @@ body.editing .resize-handle{opacity:.55}
 .ep-content-area .sys-lbl,.ep-content-area .sys-lbl2{color:#fff}
 .ep-content-area .sys-sub{color:#fff;font-size:12px}
 .ep-content-area label{color:#fff}
-/* EP panel — tutti i testi 100% bianchi */
-#epanel{--muted:#fff}
-#epanel .ghs-subhdr,
-#epanel .jsst-card-desc,
-#epanel .ep-picker-eid,
-#epanel .ep-picker-state,
-#epanel .ntf-ent-id,
-#epanel .ntf-act-type-lbl,
-#epanel .brow-mv,
-#epanel .fbar-ibtn-lbl,
-#epanel .fbar-clm-cur,
-#epanel .hbz-add,
-#epanel .hbc-btn,
-#epanel .ipm-cat,
-#epanel .ipm-mdi-lbl,
-#epanel .sos-cancel-btn{color:#fff}
+/* EP panel — TUTTO il pannello Impostazioni (tutti i 13 tab, senza eccezioni):
+   testo sempre bianco pieno, maiuscolo, grassetto, e un bordo fine bianco su
+   ogni riquadro (input/select/bottoni/box) — richiesta esplicita dell'utente
+   il 2026-07-21, applicata via le variabili CSS già usate da tutto il pannello
+   invece di migliaia di override puntuali. */
+#epanel{--muted:#fff;--dim:#fff;--bd:rgba(255,255,255,.35);--bd2:rgba(255,255,255,.55)}
+#epanel, #epanel *{color:#fff!important;text-transform:uppercase!important}
+#epanel input,#epanel select,#epanel textarea,#epanel button,
+#epanel .finp,#epanel .sys-num,#epanel .sys-time,#epanel .sys-sel,
+#epanel .ep-add2,#epanel .fbtn,#epanel .ep-theme-btn,#epanel .ep-font-sel,
+#epanel .col-o,#epanel .sys-row,#epanel .ep-saved-chip{
+  border:1px solid rgba(255,255,255,.5)!important;
+}
+#epanel .sys-lbl{font-weight:800;font-size:14px}
+#epanel .sys-lbl2{font-weight:800;font-size:13px}
+#epanel .sys-sub{font-weight:700;font-size:12px}
+#epanel .ep-add2,#epanel .fbtn,#epanel .ep-theme-btn,#epanel .ep-font-sel{font-weight:800;font-size:12px}
+#epanel .finp,#epanel .sys-sel,#epanel .sys-time{font-weight:700;font-size:13px}
+#epanel .ep-sec-title{font-weight:800;font-size:11px}
+#epanel .ep-tab-hdr-title{font-size:24px}
 /* Mobile header: versione affianco al titolo */
 .ep-hdr-ver{display:none;align-items:center;gap:6px}
 /* ── Mobile responsive ── */

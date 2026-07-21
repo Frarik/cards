@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.1.15 — 2026-07-21
+
+### feat: pannello Impostazioni — testi bianchi/maiuscoli/grassetto + bordo su tutti i 13 tab
+
+- Applicato a **tutto** il pannello Impostazioni, senza eccezioni (compresi
+  Vanessa e Store): testo sempre bianco pieno, MAIUSCOLO, grassetto e più
+  grande; bordo fine bianco su ogni riquadro (input, select, bottoni,
+  righe impostazioni).
+- Fatto estendendo le variabili CSS già usate da tutto il pannello
+  (`--muted`/`--dim`/`--bd`/`--bd2` scoped su `#epanel`, tecnica già
+  presente nel codice) invece di migliaia di override puntuali — un solo
+  punto di manutenzione, copre automaticamente anche i tab renderizzati
+  dinamicamente da JS (Vanessa, Store) essendo tutti dentro `#epanel`.
+- Nota: eventuale testo di stato colorato (es. conferme verdi/errori
+  rossi) diventa anch'esso bianco per coerenza con la richiesta "tutto
+  bianco senza eccezioni" — segnalare se si preferisce mantenere quei
+  colori semantici.
+
 ## 2.1.14 — 2026-07-21
 
 ### feat: tab Sistema semplificato + screensaver in un unico popup standard
