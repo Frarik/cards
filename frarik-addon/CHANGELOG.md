@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.1.28 — 2026-07-21
+
+### fix: resize Card non live nell'editor + secondi minimi forzati a 10
+
+- **Editor screensaver**: ridimensionando il widget "Card" trascinando
+  l'angolo, si muoveva/ridimensionava solo il riquadro esterno — il
+  contenuto della card interna restava fermo alla dimensione dell'ultimo
+  render completo e si aggiornava solo dopo aver selezionato un altro
+  widget. Ora si aggiorna dal vivo durante il trascinamento, esattamente
+  come il riquadro.
+- **Attesa prima di attivarsi**: il tempo minimo era forzato a 10
+  secondi qualsiasi valore si impostasse (bug storico, non un limite
+  dichiarato da nessuna parte nell'interfaccia) — impostando "5" si
+  attivava comunque dopo 10. Ora viene rispettato il valore configurato
+  (minimo 1 secondo, solo per evitare un valore a zero).
+
 ## 2.1.27 — 2026-07-21
 
 ### fix: anteprima "Card" nell'editor screensaver diversa dal salvaschermo reale

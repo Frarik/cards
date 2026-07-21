@@ -17140,7 +17140,7 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
     const wrap=ov&&ov.querySelector('#ss-widgets'); if(wrap) wrap.innerHTML='';
     try{ const pw=window.parent&&window.parent!==window?window.parent:null; if(pw) pw.document.querySelectorAll('[id^="frarik-yaml-"][data-ss-hide]').forEach(el=>{ delete el.dataset.ssHide; el.style.display=''; }); }catch(e){}
   }
-  function reset(){ if(active) hide(); clearTimeout(idleTimer); const c=cfg(); if(!c.on) return; idleTimer=setTimeout(show, Math.max(10,c.sec|0)*1000); }
+  function reset(){ if(active) hide(); clearTimeout(idleTimer); const c=cfg(); if(!c.on) return; idleTimer=setTimeout(show, Math.max(1,c.sec|0)*1000); }
   ['mousemove','mousedown','keydown','touchstart','wheel','scroll'].forEach(ev=>document.addEventListener(ev,reset,{passive:true,capture:true}));
   window.addEventListener('resize',()=>{ if(active) _ssRenderWidgets(); });
   if(document.readyState!=='loading') reset(); else document.addEventListener('DOMContentLoaded',reset);
@@ -17401,7 +17401,19 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
         w.w=clampV(snapv(drag.origW+dx),40,canvasW-w.x);
         w.h=clampV(snapv(drag.origH+dy),30,canvasH-w.y);
         div.style.width=w.w+'px'; div.style.height=w.h+'px';
+        if(w.type==='card') _liveResizeCardPreview(w, div);
       }
+    }
+    /* Durante il trascinamento del maniglione di resize, il box esterno (div) si aggiorna già
+       dal vivo — ma il widget "card" ha la sua card interna renderizzata a una dimensione
+       "vera" fissa e poi scalata (vedi renderCardPreviews/_SS_EDITOR_ZOOM): senza questo, resta
+       ferma alla dimensione dell'ultimo render completo finché non si seleziona un altro widget. */
+    function _liveResizeCardPreview(w, div){
+      const holder=div.querySelector('[data-w-card="'+w.id+'"]'); if(!holder) return;
+      const el=holder.querySelector(':scope > .card'); if(!el) return;
+      el.style.width=(w.w/_SS_EDITOR_ZOOM)+'px';
+      el.style.height=(w.h/_SS_EDITOR_ZOOM)+'px';
+      el.style.transform='scale('+_SS_EDITOR_ZOOM+')';
     }
     function onUp(){ drag=null; }
     function onMouseMove(e){ onMove(e.clientX,e.clientY); }
