@@ -1,4 +1,4 @@
-﻿/* frarik-version: 1.44 */
+﻿/* frarik-version: 1.45 */
 /* v1.44: tutti i popup interni (impostazioni, storico, stazione meteo,
    dettaglio giorno) unificati allo stesso standard neutro — niente più
    giallo/ambra da nessuna parte (icona ingranaggio/grafico condivisa,
@@ -216,9 +216,9 @@ const _MDI_ICONS=['thermometer','thermometer-high','thermometer-low','temperatur
 // ── CSS ───────────────────────────────────────────────────────────────────────
 const _CSS = `
 @import url('https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css');
-:host{display:block;}
+:host{display:block;height:100%;}
 *{box-sizing:border-box;margin:0;padding:0;}
-.card{border-radius:20px;overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);color:#fff;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.6);}
+.card{height:100%;border-radius:20px;overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);color:#fff;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.6);}
 /* ── Sky ── */
 .sky{position:absolute;inset:0;z-index:0;overflow:hidden;border-radius:inherit;transition:background 90s linear;}
 .sky-stars{position:absolute;inset:0;pointer-events:none;transition:opacity 3s;}
