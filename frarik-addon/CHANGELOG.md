@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.1.24 — 2026-07-21
+
+### fix: widget "Card" del salvaschermo, allargandolo il contenuto non si ingrandiva
+
+- La correzione precedente (v2.1.23) risolveva solo il caso "box più
+  piccolo del contenuto" (tagliato → ora rimpicciolito). Mancava il
+  caso opposto, visto subito dopo: **allargando** il widget, la card
+  restava della sua dimensione originale con tutto lo spazio in più
+  vuoto intorno (il testo di molte card usa `vw`/`clamp()` legati alla
+  *finestra*, non al box del widget, quindi non si ingrandiva da solo).
+- Ora la card viene sempre renderizzata alla stessa dimensione di
+  riferimento (quella di default, 240×170) e poi scalata come
+  un'unica unità sulla dimensione reale del widget — frame e contenuto
+  si ingrandiscono o rimpiccioliscono sempre insieme, riempiendo
+  esattamente il box scelto, in entrambe le direzioni.
+
 ## 2.1.23 — 2026-07-21
 
 ### fix: popup non a tutta larghezza + widget "Card" tagliato invece di rimpicciolito

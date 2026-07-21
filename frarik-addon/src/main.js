@@ -17040,21 +17040,20 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
   /* Trova una card della dashboard per id */
   function _ssFindCard(id){ if(!id) return null; try{ for(const pg of _dashPages()){ const c=(pg.cards||[]).find(x=>x.id===id); if(c) return c; } }catch(e){} return null; }
 
-  /* Una card widget del salvaschermo può essere ridimensionata più piccola di quanto il suo
-     contenuto "naturale" (font minimi via clamp(), padding fissi, icone) permetta di comprimere:
-     senza questo, il box più piccolo si limita a TAGLIARE il contenuto (overflow:hidden della
-     .card). Stessa tecnica già in uso in _autoScaleAll() per il dashboard reale, estesa anche
-     all'altezza: se il contenuto (scrollWidth/Height) non entra nel box, la scala come
-     un'unica unità (transform:scale) invece di lasciarla straboccare/tagliata. */
+  /* Il contenuto interno delle card (font in vw/clamp legati alla FINESTRA non al box del
+     widget, icone/canvas di dimensione fissa) non segue il ridimensionamento del widget "card"
+     del salvaschermo: un box più piccolo del "naturale" TAGLIA il contenuto (overflow:hidden
+     della .card), uno più grande lascia solo spazio vuoto intorno a un contenuto rimasto piccolo.
+     Soluzione: la card viene sempre renderizzata alla sua dimensione di riferimento (quella di
+     default con cui un widget "card" viene aggiunto, vedi _SS_DEFAULT_SIZE.card) e poi scalata
+     come un'unica unità (transform:scale, un fattore per asse) sulla dimensione reale del box —
+     frame e contenuto si ingrandiscono/rimpiccioliscono insieme, riempiendo sempre il box. */
+  const _SS_CARD_REF_W=240, _SS_CARD_REF_H=170;
   function _ssFitCard(el, boxW, boxH){
-    el.style.transform=''; el.style.transformOrigin=''; el.style.width='100%'; el.style.height='100%';
-    const natW=el.scrollWidth, natH=el.scrollHeight;
-    if(natW>boxW+2||natH>boxH+2){
-      const scale=Math.max(0.05,Math.min(boxW/natW, boxH/natH));
-      el.style.width=natW+'px'; el.style.height=natH+'px';
-      el.style.transformOrigin='top left';
-      el.style.transform='scale('+scale+')';
-    }
+    el.style.width=_SS_CARD_REF_W+'px';
+    el.style.height=_SS_CARD_REF_H+'px';
+    el.style.transformOrigin='top left';
+    el.style.transform='scale('+(boxW/_SS_CARD_REF_W)+','+(boxH/_SS_CARD_REF_H)+')';
   }
 
   function _ssWidgetBox(w){
