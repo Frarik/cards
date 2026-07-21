@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.1.22 — 2026-07-21
+
+### fix: lo Store impediva di aggiungere la stessa card più volte
+
+- In tutti i tab dello Store (Card JS, Predefinite, Installate/Locali,
+  ricerca) e nel vecchio modale "Store Card JS", una volta aggiunta una
+  card alla vista corrente, il bottone "➕ Aggiungi" spariva e restava
+  solo l'indicatore "✓ In vista" — **impossibile** aggiungere la stessa
+  card una seconda volta o in un'altra sezione/colonna della stessa
+  pagina (utile ad es. per due card meteo affiancate, o per collegare
+  la stessa card a più widget dello screensaver).
+- `_jsStoreAddToDashboard()` creava già correttamente un'istanza
+  indipendente ad ogni chiamata (id nuovo): il limite era **solo**
+  nell'interfaccia, che nascondeva il bottone. Ora il bottone "➕ Aggiungi"
+  resta sempre disponibile per tutte le card — resta invece "singola"
+  solo la card di sistema 🆘 SOS Emergenza (ha una configurazione unica
+  e globale da Impostazioni → SOS, non ha senso duplicarla).
+
 ## 2.1.21 — 2026-07-21
 
 ### fix: widget "Card" apre lo Store vero, popup dal basso, testi bianchi/maiuscoli

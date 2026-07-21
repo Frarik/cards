@@ -598,13 +598,13 @@ function _acpTileHtml(id,name,icon,desc){
 function _acpRenderInstalled(body){
   const all=_jsStoreList().filter(i=>!i._builtin).sort((a,b)=>((a.meta||{}).name||'').localeCompare((b.meta||{}).name||''));
   if(!all.length){ body.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.35);font-size:13px;line-height:1.8">Nessuna card installata.<br><span style="font-size:11px;opacity:.6">Installale dallo Store nelle Impostazioni.</span></div>'; return; }
-  const usedIds=new Set((curPage()||{cards:[]}).cards.filter(c=>c.type==='js-custom'&&c.jsCardId).map(c=>c.jsCardId));
+  const usedIds=new Set((curPage()||{cards:[]}).cards.filter(c=>c.type==='js-custom'&&c.jsCardId==='sos-card').map(c=>c.jsCardId));
   _acpRenderSlider(body, all, usedIds, false);
 }
 function _acpRenderBuiltin(body){
   const all=_jsStoreList().filter(i=>i._builtin);
   if(!all.length){ body.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.35);font-size:13px">Nessuna card predefinita.</div>'; return; }
-  const usedIds=new Set((curPage()||{cards:[]}).cards.filter(c=>c.type==='js-custom'&&c.jsCardId).map(c=>c.jsCardId));
+  const usedIds=new Set((curPage()||{cards:[]}).cards.filter(c=>c.type==='js-custom'&&c.jsCardId==='sos-card').map(c=>c.jsCardId));
   _acpRenderSlider(body, all, usedIds, true);
 }
 function _acpRenderSlider(body, items, usedIds, isBuiltin){
@@ -1053,7 +1053,7 @@ function _epRenderJsStore(){
   // Quali card sono già nella vista corrente / riga distintivi / barra orologio (solo informativo, non blocca l'aggiunta)
   const curCards = (curPage()||{cards:[]}).cards||[];
   const usedInPage = new Set();
-  curCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInPage.add(c.jsCardId); });
+  curCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId==='sos-card') usedInPage.add(c.jsCardId); });
   const usedInPillRow = new Set();
   ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInPillRow.add(b.jsCardId); });
   const usedInClockBar = new Set();
@@ -2668,7 +2668,7 @@ function _ghStoreRender(){
   if(tab==='js') files=files.filter(f=>!g.shas[f.name]&&_cardEffectiveTab(f,idFile)==='js');
   const _cpCards=(curPage()||{cards:[]}).cards||[];
   const usedInCurPage=new Set();
-  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)&&!(window.FratechCardRegistry?.[c.jsCardId]?.allowMultiple)) usedInCurPage.add(c.jsCardId); });
+  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId==='sos-card'&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)) usedInCurPage.add(c.jsCardId); });
   ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
   const sorted=files.filter(f=>f&&f.name).sort((a,b)=>a.name.localeCompare(b.name));
   const installed=[], toInstall=[];
@@ -2770,7 +2770,7 @@ function _ghStoreRenderInstalled(q, originFilter){
     list.innerHTML=`<div class="ghs-empty">${msg}</div>`; return;
   }
   const _lcCards=(curPage()||{cards:[]}).cards||[];
-  const _usedLocal=new Set(); _lcCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) _usedLocal.add(c.jsCardId); });
+  const _usedLocal=new Set(); _lcCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId==='sos-card') _usedLocal.add(c.jsCardId); });
   // Card di sistema in cima, poi ordine alfabetico
   const sorted=[...items.filter(i=>i._builtin),...items.filter(i=>!i._builtin).sort((a,b)=>((a.meta||{}).name||'').localeCompare((b.meta||{}).name||''))];
   list.innerHTML='<div class="ghc-grid">'+sorted.map(i=>{
@@ -2817,7 +2817,7 @@ function _ghStoreRenderPredefinite(q){
   const _hbP=cfg.hdrBar||{};
   [...(_hbP.left||[]),...(_hbP.center||[]),...(_hbP.right||[])].forEach(it=>{ if(it&&it.type==='jsd'&&it.jsCardId) usedInClockBar.add(it.jsCardId); });
   const usedInCurPage=new Set();
-  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)&&!(window.FratechCardRegistry?.[c.jsCardId]?.allowMultiple)) usedInCurPage.add(c.jsCardId); });
+  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId==='sos-card'&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)) usedInCurPage.add(c.jsCardId); });
   list.innerHTML=hdr+'<div class="ghc-grid">'+items.map(i=>{
     const m=i.meta||{}; const id=m.id||'';
     const reg=id?window.FratechCardRegistry?.[id]:null;
@@ -2962,7 +2962,7 @@ function _ghStoreRenderInstallate(q){
   const g=_ghCfg(); const idFile=g.idFile||{};
   const _cpCards=(curPage()||{cards:[]}).cards||[];
   const usedInCurPage=new Set();
-  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)&&!(window.FratechCardRegistry?.[c.jsCardId]?.allowMultiple)) usedInCurPage.add(c.jsCardId); });
+  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId==='sos-card'&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)) usedInCurPage.add(c.jsCardId); });
   ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
   let files=(_ghsCache['js']||[]).filter(f=>g.shas[f.name]&&g.shas[f.name]===f.sha);
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
@@ -3070,7 +3070,7 @@ function _ghStoreRenderFolderInstallate(q, cacheKey){
   const _hb=cfg.hdrBar||{};
   [...(_hb.left||[]),...(_hb.center||[]),...(_hb.right||[])].forEach(it=>{ if(it&&it.type==='jsd'&&it.jsCardId) usedInClockBar.add(it.jsCardId); });
   const usedInDash=new Set();
-  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.allowMultiple)) usedInDash.add(c.jsCardId); });
+  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId==='sos-card') usedInDash.add(c.jsCardId); });
   let files=(_ghsCache[cacheKey]||[]).filter(f=>g.shas[f.name]&&g.shas[f.name]===f.sha);
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
   const sorted=files.slice().sort((a,b)=>a.name.localeCompare(b.name));
@@ -3162,7 +3162,7 @@ function _ghStoreRenderCardsInstallate(q){
   const g=_ghCfg(); const idFile=g.idFile||{};
   const _cpCards=(curPage()||{cards:[]}).cards||[];
   const usedInCurPage=new Set();
-  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)&&!(window.FratechCardRegistry?.[c.jsCardId]?.allowMultiple)) usedInCurPage.add(c.jsCardId); });
+  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId==='sos-card'&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)) usedInCurPage.add(c.jsCardId); });
   ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
   let files=(_ghsCache['js']||[]).filter(f=>g.shas[f.name]&&g.shas[f.name]===f.sha);
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
@@ -3313,7 +3313,7 @@ function _ghStoreRenderElettr(q){
   const g=_ghCfg(); const idFile=g.idFile||{};
   const _cpCards=(curPage()||{cards:[]}).cards||[];
   const usedInCurPage=new Set();
-  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)&&!(window.FratechCardRegistry?.[c.jsCardId]?.allowMultiple)) usedInCurPage.add(c.jsCardId); });
+  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId==='sos-card'&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)) usedInCurPage.add(c.jsCardId); });
   ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
   // Solo card non-installate (quelle installate vanno nel tab Installate)
   let files=(_ghsCache['js']||[]).filter(f=>_cardEffectiveTab(f,idFile)==='elettrodomestici'&&!g.shas[f.name]);
@@ -3388,7 +3388,7 @@ function _ghStoreRenderPremium(q){
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
   const _cpCards=(curPage()||{cards:[]}).cards||[];
   const usedInCurPage=new Set();
-  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)&&!(window.FratechCardRegistry?.[c.jsCardId]?.allowMultiple)) usedInCurPage.add(c.jsCardId); });
+  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId==='sos-card'&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)) usedInCurPage.add(c.jsCardId); });
   ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
   const sorted=files.filter(f=>f&&f.name).sort((a,b)=>a.name.localeCompare(b.name));
   const installed=[], toInstall=[]; sorted.forEach(f=>{ (g.shas[f.name]?installed:toInstall).push(f); });
@@ -12570,7 +12570,7 @@ function _jsStoreRenderList(){
   // Controlla solo la vista corrente (non tutte le viste)
   const _curPgCards = (curPage()||{cards:[]}).cards||[];
   const usedIds = new Set();
-  _curPgCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedIds.add(c.jsCardId); });
+  _curPgCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId==='sos-card') usedIds.add(c.jsCardId); });
 
   const inDash = items.filter(i => usedIds.has((i.meta||{}).id));
   const avail  = items.filter(i => !usedIds.has((i.meta||{}).id));
