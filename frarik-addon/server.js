@@ -239,6 +239,7 @@ app.get('/api/frarik/www/list', (_req, res) => {
     try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
     for (const e of entries) {
       if (e.name.startsWith('.')) continue;
+      if (!rel && e.name === 'frarik') continue; // riservata ai file dell'add-on stesso (copyDir → HA_WWW), non è roba dell'utente
       const full = path.join(dir, e.name);
       const relPath = rel ? rel + '/' + e.name : e.name;
       if (e.isDirectory()) walk(full, relPath);

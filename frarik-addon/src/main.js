@@ -7938,6 +7938,12 @@ function openOikSettings(){
   _switchEpTab('aspetto');
 }
 function closeOikSettings(){
+  // Se le impostazioni si chiudono mentre l'editor screensaver era in attesa di una
+  // scelta dallo Store (vedi _ssPickCardFromStore), non lasciarlo invisibile per sempre.
+  if(window._ssStorePickCb){
+    window._ssStorePickCb=null;
+    try{ const ssEd=document.getElementById('ss-ed-ov'); if(ssEd) ssEd.style.display=''; }catch(e){}
+  }
   _pgCheckDirtyAndProceed(()=>{
     try{ sessionStorage.removeItem('dash_settings'); }catch(e){}
     const ep=document.getElementById('epanel');
@@ -12674,6 +12680,9 @@ function _jsStoreAddToDashboard(id, regCard){
   showToast('✅ Card aggiunta!');
   if(typeof _epRenderJsStore==='function') _epRenderJsStore();
   if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
+  // un chiamante in attesa (es. editor screensaver, vedi _ssPickCardFromStore) riceve
+  // subito l'id della card appena creata, per collegarla al proprio widget.
+  if(window._ssStorePickCb){ const cb=window._ssStorePickCb; window._ssStorePickCb=null; try{ cb(newCard.id); }catch(e){} }
 }
 
 function jsStoreAddCard(id){
@@ -17145,59 +17154,34 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
   const _SS_WIDGET_LABEL={orologio:'🕐 Orologio',data:'📅 Data',meteo:'⛅ Meteo',icona:'🔶 Icona',testo:'🔤 Testo',immagine:'🖼️ Immagine'};
 
   /* ── Selettore card: sceglie tra le istanze già presenti sulla dashboard (uniche renderizzabili) ── */
-  function _ssCardPickerOpen(cb){
-    document.getElementById('ss-card-picker')?.remove();
+  /* Sfondo di uno "sheet" popup che si apre dal basso — stile standard di tutti i popup Frarik */
+  function _ssSheetOpen(id,titleHtml){
+    document.getElementById(id)?.remove();
     const ov2=document.createElement('div');
-    ov2.id='ss-card-picker';
-    ov2.style.cssText='position:fixed;inset:0;z-index:250000;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center';
-    ov2.innerHTML='<div style="width:min(480px,92vw);max-height:80vh;background:#0a0816;border:1px solid rgba(255,255,255,.14);border-radius:16px;display:flex;flex-direction:column;overflow:hidden">'
-      +'<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08)">'
-      +'<div style="flex:1;font-size:14px;font-weight:800;color:#fff">🧩 Scegli una card della dashboard</div>'
-      +'<button id="ss-cp-close" style="width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;cursor:pointer">✕</button>'
+    ov2.id=id;
+    ov2.style.cssText='position:fixed;inset:0;z-index:250000;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center';
+    ov2.innerHTML='<div class="ss-sheet-box" style="width:100%;max-width:640px;max-height:85vh;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;color:#fff;display:flex;flex-direction:column;overflow:hidden">'
+      +'<div style="display:flex;align-items:center;gap:10px;padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0">'
+      +'<div style="flex:1;font-size:14px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">'+titleHtml+'</div>'
+      +'<button class="ss-sheet-x" style="width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;flex-shrink:0">✕</button>'
       +'</div>'
-      +'<input id="ss-cp-q" type="text" placeholder="Cerca…" style="margin:10px 16px 0;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px">'
-      +'<div id="ss-cp-list" style="flex:1;overflow-y:auto;padding:10px 16px 16px;display:flex;flex-direction:column;gap:6px"></div>'
+      +'<div class="ss-sheet-body" style="flex:1;overflow-y:auto;padding:14px 18px 20px;scrollbar-width:thin"></div>'
       +'</div>';
     document.body.appendChild(ov2);
-    ov2.querySelector('#ss-cp-close').addEventListener('click',()=>ov2.remove());
-    ov2.addEventListener('click',e=>{ if(e.target===ov2) ov2.remove(); });
-    const all=[];
-    _dashPages().forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='header-bar'||c.type==='footer-bar') return; all.push(c); }));
-    const list=ov2.querySelector('#ss-cp-list');
-    function draw(q){
-      const query=(q||'').toLowerCase().trim();
-      const shown=query?all.filter(c=>(c.label||c.type||c.id||'').toLowerCase().includes(query)):all;
-      if(!shown.length){ list.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(255,255,255,.4);font-size:12px">'+(all.length?'Nessun risultato':'Nessuna card sulla dashboard — creane una prima')+'</div>'; return; }
-      list.innerHTML=shown.map(c=>
-        '<div class="ss-cp-item" data-id="'+eh(c.id)+'" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);cursor:pointer">'
-        +'<div style="font-size:18px;flex-shrink:0">🧩</div>'
-        +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+eh(c.label||c.type||c.id)+'</div><div style="font-size:10px;color:rgba(255,255,255,.4)">'+eh(c.type||'')+'</div></div>'
-        +'</div>'
-      ).join('');
-      list.querySelectorAll('.ss-cp-item').forEach(it=>it.addEventListener('click',()=>{ cb(it.dataset.id); ov2.remove(); }));
-    }
-    draw('');
-    ov2.querySelector('#ss-cp-q').addEventListener('input',e=>draw(e.target.value));
+    function close(){ document.removeEventListener('keydown',onEsc); ov2.remove(); }
+    function onEsc(e){ if(e.key==='Escape') close(); }
+    document.addEventListener('keydown',onEsc);
+    ov2.querySelector('.ss-sheet-x').addEventListener('click',close);
+    ov2.addEventListener('click',e=>{ if(e.target===ov2) close(); });
+    return { ov:ov2, body:ov2.querySelector('.ss-sheet-body'), close };
   }
 
   /* ── Selettore immagine: sfoglia i file presenti in /config/www dell'utente (via backend add-on) ── */
   async function _ssImagePickerOpen(cb){
-    document.getElementById('ss-img-picker')?.remove();
-    const ov2=document.createElement('div');
-    ov2.id='ss-img-picker';
-    ov2.style.cssText='position:fixed;inset:0;z-index:250000;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center';
-    ov2.innerHTML='<div style="width:min(560px,92vw);max-height:80vh;background:#0a0816;border:1px solid rgba(255,255,255,.14);border-radius:16px;display:flex;flex-direction:column;overflow:hidden">'
-      +'<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08)">'
-      +'<div style="flex:1;font-size:14px;font-weight:800;color:#fff">🖼️ Immagini in /config/www</div>'
-      +'<button id="ss-ip-close" style="width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;cursor:pointer">✕</button>'
-      +'</div>'
-      +'<input id="ss-ip-q" type="text" placeholder="Cerca…" style="margin:10px 16px 0;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px">'
-      +'<div id="ss-ip-list" style="flex:1;overflow-y:auto;padding:10px 16px 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>'
-      +'</div>';
-    document.body.appendChild(ov2);
-    ov2.querySelector('#ss-ip-close').addEventListener('click',()=>ov2.remove());
-    ov2.addEventListener('click',e=>{ if(e.target===ov2) ov2.remove(); });
-    const list=ov2.querySelector('#ss-ip-list');
+    const {ov:ov2,body,close}=_ssSheetOpen('ss-img-picker','🖼️ Immagini in /config/www');
+    body.innerHTML='<input id="ss-ip-q" type="text" placeholder="Cerca…" style="width:100%;box-sizing:border-box;padding:9px 12px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px;margin-bottom:10px">'
+      +'<div id="ss-ip-list" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>';
+    const list=body.querySelector('#ss-ip-list');
     list.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:30px 0;color:rgba(255,255,255,.4);font-size:12px">⏳ Carico…</div>';
     let files=[];
     try{
@@ -17213,12 +17197,12 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
         const url='/local/'+f.split('/').map(encodeURIComponent).join('/');
         return '<div class="ss-ip-tile" data-url="'+eh(url)+'" style="border-radius:10px;overflow:hidden;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);cursor:pointer;aspect-ratio:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;padding:6px;box-sizing:border-box">'
           +'<img src="'+eh(url)+'" style="width:100%;height:70%;object-fit:cover;border-radius:6px" onerror="this.style.opacity=\'.2\'">'
-          +'<div style="font-size:9px;color:#fff;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%">'+eh(f.split('/').pop())+'</div></div>';
+          +'<div style="font-size:9px;font-weight:700;color:#fff;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%">'+eh(f.split('/').pop())+'</div></div>';
       }).join('');
-      list.querySelectorAll('.ss-ip-tile').forEach(t=>t.addEventListener('click',()=>{ cb(t.dataset.url); ov2.remove(); }));
+      list.querySelectorAll('.ss-ip-tile').forEach(t=>t.addEventListener('click',()=>{ cb(t.dataset.url); close(); }));
     }
     draw('');
-    ov2.querySelector('#ss-ip-q').addEventListener('input',e=>draw(e.target.value));
+    body.querySelector('#ss-ip-q').addEventListener('input',e=>draw(e.target.value));
   }
 
   window._ssOpenEditor=function(){
@@ -17245,9 +17229,9 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
       +'.ss-ed-w.sel{outline:2px solid #38bdf8;outline-offset:1px}'
       +'.ss-ed-resize{position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;cursor:se-resize;background:#38bdf8;border-radius:3px 0 4px 0;opacity:0;transition:opacity .15s;z-index:2}'
       +'.ss-ed-w:hover .ss-ed-resize,.ss-ed-w.sel .ss-ed-resize{opacity:.9}'
-      +'.ss-ed-addbtn{flex:1;min-width:80px;padding:9px;border-radius:10px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#fff;font-size:11px;font-weight:800;cursor:pointer}'
-      +'.ss-ed-chip{display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:20px;font-size:11px;font-weight:800;cursor:pointer;color:#fff}'
-      +'.ss-sec-title2{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);margin-bottom:8px}'
+      +'.ss-ed-addbtn{flex:1;min-width:80px;padding:9px;border-radius:10px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#fff;font-size:11px;font-weight:800;text-transform:uppercase;cursor:pointer}'
+      +'.ss-ed-chip{display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:20px;font-size:11px;font-weight:800;text-transform:uppercase;cursor:pointer;color:#fff}'
+      +'.ss-sec-title2{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#fff;margin-bottom:8px}'
       +'</style>'
       +'<div style="display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">'
       +'<div style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;flex-shrink:0">🖼</div>'
@@ -17257,15 +17241,15 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
       +'<div style="flex:1;overflow-y:auto;padding:16px 20px;scrollbar-width:thin">'
       +'<div class="ss-sec-title2">⏱ Attesa prima di attivarsi</div>'
       +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">'
-      +'<input id="sys-ss-min" type="number" min="0" max="180" value="'+Math.floor((c0.sec||0)/60)+'" style="width:64px;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px"><span style="font-size:11px;color:rgba(255,255,255,.5)">min</span>'
-      +'<input id="sys-ss-sec" type="number" min="0" max="59" value="'+((c0.sec||0)%60)+'" style="width:64px;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px;margin-left:8px"><span style="font-size:11px;color:rgba(255,255,255,.5)">sec</span>'
+      +'<input id="sys-ss-min" type="number" min="0" max="180" value="'+Math.floor((c0.sec||0)/60)+'" style="width:64px;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px"><span style="font-size:11px;font-weight:800;text-transform:uppercase;color:#fff">min</span>'
+      +'<input id="sys-ss-sec" type="number" min="0" max="59" value="'+((c0.sec||0)%60)+'" style="width:64px;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px;margin-left:8px"><span style="font-size:11px;font-weight:800;text-transform:uppercase;color:#fff">sec</span>'
       +'</div>'
       +'<div class="ss-sec-title2">🖼️ Sfondo</div>'
-      +'<div style="display:flex;gap:6px;margin-bottom:6px"><input id="sys-ss-img-day" type="url" value="'+eh(c0.imgDay||'')+'" placeholder="Immagine giorno — https://… oppure /local/…" style="flex:1;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;box-sizing:border-box"><button id="ss-ed-img-day-pick" type="button" style="flex-shrink:0;padding:8px 10px;border-radius:9px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.35);color:#fff;font-size:11px;font-weight:700;cursor:pointer">🖼️ Sfoglia</button></div>'
-      +'<div style="display:flex;gap:6px;margin-bottom:6px"><input id="sys-ss-img-night" type="url" value="'+eh(c0.imgNight||'')+'" placeholder="Immagine notte (opzionale) — vuoto = sempre quella del giorno" style="flex:1;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;box-sizing:border-box"><button id="ss-ed-img-night-pick" type="button" style="flex-shrink:0;padding:8px 10px;border-radius:9px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.35);color:#fff;font-size:11px;font-weight:700;cursor:pointer">🖼️ Sfoglia</button></div>'
+      +'<div style="display:flex;gap:6px;margin-bottom:6px"><input id="sys-ss-img-day" type="url" value="'+eh(c0.imgDay||'')+'" placeholder="Immagine giorno — https://… oppure /local/…" style="flex:1;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;box-sizing:border-box"><button id="ss-ed-img-day-pick" type="button" style="flex-shrink:0;padding:8px 10px;border-radius:9px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.35);color:#fff;font-size:11px;font-weight:800;text-transform:uppercase;cursor:pointer">🖼️ Sfoglia</button></div>'
+      +'<div style="display:flex;gap:6px;margin-bottom:6px"><input id="sys-ss-img-night" type="url" value="'+eh(c0.imgNight||'')+'" placeholder="Immagine notte (opzionale) — vuoto = sempre quella del giorno" style="flex:1;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;box-sizing:border-box"><button id="ss-ed-img-night-pick" type="button" style="flex-shrink:0;padding:8px 10px;border-radius:9px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.35);color:#fff;font-size:11px;font-weight:800;text-transform:uppercase;cursor:pointer">🖼️ Sfoglia</button></div>'
       +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">'
-      +'<span style="font-size:11px;color:rgba(255,255,255,.5)">Giorno dalle</span><input id="sys-ss-day-from" type="time" value="'+eh(c0.dayFrom||'07:00')+'" style="padding:6px 8px;border-radius:8px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;color-scheme:dark">'
-      +'<span style="font-size:11px;color:rgba(255,255,255,.5)">Notte dalle</span><input id="sys-ss-night-from" type="time" value="'+eh(c0.nightFrom||'20:00')+'" style="padding:6px 8px;border-radius:8px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;color-scheme:dark">'
+      +'<span style="font-size:11px;font-weight:800;text-transform:uppercase;color:#fff">Giorno dalle</span><input id="sys-ss-day-from" type="time" value="'+eh(c0.dayFrom||'07:00')+'" style="padding:6px 8px;border-radius:8px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;color-scheme:dark">'
+      +'<span style="font-size:11px;font-weight:800;text-transform:uppercase;color:#fff">Notte dalle</span><input id="sys-ss-night-from" type="time" value="'+eh(c0.nightFrom||'20:00')+'" style="padding:6px 8px;border-radius:8px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;color-scheme:dark">'
       +'</div>'
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
       +'<div class="ss-sec-title2" style="margin-bottom:0">🎨 Layout widget — anteprima live</div>'
@@ -17290,8 +17274,8 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
       +'<div id="ss-ed-props"></div>'
       +'</div>'
       +'<div style="display:flex;gap:8px;padding:14px 20px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">'
-      +'<button id="ss-ed-cancel" style="flex:1;padding:12px;border-radius:11px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font-weight:700;cursor:pointer;font-size:13px">Annulla</button>'
-      +'<button id="ss-ed-save" style="flex:2;padding:12px;border-radius:11px;border:none;background:#38bdf8;color:#fff;font-weight:800;cursor:pointer;font-size:13px">💾 Salva</button>'
+      +'<button id="ss-ed-cancel" style="flex:1;padding:12px;border-radius:11px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font-weight:800;text-transform:uppercase;cursor:pointer;font-size:13px">Annulla</button>'
+      +'<button id="ss-ed-save" style="flex:2;padding:12px;border-radius:11px;border:none;background:#38bdf8;color:#fff;font-weight:800;text-transform:uppercase;cursor:pointer;font-size:13px">💾 Salva</button>'
       +'</div>';
     document.body.appendChild(ov);
 
@@ -17306,6 +17290,21 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
     const imgNightPick=sh.querySelector('#ss-ed-img-night-pick'); if(imgNightPick) imgNightPick.addEventListener('click',()=>{
       _ssImagePickerOpen(url=>{ const el=sh.querySelector('#sys-ss-img-night'); if(el){ el.value=url; window._ssSaveImg&&window._ssSaveImg(); } });
     });
+
+    /* Apre lo Store reale (stesso da cui si aggiungono le card alla dashboard): nasconde
+       temporaneamente l'editor screensaver (resta in vita, solo display:none) e riprende
+       da dove si era interrotti non appena una card viene scelta/aggiunta. */
+    function _ssPickCardFromStore(cb){
+      ov.style.display='none';
+      window._ssStorePickCb=function(cardId){
+        window._ssStorePickCb=null;
+        ov.style.display='';
+        try{ _switchEpTab('sistema'); }catch(e){}
+        if(typeof showToast==='function') showToast('✅ Card collegata al widget');
+        cb(cardId);
+      };
+      try{ openGhStore(); }catch(e){}
+    }
 
     function elHtml(w,idx){
       const style='position:absolute;left:'+w.x+'px;top:'+w.y+'px;width:'+w.w+'px;height:'+w.h+'px';
@@ -17462,9 +17461,9 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
     function propsHtml(){
       if(state.selIdx<0||!state.widgets[state.selIdx]) return '<div style="padding:14px 0;font-size:11px;color:rgba(255,255,255,.4);text-align:center">Seleziona un widget per modificarlo</div>';
       const w=state.widgets[state.selIdx];
-      const lbl='font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.5);margin-bottom:3px;display:block';
+      const lbl='font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:3px;display:block';
       const inp='width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px;box-sizing:border-box;outline:none';
-      const btn='padding:8px 12px;border-radius:9px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.35);color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap';
+      const btn='padding:8px 12px;border-radius:9px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.35);color:#fff;font-size:11px;font-weight:800;text-transform:uppercase;cursor:pointer;flex-shrink:0;white-space:nowrap';
       const clr=v=>/^#([0-9a-f]{6})$/i.test(v||'')?v:'#ffffff';
       let out='';
       if(w.type==='entita'){
@@ -17492,7 +17491,7 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
       } else {
         out+='<div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:9px">Nessuna proprietà — trascina e ridimensiona sul canvas.</div>';
       }
-      out+='<button id="ss-ed-p-del" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#f87171;font-size:12px;font-weight:700;cursor:pointer">🗑 Elimina widget</button>';
+      out+='<button id="ss-ed-p-del" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#f87171;font-size:12px;font-weight:800;text-transform:uppercase;cursor:pointer">🗑 Elimina widget</button>';
       return out;
     }
     function renderProps(){
@@ -17503,7 +17502,7 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
         _epPickerOpen(eid=>{ state.widgets[state.selIdx].entity=eid; renderChips(); renderCanvas(); renderProps(); }, '', 'Seleziona entità');
       });
       const cardPick=sh.querySelector('#ss-ed-p-card-pick'); if(cardPick) cardPick.addEventListener('click',()=>{
-        _ssCardPickerOpen(cardId=>{ state.widgets[state.selIdx].cardId=cardId; renderChips(); renderCanvas(); renderProps(); });
+        _ssPickCardFromStore(cardId=>{ state.widgets[state.selIdx].cardId=cardId; renderChips(); renderCanvas(); renderProps(); });
       });
       const iconInp=sh.querySelector('#ss-ed-p-icon'); if(iconInp) iconInp.addEventListener('input',()=>{ state.widgets[state.selIdx].icon=iconInp.value; renderCanvas(); });
       const colorInp=sh.querySelector('#ss-ed-p-color'); if(colorInp) colorInp.addEventListener('input',()=>{ state.widgets[state.selIdx].color=colorInp.value; renderCanvas(); });

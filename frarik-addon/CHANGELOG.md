@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.1.21 — 2026-07-21
+
+### fix: widget "Card" apre lo Store vero, popup dal basso, testi bianchi/maiuscoli
+
+- **Widget Card**: "🧩 Scegli" apriva un elenco delle sole card già
+  presenti sulla dashboard — ora apre lo **Store vero** (stesso da cui
+  si aggiungono le card alla dashboard normale): si sceglie/aggiunge
+  qualunque card disponibile, che viene collegata subito al widget.
+  L'editor screensaver si nasconde temporaneamente durante la scelta e
+  riappare da solo appena la card è stata aggiunta (o se si chiudono le
+  Impostazioni senza scegliere nulla, per non restare bloccati).
+- **Popup**: il selettore card e quello immagini (introdotti in v2.1.20)
+  si aprivano centrati invece che dal basso come tutti gli altri popup
+  dell'app — corretto.
+- **Testi**: etichette e titoli del pannello proprietà, delle sezioni
+  ("Sfondo", "Layout widget…") e dei bottoni erano in parte grigio
+  attenuato — ora bianco pieno, maiuscolo, grassetto ovunque.
+- **Immagini**: l'elenco di "🖼️ Sfoglia" mostrava anche i file
+  dell'add-on stesso (`/config/www/frarik/`, loghi interni copiati lì
+  automaticamente) mescolati a quelli dell'utente — ora esclusi.
+
 ## 2.1.20 — 2026-07-21
 
 ### editor screensaver: selettori reali invece di digitare a mano + 3 nuovi widget
