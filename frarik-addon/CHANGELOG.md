@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.1.18 — 2026-07-21
+
+### fix: ripristinato il bottone "Card YAML" — era codice morto senza nessun pulsante
+
+- Verificando come provare i tipi aggiunti in v2.1.17 (gauge/glance/
+  picture-elements) è emerso che **non esisteva più nessun bottone** che
+  aprisse un editor YAML vuoto per una card nuova: il repo aveva due
+  sistemi di editor YAML completi ma orfani (`_acpRenderYaml`/
+  `_acpSetTab` e `_ghStoreRenderYamlEditor`, mai richiamati da nessun
+  elemento reale dell'interfaccia) più un terzo sistema (`openYamlImport`/
+  `#yaml-modal`) realmente funzionante ma raggiungibile solo modificando
+  una card YAML già esistente, non creandone una da zero.
+- Aggiunto un bottone reale **"📋 Card YAML"** nella barra dello Store
+  (Impostazioni → Store, o "+" per aggiungere una card) che apre
+  `openYamlImport()` a vuoto — anteprima live, poi "Aggiungi alla
+  Dashboard" per crearla come card vera sulla pagina corrente.
+
 ## 2.1.17 — 2026-07-21
 
 ### feat: Card YAML — supporto a gauge, glance e picture-elements native
