@@ -16926,6 +16926,11 @@ function _syncKioskFromFS(){
 document.addEventListener('fullscreenchange',_syncKioskFromFS);
 document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
 
+/* Espone le pagine/card della dashboard reale: definita qui (scope modulo) perché la
+   IIFE del salvaschermo dichiara un proprio `function cfg(){}` locale che oscura
+   totalmente il `cfg` globale (dashboard) per tutta la sua durata. */
+function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
+
 (function(){
   const LS='dash_screensaver';
   function cfg(){ try{return Object.assign({on:true,sec:300,weather:'',temp:'',imgDay:'',imgNight:'',dayFrom:'07:00',nightFrom:'20:00',ssEnt1:'',ssEnt2:'',ssEnt3:'',ssCardId:'',widgets:null}, JSON.parse(localStorage.getItem(LS)||'{}'));}catch(e){return {on:true,sec:300};} }
@@ -17006,9 +17011,25 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     const nfs=Math.max(9,vfs*0.5);
     return '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px">'+(icHtml?'<div>'+icHtml+'</div>':'')+'<div style="font-weight:800;line-height:1.1;font-size:'+vfs+'px">'+eh(val)+'</div><div style="font-weight:600;color:#fff;font-size:'+nfs+'px">'+eh(name)+'</div></div>';
   }
+  function _ssIconHtml(box,w){
+    let col=w.color||'#ffffff';
+    if(w.entity){ const st=gv(w.entity); col=(String(st)===(w.stateOn||'on'))?(w.colorOn||'#4ade80'):(w.colorOff||'#f87171'); }
+    const sz=Math.max(16,Math.round(Math.min(box.width,box.height)*0.6));
+    let ic=''; try{ ic=_renderIcon(w.icon||'❔',sz,col); }catch(e){}
+    if(!ic) ic='<span style="font-size:'+sz+'px">'+eh(w.icon||'❔')+'</span>';
+    return '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;line-height:1;color:'+col+'">'+ic+'</div>';
+  }
+  function _ssTextHtml(box,w){
+    const fs=Math.max(10,Math.min(box.width/10,box.height*0.5));
+    return '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-weight:700;color:'+(w.color||'#ffffff')+';font-size:'+fs+'px;overflow:hidden;text-align:center;padding:2px;box-sizing:border-box;line-height:1.15">'+eh(w.text||'')+'</div>';
+  }
+  function _ssImageHtml(box,w){
+    if(!w.url) return '';
+    return '<img src="'+eh(w.url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px" onerror="this.style.opacity=\'.15\'">';
+  }
 
   /* Trova una card della dashboard per id */
-  function _ssFindCard(id){ if(!id) return null; try{ for(const pg of (cfg.pages||[])){ const c=(pg.cards||[]).find(x=>x.id===id); if(c) return c; } }catch(e){} return null; }
+  function _ssFindCard(id){ if(!id) return null; try{ for(const pg of _dashPages()){ const c=(pg.cards||[]).find(x=>x.id===id); if(c) return c; } }catch(e){} return null; }
 
   function _ssWidgetBox(w){
     const wrap=ov&&ov.querySelector('#ss-widgets');
@@ -17041,6 +17062,9 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
       else if(w.type==='data') inner.innerHTML=_ssDateHtml(box);
       else if(w.type==='meteo') inner.innerHTML=_ssWeatherHtml(box);
       else if(w.type==='entita') inner.innerHTML=_ssEntityHtml(box,w.entity);
+      else if(w.type==='icona') inner.innerHTML=_ssIconHtml(box,w);
+      else if(w.type==='testo') inner.innerHTML=_ssTextHtml(box,w);
+      else if(w.type==='immagine') inner.innerHTML=_ssImageHtml(box,w);
     });
   }
 
@@ -17117,8 +17141,85 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
       w:(widget.wPct!=null?widget.wPct:10)/100*cw, h:(widget.hPct!=null?widget.hPct:10)/100*ch
     });
   }
-  const _SS_DEFAULT_SIZE={orologio:[280,100],data:[220,40],meteo:[200,50],entita:[90,70],card:[240,170]};
-  const _SS_WIDGET_LABEL={orologio:'🕐 Orologio',data:'📅 Data',meteo:'⛅ Meteo'};
+  const _SS_DEFAULT_SIZE={orologio:[280,100],data:[220,40],meteo:[200,50],entita:[90,70],card:[240,170],icona:[90,90],testo:[220,60],immagine:[240,160]};
+  const _SS_WIDGET_LABEL={orologio:'🕐 Orologio',data:'📅 Data',meteo:'⛅ Meteo',icona:'🔶 Icona',testo:'🔤 Testo',immagine:'🖼️ Immagine'};
+
+  /* ── Selettore card: sceglie tra le istanze già presenti sulla dashboard (uniche renderizzabili) ── */
+  function _ssCardPickerOpen(cb){
+    document.getElementById('ss-card-picker')?.remove();
+    const ov2=document.createElement('div');
+    ov2.id='ss-card-picker';
+    ov2.style.cssText='position:fixed;inset:0;z-index:250000;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center';
+    ov2.innerHTML='<div style="width:min(480px,92vw);max-height:80vh;background:#0a0816;border:1px solid rgba(255,255,255,.14);border-radius:16px;display:flex;flex-direction:column;overflow:hidden">'
+      +'<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08)">'
+      +'<div style="flex:1;font-size:14px;font-weight:800;color:#fff">🧩 Scegli una card della dashboard</div>'
+      +'<button id="ss-cp-close" style="width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;cursor:pointer">✕</button>'
+      +'</div>'
+      +'<input id="ss-cp-q" type="text" placeholder="Cerca…" style="margin:10px 16px 0;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px">'
+      +'<div id="ss-cp-list" style="flex:1;overflow-y:auto;padding:10px 16px 16px;display:flex;flex-direction:column;gap:6px"></div>'
+      +'</div>';
+    document.body.appendChild(ov2);
+    ov2.querySelector('#ss-cp-close').addEventListener('click',()=>ov2.remove());
+    ov2.addEventListener('click',e=>{ if(e.target===ov2) ov2.remove(); });
+    const all=[];
+    _dashPages().forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='header-bar'||c.type==='footer-bar') return; all.push(c); }));
+    const list=ov2.querySelector('#ss-cp-list');
+    function draw(q){
+      const query=(q||'').toLowerCase().trim();
+      const shown=query?all.filter(c=>(c.label||c.type||c.id||'').toLowerCase().includes(query)):all;
+      if(!shown.length){ list.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(255,255,255,.4);font-size:12px">'+(all.length?'Nessun risultato':'Nessuna card sulla dashboard — creane una prima')+'</div>'; return; }
+      list.innerHTML=shown.map(c=>
+        '<div class="ss-cp-item" data-id="'+eh(c.id)+'" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);cursor:pointer">'
+        +'<div style="font-size:18px;flex-shrink:0">🧩</div>'
+        +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+eh(c.label||c.type||c.id)+'</div><div style="font-size:10px;color:rgba(255,255,255,.4)">'+eh(c.type||'')+'</div></div>'
+        +'</div>'
+      ).join('');
+      list.querySelectorAll('.ss-cp-item').forEach(it=>it.addEventListener('click',()=>{ cb(it.dataset.id); ov2.remove(); }));
+    }
+    draw('');
+    ov2.querySelector('#ss-cp-q').addEventListener('input',e=>draw(e.target.value));
+  }
+
+  /* ── Selettore immagine: sfoglia i file presenti in /config/www dell'utente (via backend add-on) ── */
+  async function _ssImagePickerOpen(cb){
+    document.getElementById('ss-img-picker')?.remove();
+    const ov2=document.createElement('div');
+    ov2.id='ss-img-picker';
+    ov2.style.cssText='position:fixed;inset:0;z-index:250000;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center';
+    ov2.innerHTML='<div style="width:min(560px,92vw);max-height:80vh;background:#0a0816;border:1px solid rgba(255,255,255,.14);border-radius:16px;display:flex;flex-direction:column;overflow:hidden">'
+      +'<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08)">'
+      +'<div style="flex:1;font-size:14px;font-weight:800;color:#fff">🖼️ Immagini in /config/www</div>'
+      +'<button id="ss-ip-close" style="width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;cursor:pointer">✕</button>'
+      +'</div>'
+      +'<input id="ss-ip-q" type="text" placeholder="Cerca…" style="margin:10px 16px 0;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px">'
+      +'<div id="ss-ip-list" style="flex:1;overflow-y:auto;padding:10px 16px 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>'
+      +'</div>';
+    document.body.appendChild(ov2);
+    ov2.querySelector('#ss-ip-close').addEventListener('click',()=>ov2.remove());
+    ov2.addEventListener('click',e=>{ if(e.target===ov2) ov2.remove(); });
+    const list=ov2.querySelector('#ss-ip-list');
+    list.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:30px 0;color:rgba(255,255,255,.4);font-size:12px">⏳ Carico…</div>';
+    let files=[];
+    try{
+      const r=await fetch(ADDON_BASE+'/api/frarik/www/list');
+      const j=await r.json();
+      files=(j&&j.ok&&Array.isArray(j.files))?j.files:[];
+    }catch(e){ files=[]; }
+    function draw(q){
+      const query=(q||'').toLowerCase().trim();
+      const shown=query?files.filter(f=>f.toLowerCase().includes(query)):files;
+      if(!shown.length){ list.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:30px 0;color:rgba(255,255,255,.4);font-size:12px">'+(files.length?'Nessun risultato':'Nessuna immagine trovata in /config/www')+'</div>'; return; }
+      list.innerHTML=shown.map(f=>{
+        const url='/local/'+f.split('/').map(encodeURIComponent).join('/');
+        return '<div class="ss-ip-tile" data-url="'+eh(url)+'" style="border-radius:10px;overflow:hidden;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);cursor:pointer;aspect-ratio:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;padding:6px;box-sizing:border-box">'
+          +'<img src="'+eh(url)+'" style="width:100%;height:70%;object-fit:cover;border-radius:6px" onerror="this.style.opacity=\'.2\'">'
+          +'<div style="font-size:9px;color:#fff;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%">'+eh(f.split('/').pop())+'</div></div>';
+      }).join('');
+      list.querySelectorAll('.ss-ip-tile').forEach(t=>t.addEventListener('click',()=>{ cb(t.dataset.url); ov2.remove(); }));
+    }
+    draw('');
+    ov2.querySelector('#ss-ip-q').addEventListener('input',e=>draw(e.target.value));
+  }
 
   window._ssOpenEditor=function(){
     let canvasW=560, canvasH=315;   // preset Orizzontale (16:9) — solo proporzioni, non risoluzione reale
@@ -17160,8 +17261,8 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
       +'<input id="sys-ss-sec" type="number" min="0" max="59" value="'+((c0.sec||0)%60)+'" style="width:64px;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px;margin-left:8px"><span style="font-size:11px;color:rgba(255,255,255,.5)">sec</span>'
       +'</div>'
       +'<div class="ss-sec-title2">🖼️ Sfondo</div>'
-      +'<input id="sys-ss-img-day" type="url" value="'+eh(c0.imgDay||'')+'" placeholder="Immagine giorno — https://… oppure /local/…" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;box-sizing:border-box;margin-bottom:6px">'
-      +'<input id="sys-ss-img-night" type="url" value="'+eh(c0.imgNight||'')+'" placeholder="Immagine notte (opzionale) — vuoto = sempre quella del giorno" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;box-sizing:border-box;margin-bottom:6px">'
+      +'<div style="display:flex;gap:6px;margin-bottom:6px"><input id="sys-ss-img-day" type="url" value="'+eh(c0.imgDay||'')+'" placeholder="Immagine giorno — https://… oppure /local/…" style="flex:1;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;box-sizing:border-box"><button id="ss-ed-img-day-pick" type="button" style="flex-shrink:0;padding:8px 10px;border-radius:9px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.35);color:#fff;font-size:11px;font-weight:700;cursor:pointer">🖼️ Sfoglia</button></div>'
+      +'<div style="display:flex;gap:6px;margin-bottom:6px"><input id="sys-ss-img-night" type="url" value="'+eh(c0.imgNight||'')+'" placeholder="Immagine notte (opzionale) — vuoto = sempre quella del giorno" style="flex:1;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;box-sizing:border-box"><button id="ss-ed-img-night-pick" type="button" style="flex-shrink:0;padding:8px 10px;border-radius:9px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.35);color:#fff;font-size:11px;font-weight:700;cursor:pointer">🖼️ Sfoglia</button></div>'
       +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">'
       +'<span style="font-size:11px;color:rgba(255,255,255,.5)">Giorno dalle</span><input id="sys-ss-day-from" type="time" value="'+eh(c0.dayFrom||'07:00')+'" style="padding:6px 8px;border-radius:8px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;color-scheme:dark">'
       +'<span style="font-size:11px;color:rgba(255,255,255,.5)">Notte dalle</span><input id="sys-ss-night-from" type="time" value="'+eh(c0.nightFrom||'20:00')+'" style="padding:6px 8px;border-radius:8px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;color-scheme:dark">'
@@ -17181,6 +17282,9 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
       +'<button class="ss-ed-addbtn" data-add="meteo">+ ⛅ Meteo</button>'
       +'<button class="ss-ed-addbtn" data-add="entita">+ 🔢 Entità</button>'
       +'<button class="ss-ed-addbtn" data-add="card">+ 🧩 Card</button>'
+      +'<button class="ss-ed-addbtn" data-add="icona">+ 🔶 Icona</button>'
+      +'<button class="ss-ed-addbtn" data-add="testo">+ 🔤 Testo</button>'
+      +'<button class="ss-ed-addbtn" data-add="immagine">+ 🖼️ Immagine</button>'
       +'</div>'
       +'<div id="ss-ed-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>'
       +'<div id="ss-ed-props"></div>'
@@ -17196,6 +17300,12 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     ['sys-ss-img-day','sys-ss-img-night','sys-ss-day-from','sys-ss-night-from'].forEach(id=>{
       const el=sh.querySelector('#'+id); if(el) el.addEventListener('change',()=>window._ssSaveImg&&window._ssSaveImg());
     });
+    const imgDayPick=sh.querySelector('#ss-ed-img-day-pick'); if(imgDayPick) imgDayPick.addEventListener('click',()=>{
+      _ssImagePickerOpen(url=>{ const el=sh.querySelector('#sys-ss-img-day'); if(el){ el.value=url; window._ssSaveImg&&window._ssSaveImg(); } });
+    });
+    const imgNightPick=sh.querySelector('#ss-ed-img-night-pick'); if(imgNightPick) imgNightPick.addEventListener('click',()=>{
+      _ssImagePickerOpen(url=>{ const el=sh.querySelector('#sys-ss-img-night'); if(el){ el.value=url; window._ssSaveImg&&window._ssSaveImg(); } });
+    });
 
     function elHtml(w,idx){
       const style='position:absolute;left:'+w.x+'px;top:'+w.y+'px;width:'+w.w+'px;height:'+w.h+'px';
@@ -17206,6 +17316,9 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
       else if(w.type==='meteo') inner=_ssWeatherHtml(box)||_ssPh('⛅ Meteo');
       else if(w.type==='entita') inner=w.entity?_ssEntityHtml(box,w.entity):_ssPh('🔢 scegli entità →');
       else if(w.type==='card') inner=w.cardId?('<div data-w-card="'+w.id+'" style="width:100%;height:100%"></div>'):_ssPh('🧩 scegli card →');
+      else if(w.type==='icona') inner=_ssIconHtml(box,w);
+      else if(w.type==='testo') inner=w.text?_ssTextHtml(box,w):_ssPh('🔤 scrivi un testo →');
+      else if(w.type==='immagine') inner=w.url?_ssImageHtml(box,w):_ssPh('🖼️ scegli immagine →');
       else inner='';
       return '<div class="ss-ed-w" data-idx="'+idx+'" style="'+style+'">'+inner+'<div class="ss-ed-resize"></div></div>';
     }
@@ -17247,6 +17360,7 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
         else if(w.type==='data') inner=_ssDateHtml(box);
         else if(w.type==='meteo') inner=_ssWeatherHtml(box)||_ssPh('⛅ Meteo');
         else if(w.type==='entita') inner=w.entity?_ssEntityHtml(box,w.entity):_ssPh('🔢 scegli entità →');
+        else if(w.type==='icona') inner=_ssIconHtml(box,w);
         else return;
         const handle=div.querySelector('.ss-ed-resize');
         div.innerHTML=inner;
@@ -17350,13 +17464,31 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
       const w=state.widgets[state.selIdx];
       const lbl='font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.5);margin-bottom:3px;display:block';
       const inp='width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px;box-sizing:border-box;outline:none';
+      const btn='padding:8px 12px;border-radius:9px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.35);color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap';
+      const clr=v=>/^#([0-9a-f]{6})$/i.test(v||'')?v:'#ffffff';
       let out='';
       if(w.type==='entita'){
-        out+='<div style="margin-bottom:9px"><label style="'+lbl+'">Entità</label><input id="ss-ed-p-entity" type="text" value="'+eh(w.entity||'')+'" placeholder="sensor.temperatura" style="'+inp+';font-family:monospace"></div>';
+        out+='<div style="margin-bottom:9px"><label style="'+lbl+'">Entità</label><div style="display:flex;gap:6px"><input id="ss-ed-p-entity" type="text" value="'+eh(w.entity||'')+'" placeholder="sensor.temperatura" style="'+inp+';font-family:monospace;flex:1"><button id="ss-ed-p-entity-pick" type="button" style="'+btn+'">🔍 Scegli</button></div></div>';
       } else if(w.type==='card'){
-        const o=['<option value="">— scegli —</option>'];
-        (cfg.pages||[]).forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='header-bar'||c.type==='footer-bar') return; o.push('<option value="'+c.id+'"'+(w.cardId===c.id?' selected':'')+'>'+eh(c.label||c.type||c.id)+'</option>'); }));
-        out+='<div style="margin-bottom:9px"><label style="'+lbl+'">Card</label><select id="ss-ed-p-card" style="'+inp+'">'+o.join('')+'</select></div>';
+        const c=_ssFindCard(w.cardId);
+        const curLbl=c?(c.label||c.type||c.id):'— nessuna scelta —';
+        out+='<div style="margin-bottom:9px"><label style="'+lbl+'">Card</label><div style="display:flex;gap:6px;align-items:center"><div style="'+inp+';flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:'+(c?'#fff':'rgba(255,255,255,.4)')+'">'+eh(curLbl)+'</div><button id="ss-ed-p-card-pick" type="button" style="'+btn+'">🧩 Scegli</button></div></div>';
+      } else if(w.type==='icona'){
+        out+='<div style="margin-bottom:9px"><label style="'+lbl+'">Icona (emoji o mdi:nome)</label><input id="ss-ed-p-icon" type="text" value="'+eh(w.icon||'')+'" placeholder="⭐ oppure mdi:star" style="'+inp+'"></div>';
+        out+='<div style="margin-bottom:9px"><label style="'+lbl+'">Colore</label><input id="ss-ed-p-color" type="color" value="'+clr(w.color)+'" style="width:52px;height:32px;border:none;background:none;cursor:pointer;padding:0"></div>';
+        out+='<div style="margin-bottom:9px"><label style="'+lbl+'">Entità (opzionale — cambia colore in base allo stato)</label><div style="display:flex;gap:6px"><input id="ss-ed-p-icon-entity" type="text" value="'+eh(w.entity||'')+'" placeholder="binary_sensor.…" style="'+inp+';font-family:monospace;flex:1"><button id="ss-ed-p-icon-entity-pick" type="button" style="'+btn+'">🔍</button></div></div>';
+        if(w.entity){
+          out+='<div style="margin-bottom:9px"><label style="'+lbl+'">Stato "acceso"</label><input id="ss-ed-p-stateon" type="text" value="'+eh(w.stateOn||'on')+'" style="'+inp+'"></div>'
+            +'<div style="display:flex;gap:14px;margin-bottom:9px">'
+            +'<div><label style="'+lbl+'">Colore ON</label><input id="ss-ed-p-coloron" type="color" value="'+clr(w.colorOn||'#4ade80')+'" style="width:52px;height:32px;border:none;background:none;cursor:pointer;padding:0"></div>'
+            +'<div><label style="'+lbl+'">Colore OFF</label><input id="ss-ed-p-coloroff" type="color" value="'+clr(w.colorOff||'#f87171')+'" style="width:52px;height:32px;border:none;background:none;cursor:pointer;padding:0"></div>'
+            +'</div>';
+        }
+      } else if(w.type==='testo'){
+        out+='<div style="margin-bottom:9px"><label style="'+lbl+'">Testo</label><input id="ss-ed-p-text" type="text" value="'+eh(w.text||'')+'" placeholder="Buongiorno!" style="'+inp+'"></div>';
+        out+='<div style="margin-bottom:9px"><label style="'+lbl+'">Colore</label><input id="ss-ed-p-textcolor" type="color" value="'+clr(w.color)+'" style="width:52px;height:32px;border:none;background:none;cursor:pointer;padding:0"></div>';
+      } else if(w.type==='immagine'){
+        out+='<div style="margin-bottom:9px"><label style="'+lbl+'">Immagine</label><div style="display:flex;gap:6px"><input id="ss-ed-p-img" type="url" value="'+eh(w.url||'')+'" placeholder="https://… oppure /local/…" style="'+inp+';flex:1"><button id="ss-ed-p-img-pick" type="button" style="'+btn+'">🖼️ Sfoglia</button></div></div>';
       } else {
         out+='<div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:9px">Nessuna proprietà — trascina e ridimensiona sul canvas.</div>';
       }
@@ -17367,7 +17499,27 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
       const box=sh.querySelector('#ss-ed-props'); if(!box) return;
       box.innerHTML=propsHtml();
       const entInp=sh.querySelector('#ss-ed-p-entity'); if(entInp) entInp.addEventListener('input',()=>{ state.widgets[state.selIdx].entity=entInp.value; renderChips(); renderCanvas(); });
-      const cardSel=sh.querySelector('#ss-ed-p-card'); if(cardSel) cardSel.addEventListener('change',()=>{ state.widgets[state.selIdx].cardId=cardSel.value; renderChips(); renderCanvas(); });
+      const entPick=sh.querySelector('#ss-ed-p-entity-pick'); if(entPick) entPick.addEventListener('click',()=>{
+        _epPickerOpen(eid=>{ state.widgets[state.selIdx].entity=eid; renderChips(); renderCanvas(); renderProps(); }, '', 'Seleziona entità');
+      });
+      const cardPick=sh.querySelector('#ss-ed-p-card-pick'); if(cardPick) cardPick.addEventListener('click',()=>{
+        _ssCardPickerOpen(cardId=>{ state.widgets[state.selIdx].cardId=cardId; renderChips(); renderCanvas(); renderProps(); });
+      });
+      const iconInp=sh.querySelector('#ss-ed-p-icon'); if(iconInp) iconInp.addEventListener('input',()=>{ state.widgets[state.selIdx].icon=iconInp.value; renderCanvas(); });
+      const colorInp=sh.querySelector('#ss-ed-p-color'); if(colorInp) colorInp.addEventListener('input',()=>{ state.widgets[state.selIdx].color=colorInp.value; renderCanvas(); });
+      const iconEntInp=sh.querySelector('#ss-ed-p-icon-entity'); if(iconEntInp) iconEntInp.addEventListener('input',()=>{ state.widgets[state.selIdx].entity=iconEntInp.value; renderCanvas(); });
+      const iconEntPick=sh.querySelector('#ss-ed-p-icon-entity-pick'); if(iconEntPick) iconEntPick.addEventListener('click',()=>{
+        _epPickerOpen(eid=>{ state.widgets[state.selIdx].entity=eid; renderCanvas(); renderProps(); }, '', 'Seleziona entità');
+      });
+      const stateOnInp=sh.querySelector('#ss-ed-p-stateon'); if(stateOnInp) stateOnInp.addEventListener('input',()=>{ state.widgets[state.selIdx].stateOn=stateOnInp.value; renderCanvas(); });
+      const colorOnInp=sh.querySelector('#ss-ed-p-coloron'); if(colorOnInp) colorOnInp.addEventListener('input',()=>{ state.widgets[state.selIdx].colorOn=colorOnInp.value; renderCanvas(); });
+      const colorOffInp=sh.querySelector('#ss-ed-p-coloroff'); if(colorOffInp) colorOffInp.addEventListener('input',()=>{ state.widgets[state.selIdx].colorOff=colorOffInp.value; renderCanvas(); });
+      const textInp=sh.querySelector('#ss-ed-p-text'); if(textInp) textInp.addEventListener('input',()=>{ state.widgets[state.selIdx].text=textInp.value; renderChips(); renderCanvas(); });
+      const textColorInp=sh.querySelector('#ss-ed-p-textcolor'); if(textColorInp) textColorInp.addEventListener('input',()=>{ state.widgets[state.selIdx].color=textColorInp.value; renderCanvas(); });
+      const imgInp=sh.querySelector('#ss-ed-p-img'); if(imgInp) imgInp.addEventListener('input',()=>{ state.widgets[state.selIdx].url=imgInp.value; renderCanvas(); });
+      const imgPick=sh.querySelector('#ss-ed-p-img-pick'); if(imgPick) imgPick.addEventListener('click',()=>{
+        _ssImagePickerOpen(url=>{ state.widgets[state.selIdx].url=url; renderCanvas(); renderProps(); });
+      });
       const delBtn=sh.querySelector('#ss-ed-p-del'); if(delBtn) delBtn.addEventListener('click',deleteSelected);
     }
     function deleteSelected(){
@@ -17381,6 +17533,9 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
       const w={id:'w'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),type,x:20,y:20,w:Math.min(sz[0],canvasW-20),h:Math.min(sz[1],canvasH-20)};
       if(type==='entita') w.entity='';
       if(type==='card') w.cardId='';
+      if(type==='icona'){ w.icon='⭐'; w.color='#ffffff'; w.entity=''; w.stateOn='on'; w.colorOn='#4ade80'; w.colorOff='#f87171'; }
+      if(type==='testo'){ w.text=''; w.color='#ffffff'; }
+      if(type==='immagine') w.url='';
       state.widgets.push(w);
       state.selIdx=state.widgets.length-1;
       renderCanvas(); renderChips(); renderProps();
@@ -17408,7 +17563,8 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     sh.querySelector('#ss-ed-cancel').addEventListener('click',closeEditor);
     ov.addEventListener('click',e=>{ if(e.target===ov) closeEditor(); });
     sh.querySelector('#ss-ed-save').addEventListener('click',()=>{
-      const out=state.widgets.map(w=>({ id:w.id, type:w.type, xPct:w.x/canvasW*100, yPct:w.y/canvasH*100, wPct:w.w/canvasW*100, hPct:w.h/canvasH*100, entity:w.entity, cardId:w.cardId }));
+      const out=state.widgets.map(w=>({ id:w.id, type:w.type, xPct:w.x/canvasW*100, yPct:w.y/canvasH*100, wPct:w.w/canvasW*100, hPct:w.h/canvasH*100,
+        entity:w.entity, cardId:w.cardId, icon:w.icon, color:w.color, stateOn:w.stateOn, colorOn:w.colorOn, colorOff:w.colorOff, text:w.text, url:w.url }));
       window._sysSaveSS&&window._sysSaveSS();
       window._ssSaveImg&&window._ssSaveImg();
       screensaverCfg({widgets:out});

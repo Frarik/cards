@@ -229,6 +229,26 @@ app.delete('/api/frarik/pkg/uninstall', async (req, res) => {
   } catch (e) { res.status(500).json({ ok: false, error: String(e.message) }); }
 });
 
+/* ── Immagini utente in /config/www (sfoglia da frontend: sfondo/widget screensaver) ── */
+const WWW_DIR = '/config/www';
+const IMG_RE = /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i;
+app.get('/api/frarik/www/list', (_req, res) => {
+  const files = [];
+  function walk(dir, rel) {
+    let entries;
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of entries) {
+      if (e.name.startsWith('.')) continue;
+      const full = path.join(dir, e.name);
+      const relPath = rel ? rel + '/' + e.name : e.name;
+      if (e.isDirectory()) walk(full, relPath);
+      else if (IMG_RE.test(e.name)) files.push(relPath);
+    }
+  }
+  try { walk(WWW_DIR, ''); res.json({ ok: true, files }); }
+  catch (e) { res.json({ ok: false, files: [], error: String(e.message) }); }
+});
+
 /* ═══════════════════════════════════════════════════════════════════════════
    PROXY REST → HA core  (tutto /api/* tranne /api/frarik/* e /api/websocket)
    Gated da licenza. Il token HA non transita mai dal browser.

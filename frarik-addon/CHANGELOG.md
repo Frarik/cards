@@ -1,5 +1,27 @@
 # Changelog
 
+## 2.1.20 — 2026-07-21
+
+### editor screensaver: selettori reali invece di digitare a mano + 3 nuovi widget
+
+- **Entità**: il campo era testo libero — ora c'è un bottone "🔍 Scegli" che
+  apre il selettore entità completo (lo stesso usato ovunque nell'app),
+  con ricerca e raggruppamento per dominio.
+- **Card**: la `<select>` (poteva mostrare solo le card già esistenti sulla
+  dashboard, elencate in modo grezzo) è diventata un bottone "🧩 Scegli"
+  che apre un vero selettore con ricerca — corretto anche un bug per cui
+  `_ssFindCard` non trovava mai nessuna card (un `cfg` locale della IIFE
+  del salvaschermo oscurava quello globale della dashboard: il widget
+  "card" non aveva mai funzionato).
+- **3 nuovi tipi di widget**: 🔶 Icona (emoji/mdi, colore fisso oppure
+  che cambia in base allo stato di un'entità — stile Canvas Libero),
+  🔤 Testo libero (testo statico + colore), 🖼️ Immagine (URL, con
+  segnaposto se il link non carica).
+- **Sfoglia immagini di HA**: sia i campi sfondo giorno/notte sia il nuovo
+  widget Immagine hanno un bottone "🖼️ Sfoglia" che elenca le immagini già
+  presenti in `/config/www` (nuovo endpoint add-on `/api/frarik/www/list`)
+  invece di dover scrivere a mano il percorso `/local/...`.
+
 ## 2.1.19 — 2026-07-21
 
 ### fix: caricamento risorse HACS in parallelo, non una alla volta
