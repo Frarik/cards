@@ -694,36 +694,29 @@
         <!-- ── SISTEMA ── -->
         <div id="ep-content-sistema" class="ep-tab-content">
           <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">⚙️</div><div class="ep-tab-hdr-title">Sistema</div></div>
-          <div class="sys-row"><span class="sys-lbl">⛶ Modalità Kiosk</span><button class="sys-tog" id="sys-kiosk-tog" data-action="_sysToggle" data-action-arg="kiosk"></button></div>
-          <div class="sys-sub" style="margin-bottom:10px">Mostra l'icona schermo intero in alto. Disattivata = nessuna icona.</div>
-          <div class="sys-row"><span class="sys-lbl">🖼 Screensaver</span><button class="sys-tog" id="sys-ss-tog" data-action="_sysToggle" data-action-arg="ss"></button></div>
-          <div class="sys-sub">Dopo inattività: orologio + meteo a tutto schermo</div>
-          <div class="sys-row" style="margin-top:8px"><span class="sys-lbl2">Attesa</span>
-            <div style="display:flex;align-items:center;gap:4px">
-              <input class="sys-num" id="sys-ss-min" type="number" min="0" max="180"><span class="sys-u">min</span>
-              <input class="sys-num" id="sys-ss-sec" type="number" min="0" max="59"><span class="sys-u">sec</span>
-            </div></div>
-          <div class="sys-row" style="margin-top:10px"><span class="sys-lbl2">🖼️ Immagine giorno (URL)</span></div>
-          <input class="finp" id="sys-ss-img-day" type="url" placeholder="https://… oppure /local/…" data-input="_ssSaveImg" style="font-size:10px;margin-top:3px">
-          <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">🌙 Immagine notte (URL)</span></div>
-          <input class="finp" id="sys-ss-img-night" type="url" placeholder="opzionale — vuoto = sempre quella del giorno" data-input="_ssSaveImg" style="font-size:10px;margin-top:3px">
-          <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">Giorno / Notte dalle</span>
-            <div style="display:flex;gap:4px"><input class="sys-time" id="sys-ss-day-from" type="time" data-input="_ssSaveImg"><input class="sys-time" id="sys-ss-night-from" type="time" data-input="_ssSaveImg"></div></div>
-          <div class="sys-sub" style="margin-top:4px">2 immagini = cambia automaticamente · 1 sola = sempre quella</div>
-          <button class="ep-add2" data-action="_ssOpenEditor" style="margin-top:10px">🎨 Modifica layout</button>
-          <div class="sys-sub" style="margin-top:4px">Orologio, data, meteo, entità, card della dashboard — posizionali liberamente</div>
-          <button class="ep-add2" data-action="screensaverNow" style="margin-top:6px">👁 Anteprima screensaver</button>
-          <div style="height:1px;background:rgba(255,255,255,.06);margin:16px 0"></div>
-          <div class="sys-row"><span class="sys-lbl">🌗 Tema automatico</span><button class="sys-tog" id="sys-th-tog" data-action="_sysToggle" data-action-arg="th"></button></div>
+
+          <div class="ep-sec-title" style="margin-bottom:6px">Modalità Kiosk</div>
+          <div class="sys-row"><span class="sys-lbl">⛶ Icona schermo intero</span><button class="sys-tog" id="sys-kiosk-tog" data-action="_sysToggle" data-action-arg="kiosk"></button></div>
+          <div class="sys-sub" style="margin-bottom:16px">Mostra l'icona schermo intero in alto. Disattivata = nessuna icona.</div>
+
+          <div class="ep-sec-title" style="margin-bottom:6px">Screensaver</div>
+          <div class="sys-row"><span class="sys-lbl">🖼 Attiva dopo inattività</span><button class="sys-tog" id="sys-ss-tog" data-action="_sysToggle" data-action-arg="ss"></button></div>
+          <div class="sys-sub" style="margin-bottom:8px">Orologio, meteo, entità o card della dashboard a tutto schermo</div>
+          <button class="ep-add2" data-action="_ssOpenEditor">🎨 Configura screensaver</button>
+          <div style="height:16px"></div>
+
+          <div class="ep-sec-title" style="margin-bottom:6px">Tema automatico</div>
+          <div class="sys-row"><span class="sys-lbl">🌗 Chiaro/scuro automatico</span><button class="sys-tog" id="sys-th-tog" data-action="_sysToggle" data-action-arg="th"></button></div>
           <div class="sys-row" style="margin-top:8px"><span class="sys-lbl2">Modalità</span>
             <select class="sys-sel" id="sys-th-mode"><option value="time">Orario</option><option value="sun">Alba/Tramonto</option></select></div>
           <div class="sys-row" id="sys-th-times" style="margin-top:6px"><span class="sys-lbl2">Chiaro / Scuro</span>
             <div style="display:flex;gap:4px"><input class="sys-time" id="sys-th-light" type="time"><input class="sys-time" id="sys-th-dark" type="time"></div></div>
-          <div style="height:1px;background:rgba(255,255,255,.06);margin:16px 0"></div>
-          <div class="sys-row"><span class="sys-lbl">📱 Colonna singola (cell)</span></div>
-          <div class="sys-sub">Su telefono impila tutto in 1 colonna</div>
-          <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">Modo</span>
+          <div style="height:16px"></div>
+
+          <div class="ep-sec-title" style="margin-bottom:6px">Layout mobile</div>
+          <div class="sys-row"><span class="sys-lbl2">📱 Colonna singola</span>
             <select class="sys-sel" id="sys-mob"><option value="auto">Auto (telefono)</option><option value="always">Sempre</option><option value="off">Mai</option></select></div>
+          <div class="sys-sub">Su telefono impila tutto in 1 colonna</div>
           <div style="height:16px"></div>
         </div>
 

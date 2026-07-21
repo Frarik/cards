@@ -15007,8 +15007,6 @@ function _adminShowFirstAccess(){
   on('ep-page-name',  'input',  ()=>_pgMarkDirty());
   on('ep-view-title', 'input',  ()=>_pgMarkDirty());
   // Sistema
-  on('sys-ss-min',    'input',  ()=>_sysSaveSS());
-  on('sys-ss-sec',    'input',  ()=>_sysSaveSS());
   on('sys-th-mode',   'change', ()=>_sysSaveTH());
   on('sys-th-light',  'change', ()=>_sysSaveTH());
   on('sys-th-dark',   'change', ()=>_sysSaveTH());
@@ -17041,65 +17039,92 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     const SNAP=10;
     const clampV=(v,mn,mx)=>Math.max(mn,Math.min(mx,v));
     const snapv=v=>Math.round(v/SNAP)*SNAP;
+    const c0=cfg();
+    const _edActiveCards=new Set();   // widget.id con una card viva montata nell'anteprima
+    let _edTick=null;
 
     function widgetLabel(w){ return _SS_WIDGET_LABEL[w.type]||(w.type==='entita'?('🔢 '+(w.entity||'Entità')):w.type==='card'?('🧩 '+(w.cardId||'Card')):w.type); }
 
-    const modal=document.createElement('div');
-    modal.id='ss-ed-ov';
-    modal.style.cssText='position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center';
-    modal.innerHTML='<style>'
-      +'#ss-ed-modal{width:min(1100px,96vw);height:min(760px,92vh);background:#06060f;border:1px solid rgba(139,92,246,.28);border-radius:20px;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.85);overflow:hidden}'
-      +'#ss-ed-hdr{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}'
-      +'#ss-ed-body{flex:1;display:flex;overflow:hidden;min-height:0}'
-      +'#ss-ed-left{width:300px;flex-shrink:0;border-right:1px solid rgba(255,255,255,.08);padding:14px;overflow-y:auto}'
-      +'#ss-ed-right{flex:1;overflow:auto;padding:20px;display:flex;align-items:flex-start;justify-content:center;background:rgba(255,255,255,.02)}'
-      +'#ss-ed-canvas{position:relative;flex-shrink:0;background:#05070f;border-radius:12px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.1)}'
-      +'.ss-ed-w{position:absolute;box-sizing:border-box;cursor:move;border:1px dashed rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.65);font-size:10px;font-weight:700;text-align:center;overflow:hidden;padding:2px}'
+    const ov=document.createElement('div');
+    ov.id='ss-ed-ov';
+    ov.style.cssText='position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:flex;align-items:flex-end';
+    const sh=document.createElement('div');
+    sh.style.cssText='width:100%;max-height:90vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;color:#fff;overflow:hidden';
+    ov.appendChild(sh);
+    sh.innerHTML='<style>'
+      +'#ss-ed-canvas{position:relative;flex-shrink:0;background:#05070f;border-radius:12px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.1);margin:0 auto}'
+      +'.ss-ed-w{position:absolute;box-sizing:border-box;cursor:move;border:1px dashed rgba(255,255,255,.3);overflow:hidden}'
       +'.ss-ed-w.sel{outline:2px solid #38bdf8;outline-offset:1px}'
-      +'.ss-ed-resize{position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;cursor:se-resize;background:#38bdf8;border-radius:3px 0 4px 0;opacity:0;transition:opacity .15s}'
+      +'.ss-ed-resize{position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;cursor:se-resize;background:#38bdf8;border-radius:3px 0 4px 0;opacity:0;transition:opacity .15s;z-index:2}'
       +'.ss-ed-w:hover .ss-ed-resize,.ss-ed-w.sel .ss-ed-resize{opacity:.9}'
       +'.ss-ed-addbtn{flex:1;min-width:80px;padding:9px;border-radius:10px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#fff;font-size:11px;font-weight:800;cursor:pointer}'
       +'.ss-ed-chip{display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:20px;font-size:11px;font-weight:800;cursor:pointer;color:#fff}'
+      +'.ss-sec-title2{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);margin-bottom:8px}'
       +'</style>'
-      +'<div id="ss-ed-modal">'
-      +'<div id="ss-ed-hdr">'
-      +'<div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3)">🎨</div>'
-      +'<div style="flex:1;font-size:14px;font-weight:800;color:#fff">Layout salvaschermo</div>'
+      +'<div style="display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">'
+      +'<div style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;flex-shrink:0">🖼</div>'
+      +'<div style="flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">Screensaver</div>'
+      +'<button id="ss-ed-x" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);flex-shrink:0">✕</button>'
+      +'</div>'
+      +'<div style="flex:1;overflow-y:auto;padding:16px 20px;scrollbar-width:thin">'
+      +'<div class="ss-sec-title2">⏱ Attesa prima di attivarsi</div>'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">'
+      +'<input id="sys-ss-min" type="number" min="0" max="180" value="'+Math.floor((c0.sec||0)/60)+'" style="width:64px;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px"><span style="font-size:11px;color:rgba(255,255,255,.5)">min</span>'
+      +'<input id="sys-ss-sec" type="number" min="0" max="59" value="'+((c0.sec||0)%60)+'" style="width:64px;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px;margin-left:8px"><span style="font-size:11px;color:rgba(255,255,255,.5)">sec</span>'
+      +'</div>'
+      +'<div class="ss-sec-title2">🖼️ Sfondo</div>'
+      +'<input id="sys-ss-img-day" type="url" value="'+eh(c0.imgDay||'')+'" placeholder="Immagine giorno — https://… oppure /local/…" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;box-sizing:border-box;margin-bottom:6px">'
+      +'<input id="sys-ss-img-night" type="url" value="'+eh(c0.imgNight||'')+'" placeholder="Immagine notte (opzionale) — vuoto = sempre quella del giorno" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;box-sizing:border-box;margin-bottom:6px">'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">'
+      +'<span style="font-size:11px;color:rgba(255,255,255,.5)">Giorno dalle</span><input id="sys-ss-day-from" type="time" value="'+eh(c0.dayFrom||'07:00')+'" style="padding:6px 8px;border-radius:8px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;color-scheme:dark">'
+      +'<span style="font-size:11px;color:rgba(255,255,255,.5)">Notte dalle</span><input id="sys-ss-night-from" type="time" value="'+eh(c0.nightFrom||'20:00')+'" style="padding:6px 8px;border-radius:8px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:11px;color-scheme:dark">'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+      +'<div class="ss-sec-title2" style="margin-bottom:0">🎨 Layout widget — anteprima live</div>'
       +'<div style="display:flex;gap:6px">'
-      +'<button id="ss-ed-preset-h" style="padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-size:11px;font-weight:700;cursor:pointer">▭ Orizzontale</button>'
-      +'<button id="ss-ed-preset-v" style="padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-size:11px;font-weight:700;cursor:pointer">▯ Verticale</button>'
+      +'<button id="ss-ed-preset-h" style="padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-size:10px;font-weight:700;cursor:pointer">▭ Orizz.</button>'
+      +'<button id="ss-ed-preset-v" style="padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-size:10px;font-weight:700;cursor:pointer">▯ Vert.</button>'
+      +'</div></div>'
+      +'<div style="display:flex;justify-content:center;padding:14px;background:rgba(255,255,255,.02);border-radius:12px;margin-bottom:14px">'
+      +'<div id="ss-ed-canvas"></div>'
       +'</div>'
-      +'<button id="ss-ed-close" style="width:30px;height:30px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:15px;cursor:pointer">✕</button>'
-      +'</div>'
-      +'<div id="ss-ed-body">'
-      +'<div id="ss-ed-left">'
-      +'<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);margin-bottom:8px">Aggiungi widget</div>'
-      +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">'
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">'
       +'<button class="ss-ed-addbtn" data-add="orologio">+ 🕐 Orologio</button>'
       +'<button class="ss-ed-addbtn" data-add="data">+ 📅 Data</button>'
       +'<button class="ss-ed-addbtn" data-add="meteo">+ ⛅ Meteo</button>'
       +'<button class="ss-ed-addbtn" data-add="entita">+ 🔢 Entità</button>'
       +'<button class="ss-ed-addbtn" data-add="card">+ 🧩 Card</button>'
       +'</div>'
-      +'<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);margin-bottom:8px">Widget aggiunti</div>'
-      +'<div id="ss-ed-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>'
+      +'<div id="ss-ed-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>'
       +'<div id="ss-ed-props"></div>'
       +'</div>'
-      +'<div id="ss-ed-right"><div id="ss-ed-canvas"></div></div>'
-      +'</div>'
-      +'<div style="display:flex;gap:8px;padding:14px 20px;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0">'
-      +'<button id="ss-ed-cancel" style="flex:1;padding:11px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
-      +'<button id="ss-ed-save" style="flex:2;padding:11px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#fff">💾 Salva layout</button>'
-      +'</div>'
+      +'<div style="display:flex;gap:8px;padding:14px 20px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">'
+      +'<button id="ss-ed-cancel" style="flex:1;padding:12px;border-radius:11px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font-weight:700;cursor:pointer;font-size:13px">Annulla</button>'
+      +'<button id="ss-ed-save" style="flex:2;padding:12px;border-radius:11px;border:none;background:#38bdf8;color:#fff;font-weight:800;cursor:pointer;font-size:13px">💾 Salva</button>'
       +'</div>';
-    document.body.appendChild(modal);
+    document.body.appendChild(ov);
+
+    sh.querySelector('#sys-ss-min').addEventListener('input',()=>window._sysSaveSS&&window._sysSaveSS());
+    sh.querySelector('#sys-ss-sec').addEventListener('input',()=>window._sysSaveSS&&window._sysSaveSS());
+    ['sys-ss-img-day','sys-ss-img-night','sys-ss-day-from','sys-ss-night-from'].forEach(id=>{
+      const el=sh.querySelector('#'+id); if(el) el.addEventListener('change',()=>window._ssSaveImg&&window._ssSaveImg());
+    });
 
     function elHtml(w,idx){
       const style='position:absolute;left:'+w.x+'px;top:'+w.y+'px;width:'+w.w+'px;height:'+w.h+'px';
-      return '<div class="ss-ed-w" data-idx="'+idx+'" style="'+style+'">'+eh(widgetLabel(w))+'<div class="ss-ed-resize"></div></div>';
+      const box={width:w.w,height:w.h};
+      let inner;
+      if(w.type==='orologio') inner=_ssClockHtml(box);
+      else if(w.type==='data') inner=_ssDateHtml(box);
+      else if(w.type==='meteo') inner=_ssWeatherHtml(box)||_ssPh('⛅ Meteo');
+      else if(w.type==='entita') inner=w.entity?_ssEntityHtml(box,w.entity):_ssPh('🔢 scegli entità →');
+      else if(w.type==='card') inner=w.cardId?('<div data-w-card="'+w.id+'" style="width:100%;height:100%"></div>'):_ssPh('🧩 scegli card →');
+      else inner='';
+      return '<div class="ss-ed-w" data-idx="'+idx+'" style="'+style+'">'+inner+'<div class="ss-ed-resize"></div></div>';
     }
+    function _ssPh(txt){ return '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(255,255,255,.35);text-align:center;padding:2px">'+txt+'</div>'; }
     function renderCanvas(){
-      const box=modal.querySelector('#ss-ed-canvas'); if(!box) return;
+      const box=sh.querySelector('#ss-ed-canvas'); if(!box) return;
       box.style.width=canvasW+'px'; box.style.height=canvasH+'px';
       box.innerHTML=state.widgets.map((w,i)=>elHtml(w,i)).join('');
       box.querySelectorAll('.ss-ed-w').forEach(div=>{
@@ -17107,12 +17132,46 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
         if(idx===state.selIdx) div.classList.add('sel');
         bindDrag(div,idx);
       });
+      renderCardPreviews();
     }
+    function renderCardPreviews(){
+      const box=sh.querySelector('#ss-ed-canvas'); if(!box) return;
+      _edActiveCards.forEach(id=>{ try{ _stopYamlCard('ed_'+id); }catch(e){} });
+      _edActiveCards.clear();
+      state.widgets.forEach(w=>{
+        if(w.type!=='card'||!w.cardId) return;
+        const holder=box.querySelector('[data-w-card="'+w.id+'"]'); if(!holder) return;
+        const card=_ssFindCard(w.cardId); if(!card||typeof buildCard!=='function') return;
+        try{
+          const el=buildCard(Object.assign({},card,{id:'ed_'+w.id,colSpan:1,rowSpan:1}));
+          el.style.width='100%'; el.style.height='100%'; el.style.gridColumn=''; el.style.gridRow='';
+          holder.appendChild(el);
+          _edActiveCards.add(w.id);
+        }catch(e){ console.warn('[Frarik] editor card preview:',e&&e.message); }
+      });
+    }
+    function tickPreview(){
+      state.widgets.forEach((w,idx)=>{
+        if(w.type==='card') return;
+        const div=sh.querySelector('.ss-ed-w[data-idx="'+idx+'"]'); if(!div) return;
+        const box={width:w.w,height:w.h};
+        let inner;
+        if(w.type==='orologio') inner=_ssClockHtml(box);
+        else if(w.type==='data') inner=_ssDateHtml(box);
+        else if(w.type==='meteo') inner=_ssWeatherHtml(box)||_ssPh('⛅ Meteo');
+        else if(w.type==='entita') inner=w.entity?_ssEntityHtml(box,w.entity):_ssPh('🔢 scegli entità →');
+        else return;
+        const handle=div.querySelector('.ss-ed-resize');
+        div.innerHTML=inner;
+        if(handle) div.appendChild(handle);
+      });
+    }
+    _edTick=setInterval(tickPreview,1000);
     let drag=null;
     function onMove(cx,cy){
       if(!drag) return;
       const w=state.widgets[drag.idx]; if(!w) return;
-      const div=modal.querySelector('.ss-ed-w[data-idx="'+drag.idx+'"]'); if(!div) return;
+      const div=sh.querySelector('.ss-ed-w[data-idx="'+drag.idx+'"]'); if(!div) return;
       const dx=cx-drag.startX, dy=cy-drag.startY;
       if(drag.mode==='move'){
         w.x=clampV(snapv(drag.origX+dx),0,Math.max(0,canvasW-w.w));
@@ -17141,8 +17200,8 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     }
     function selectWidget(idx){
       state.selIdx=idx;
-      modal.querySelectorAll('.ss-ed-w.sel').forEach(d=>d.classList.remove('sel'));
-      const div=modal.querySelector('.ss-ed-w[data-idx="'+idx+'"]'); if(div) div.classList.add('sel');
+      sh.querySelectorAll('.ss-ed-w.sel').forEach(d=>d.classList.remove('sel'));
+      const div=sh.querySelector('.ss-ed-w[data-idx="'+idx+'"]'); if(div) div.classList.add('sel');
       renderChips(); renderProps();
     }
     function bindDrag(div,idx){
@@ -17176,7 +17235,7 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
       }
     }
     function renderChips(){
-      const box=modal.querySelector('#ss-ed-chips'); if(!box) return;
+      const box=sh.querySelector('#ss-ed-chips'); if(!box) return;
       if(!state.widgets.length){ box.innerHTML='<div style="font-size:11px;color:rgba(255,255,255,.4)">Nessun widget — aggiungine uno sopra</div>'; return; }
       box.innerHTML=state.widgets.map((w,i)=>
         '<div class="ss-ed-chip" data-idx="'+i+'" style="background:'+(i===state.selIdx?'rgba(56,189,248,.22)':'rgba(255,255,255,.06)')+';border:1px solid '+(i===state.selIdx?'rgba(56,189,248,.5)':'rgba(255,255,255,.12)')+'">'
@@ -17218,11 +17277,11 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
       return out;
     }
     function renderProps(){
-      const box=modal.querySelector('#ss-ed-props'); if(!box) return;
+      const box=sh.querySelector('#ss-ed-props'); if(!box) return;
       box.innerHTML=propsHtml();
-      const entInp=modal.querySelector('#ss-ed-p-entity'); if(entInp) entInp.addEventListener('input',()=>{ state.widgets[state.selIdx].entity=entInp.value; renderChips(); });
-      const cardSel=modal.querySelector('#ss-ed-p-card'); if(cardSel) cardSel.addEventListener('change',()=>{ state.widgets[state.selIdx].cardId=cardSel.value; renderChips(); });
-      const delBtn=modal.querySelector('#ss-ed-p-del'); if(delBtn) delBtn.addEventListener('click',deleteSelected);
+      const entInp=sh.querySelector('#ss-ed-p-entity'); if(entInp) entInp.addEventListener('input',()=>{ state.widgets[state.selIdx].entity=entInp.value; renderChips(); renderCanvas(); });
+      const cardSel=sh.querySelector('#ss-ed-p-card'); if(cardSel) cardSel.addEventListener('change',()=>{ state.widgets[state.selIdx].cardId=cardSel.value; renderChips(); renderCanvas(); });
+      const delBtn=sh.querySelector('#ss-ed-p-del'); if(delBtn) delBtn.addEventListener('click',deleteSelected);
     }
     function deleteSelected(){
       if(state.selIdx<0) return;
@@ -17245,17 +17304,28 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
       state.widgets.forEach(wi=>{ wi.x=wi.x/oldW*canvasW; wi.y=wi.y/oldH*canvasH; wi.w=wi.w/oldW*canvasW; wi.h=wi.h/oldH*canvasH; });
       renderCanvas();
     }
-    modal.querySelector('#ss-ed-preset-h').addEventListener('click',()=>setPreset(560,315));
-    modal.querySelector('#ss-ed-preset-v').addEventListener('click',()=>setPreset(315,560));
-    modal.querySelectorAll('[data-add]').forEach(btn=>btn.addEventListener('click',()=>addWidget(btn.dataset.add)));
-    function closeEditor(){ cleanupDrag(); modal.remove(); }
-    modal.querySelector('#ss-ed-close').addEventListener('click',closeEditor);
-    modal.querySelector('#ss-ed-cancel').addEventListener('click',closeEditor);
-    modal.addEventListener('click',e=>{ if(e.target===modal) closeEditor(); });
-    modal.querySelector('#ss-ed-save').addEventListener('click',()=>{
+    sh.querySelector('#ss-ed-preset-h').addEventListener('click',()=>setPreset(560,315));
+    sh.querySelector('#ss-ed-preset-v').addEventListener('click',()=>setPreset(315,560));
+    sh.querySelectorAll('[data-add]').forEach(btn=>btn.addEventListener('click',()=>addWidget(btn.dataset.add)));
+    function closeEditor(){
+      cleanupDrag();
+      if(_edTick){ clearInterval(_edTick); _edTick=null; }
+      _edActiveCards.forEach(id=>{ try{ _stopYamlCard('ed_'+id); }catch(e){} });
+      _edActiveCards.clear();
+      document.removeEventListener('keydown',onEsc);
+      ov.remove();
+    }
+    function onEsc(e){ if(e.key==='Escape') closeEditor(); }
+    document.addEventListener('keydown',onEsc);
+    sh.querySelector('#ss-ed-x').addEventListener('click',closeEditor);
+    sh.querySelector('#ss-ed-cancel').addEventListener('click',closeEditor);
+    ov.addEventListener('click',e=>{ if(e.target===ov) closeEditor(); });
+    sh.querySelector('#ss-ed-save').addEventListener('click',()=>{
       const out=state.widgets.map(w=>({ id:w.id, type:w.type, xPct:w.x/canvasW*100, yPct:w.y/canvasH*100, wPct:w.w/canvasW*100, hPct:w.h/canvasH*100, entity:w.entity, cardId:w.cardId }));
+      window._sysSaveSS&&window._sysSaveSS();
+      window._ssSaveImg&&window._ssSaveImg();
       screensaverCfg({widgets:out});
-      if(typeof showToast==='function') showToast('✅ Layout salvaschermo salvato');
+      if(typeof showToast==='function') showToast('✅ Screensaver salvato');
       closeEditor();
     });
 
@@ -17328,12 +17398,6 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
   window._sysLoad=function(){
     try{
       const ss=screensaverCfg(); _setTog('sys-ss-tog',ss.on);
-      if($('sys-ss-min')) $('sys-ss-min').value=Math.floor((ss.sec||0)/60);
-      if($('sys-ss-sec')) $('sys-ss-sec').value=(ss.sec||0)%60;
-      if($('sys-ss-img-day')) $('sys-ss-img-day').value=ss.imgDay||'';
-      if($('sys-ss-img-night')) $('sys-ss-img-night').value=ss.imgNight||'';
-      if($('sys-ss-day-from')) $('sys-ss-day-from').value=ss.dayFrom||'07:00';
-      if($('sys-ss-night-from')) $('sys-ss-night-from').value=ss.nightFrom||'20:00';
       const th=themeScheduleCfg(); _setTog('sys-th-tog',th.on);
       if($('sys-th-mode')) $('sys-th-mode').value=th.mode||'time';
       if($('sys-th-light')) $('sys-th-light').value=th.light||'07:00';

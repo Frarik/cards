@@ -1,5 +1,27 @@
 # Changelog
 
+## 2.1.14 — 2026-07-21
+
+### feat: tab Sistema semplificato + screensaver in un unico popup standard
+
+- Il tab Impostazioni → Sistema era un unico elenco piatto di controlli
+  senza vere sezioni. Ora è raggruppato in 4 sezioni con titolo (stesso
+  stile `.ep-sec-title` già usato in Aspetto/Viste): Modalità Kiosk,
+  Screensaver, Tema automatico, Layout mobile.
+- Lo screensaver passa da 8 campi sparsi nel tab (attesa, 2 immagini,
+  2 orari, editor separato) a **un solo bottone "🎨 Configura screensaver"**
+  che apre un **unico popup** con tutto dentro.
+- Quel popup ora è un vero **bottom sheet**, identico per stile/colori/
+  comportamento allo standard già in uso in tutte le altre card (rif.
+  `LetpotMax.js` `configure()`/`openSettings()`): apertura dal basso,
+  sfondo `#0a0816`, header icona+titolo+✕, chiusura su click fuori/✕/Esc
+  — prima usava una finestra centrata diversa da tutto il resto.
+- Il canvas dei widget mostra ora **contenuto reale dal vivo** invece di
+  etichette segnaposto: l'orologio ticchetta, meteo/entità mostrano i
+  valori veri, le card sono le card vere — e si aggiorna subito quando si
+  aggiunge/rimuove/modifica un widget (entità digitata, card scelta),
+  non solo dopo il salvataggio.
+
 ## 2.1.13 — 2026-07-21
 
 ### feat: Salvaschermo — editor a widget multipli (ispirato a Oikos)
