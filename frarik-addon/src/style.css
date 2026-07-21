@@ -340,12 +340,11 @@ body.editing .resize-handle{opacity:.55}
    invece di migliaia di override puntuali. */
 #epanel{--muted:#fff;--dim:#fff;--bd:rgba(255,255,255,.35);--bd2:rgba(255,255,255,.55)}
 #epanel, #epanel *{color:#fff!important;text-transform:uppercase!important}
-#epanel input,#epanel select,#epanel textarea,#epanel button,
-#epanel .finp,#epanel .sys-num,#epanel .sys-time,#epanel .sys-sel,
-#epanel .ep-add2,#epanel .fbtn,#epanel .ep-theme-btn,#epanel .ep-font-sel,
-#epanel .col-o,#epanel .sys-row,#epanel .ep-saved-chip{
+#epanel input,#epanel select,#epanel textarea,
+#epanel .finp,#epanel .sys-num,#epanel .sys-time,#epanel .sys-sel{
   border:1px solid rgba(255,255,255,.5)!important;
 }
+#epanel .sys-tog{border:none!important}
 #epanel .sys-lbl{font-weight:800;font-size:14px}
 #epanel .sys-lbl2{font-weight:800;font-size:13px}
 #epanel .sys-sub{font-weight:700;font-size:12px}

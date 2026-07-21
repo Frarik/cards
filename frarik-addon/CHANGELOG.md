@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.1.16 — 2026-07-21
+
+### fix: Impostazioni — troppi bordi bianchi annidati
+
+- Il bordo bianco introdotto in v2.1.15 era su troppi elementi insieme:
+  singoli campi/bottoni E ANCHE la riga/contenitore che li racchiudeva,
+  con l'effetto "bordo dentro il bordo" ovunque.
+- Ridotto ai soli campi veri: input di testo/numero/url/orario e le
+  select. Righe, bottoni e chip non hanno più un bordo forzato.
+
 ## 2.1.15 — 2026-07-21
 
 ### feat: pannello Impostazioni — testi bianchi/maiuscoli/grassetto + bordo su tutti i 13 tab
