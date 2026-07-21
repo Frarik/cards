@@ -1990,9 +1990,9 @@ select.ntf-field-inp option{background:#1a2035;color:#e2e8f0}
 [data-theme="light"] .ntf-ent-name{color:#0f172a}
 
 /* ═══ UNIVERSAL ENTITY PICKER ═══ */
-#ep-picker{position:fixed;inset:0;z-index:199999;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+#ep-picker{position:fixed;inset:0;z-index:199999;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
 #ep-picker.open{opacity:1;pointer-events:all}
-.ep-picker-box{background:#0c0e1c;border:1px solid rgba(255,255,255,.12);border-radius:22px;width:min(560px,96vw);height:min(680px,88vh);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.85)}
+.ep-picker-box{background:#0c0e1c;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -20px 60px rgba(0,0,0,.6)}
 .ep-picker-hdr{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px;flex-shrink:0}
 .ep-picker-hdr-title{font-size:14px;font-weight:800;color:#f1f5f9;flex:1}
 .ep-picker-domain-badge{padding:3px 10px;border-radius:12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);font-size:10px;color:#818cf8;font-weight:700}

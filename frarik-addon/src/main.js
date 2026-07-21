@@ -17040,6 +17040,23 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
   /* Trova una card della dashboard per id */
   function _ssFindCard(id){ if(!id) return null; try{ for(const pg of _dashPages()){ const c=(pg.cards||[]).find(x=>x.id===id); if(c) return c; } }catch(e){} return null; }
 
+  /* Una card widget del salvaschermo può essere ridimensionata più piccola di quanto il suo
+     contenuto "naturale" (font minimi via clamp(), padding fissi, icone) permetta di comprimere:
+     senza questo, il box più piccolo si limita a TAGLIARE il contenuto (overflow:hidden della
+     .card). Stessa tecnica già in uso in _autoScaleAll() per il dashboard reale, estesa anche
+     all'altezza: se il contenuto (scrollWidth/Height) non entra nel box, la scala come
+     un'unica unità (transform:scale) invece di lasciarla straboccare/tagliata. */
+  function _ssFitCard(el, boxW, boxH){
+    el.style.transform=''; el.style.transformOrigin=''; el.style.width='100%'; el.style.height='100%';
+    const natW=el.scrollWidth, natH=el.scrollHeight;
+    if(natW>boxW+2||natH>boxH+2){
+      const scale=Math.max(0.05,Math.min(boxW/natW, boxH/natH));
+      el.style.width=natW+'px'; el.style.height=natH+'px';
+      el.style.transformOrigin='top left';
+      el.style.transform='scale('+scale+')';
+    }
+  }
+
   function _ssWidgetBox(w){
     const wrap=ov&&ov.querySelector('#ss-widgets');
     const ww=(wrap&&wrap.clientWidth)||window.innerWidth||1280;
@@ -17077,6 +17094,18 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
     });
   }
 
+  /* Ricalcola solo la scala delle card widget già montate (es. dopo un resize della finestra),
+     senza smontarle/ricrearle — evita di riavviare inutilmente timer/grafici interni. */
+  function _ssRefitCardWidgets(){
+    const wrap=ov&&ov.querySelector('#ss-widgets'); if(!wrap) return;
+    _ssMigrateWidgets().filter(w=>w.type==='card').forEach(w=>{
+      const holder=wrap.querySelector('[data-ss-w="'+w.id+'"] .ss-w-inner'); if(!holder) return;
+      const el=holder.querySelector(':scope > .card'); if(!el) return;
+      const box=_ssWidgetBox(w);
+      _ssFitCard(el, box.width, box.height);
+    });
+  }
+
   /* ── Widget "card": possono essere più di una contemporaneamente ── */
   let _ssActiveCardIds=[];
   function _ssApplyCardWidgets(){
@@ -17091,8 +17120,10 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
       const instId=card.id+'_ss'+idx;
       try{
         const el=buildCard(Object.assign({},card,{id:instId,colSpan:1,rowSpan:1}));
-        el.style.width='100%'; el.style.height='100%'; el.style.gridColumn=''; el.style.gridRow='';
+        el.style.gridColumn=''; el.style.gridRow='';
         holder.appendChild(el);
+        const box=_ssWidgetBox(w);
+        _ssFitCard(el, box.width, box.height);
         _ssActiveCardIds.push(instId);
       }catch(e){ console.warn('[Frarik] screensaver card widget:',e&&e.message); }
     });
@@ -17139,7 +17170,7 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
   }
   function reset(){ if(active) hide(); clearTimeout(idleTimer); const c=cfg(); if(!c.on) return; idleTimer=setTimeout(show, Math.max(10,c.sec|0)*1000); }
   ['mousemove','mousedown','keydown','touchstart','wheel','scroll'].forEach(ev=>document.addEventListener(ev,reset,{passive:true,capture:true}));
-  window.addEventListener('resize',()=>{ if(active) _ssRenderWidgets(); });
+  window.addEventListener('resize',()=>{ if(active){ _ssRenderWidgets(); _ssRefitCardWidgets(); } });
   if(document.readyState!=='loading') reset(); else document.addEventListener('DOMContentLoaded',reset);
   window.screensaverNow=function(){ active=false; _open(); };  // test forzato (anche in modifica)
 
@@ -17160,7 +17191,7 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
     const ov2=document.createElement('div');
     ov2.id=id;
     ov2.style.cssText='position:fixed;inset:0;z-index:250000;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center';
-    ov2.innerHTML='<div class="ss-sheet-box" style="width:100%;max-width:640px;max-height:85vh;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;color:#fff;display:flex;flex-direction:column;overflow:hidden">'
+    ov2.innerHTML='<div class="ss-sheet-box" style="width:100%;max-height:85vh;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;color:#fff;display:flex;flex-direction:column;overflow:hidden">'
       +'<div style="display:flex;align-items:center;gap:10px;padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0">'
       +'<div style="flex:1;font-size:14px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">'+titleHtml+'</div>'
       +'<button class="ss-sheet-x" style="width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;flex-shrink:0">✕</button>'
@@ -17343,8 +17374,9 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
         const card=_ssFindCard(w.cardId); if(!card||typeof buildCard!=='function') return;
         try{
           const el=buildCard(Object.assign({},card,{id:'ed_'+w.id,colSpan:1,rowSpan:1}));
-          el.style.width='100%'; el.style.height='100%'; el.style.gridColumn=''; el.style.gridRow='';
+          el.style.gridColumn=''; el.style.gridRow='';
           holder.appendChild(el);
+          _ssFitCard(el, w.w, w.h);
           _edActiveCards.add(w.id);
         }catch(e){ console.warn('[Frarik] editor card preview:',e&&e.message); }
       });
@@ -17383,7 +17415,13 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
         div.style.width=w.w+'px'; div.style.height=w.h+'px';
       }
     }
-    function onUp(){ drag=null; }
+    function onUp(){
+      // a fine ridimensionamento di un widget "card", il contenuto va riscalato sulla nuova
+      // dimensione (durante il trascinamento il box esterno si aggiorna già dal vivo via CSS,
+      // ma il contenuto interno della card resta alla scala calcolata l'ultima volta)
+      if(drag&&drag.mode==='resize'){ const w=state.widgets[drag.idx]; if(w&&w.type==='card') renderCardPreviews(); }
+      drag=null;
+    }
     function onMouseMove(e){ onMove(e.clientX,e.clientY); }
     function onMouseUp(){ onUp(); }
     function onTouchMove(e){ if(!drag) return; const t=e.touches&&e.touches[0]; if(!t) return; e.preventDefault(); onMove(t.clientX,t.clientY); }

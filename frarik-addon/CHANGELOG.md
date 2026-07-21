@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.1.23 — 2026-07-21
+
+### fix: popup non a tutta larghezza + widget "Card" tagliato invece di rimpicciolito
+
+- **Popup**: il selettore entità universale (`#ep-picker`, usato ovunque
+  nell'app) si apriva centrato con una larghezza massima invece che dal
+  basso a tutta larghezza come tutti gli altri popup — corretto. Tolto
+  anche un residuo limite di larghezza (640px) dal popup immagini
+  dell'editor screensaver.
+- **Widget "Card"**: ridimensionandolo più piccolo, il contenuto della
+  card (numeri/testo con dimensione minima, padding fissi) non si
+  rimpiccioliva ma veniva **tagliato** dal bordo del widget. Ora, se il
+  contenuto non entra nel box, la card viene scalata come un'unica unità
+  (stessa tecnica già in uso per le card della dashboard reale quando
+  sbordano in larghezza, `_autoScaleAll`, qui estesa anche all'altezza) —
+  si vede rimpicciolita, non tagliata. Applicato sia nell'editor sia nel
+  salvaschermo reale (anche dopo un ridimensionamento della finestra).
+
 ## 2.1.22 — 2026-07-21
 
 ### fix: lo Store impediva di aggiungere la stessa card più volte
