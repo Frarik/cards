@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.1.27 — 2026-07-21
+
+### fix: anteprima "Card" nell'editor screensaver diversa dal salvaschermo reale
+
+- Nel salvaschermo reale il widget "Card" ora si adatta correttamente
+  (v2.1.26), ma nell'editor delle Impostazioni la stessa card veniva
+  renderizzata letteralmente alle poche decine di pixel della canvas in
+  miniatura — troppo piccola perché il contenuto della card avesse
+  senso, quindi appariva diversa da come si vede davvero una volta
+  salvato.
+- La canvas dell'editor è una miniatura in proporzione dell'intero
+  schermo (non la dimensione reale). Ora la card viene renderizzata
+  alla sua dimensione "vera" equivalente (proporzionale, come apparirebbe
+  davvero) e poi mostrata rimpicciolita nella miniatura con una scala
+  uniforme — l'anteprima nell'editor rispecchia fedelmente il risultato
+  finale.
+
 ## 2.1.26 — 2026-07-21
 
 ### fix: widget "Card" — via del trucco a "scala finta", adattamento fluido vero

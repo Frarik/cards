@@ -17208,6 +17208,11 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
     body.querySelector('#ss-ip-q').addEventListener('input',e=>draw(e.target.value));
   }
 
+  /* Rapporto tra la canvas dell'editor (miniatura) e uno schermo reale plausibile — usato SOLO
+     per i widget "card", per renderizzarle a dimensione realistica e poi mostrarle in scala
+     (vedi renderCardPreviews). Stessa proporzione per entrambi i preset (315/1080 = 560/1920). */
+  const _SS_EDITOR_ZOOM = 560/1920;
+
   window._ssOpenEditor=function(){
     let canvasW=560, canvasH=315;   // preset Orizzontale (16:9) — solo proporzioni, non risoluzione reale
     const state={ widgets:_ssMigrateWidgets().map(w=>_ssPctToPx(w,canvasW,canvasH)), selIdx:-1 };
@@ -17346,7 +17351,19 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
         const card=_ssFindCard(w.cardId); if(!card||typeof buildCard!=='function') return;
         try{
           const el=buildCard(Object.assign({},card,{id:'ed_'+w.id,colSpan:1,rowSpan:1}));
-          el.style.width='100%'; el.style.height='100%'; el.style.gridColumn=''; el.style.gridRow='';
+          el.style.gridColumn=''; el.style.gridRow='';
+          // La canvas dell'editor è una MINIATURA dell'intero schermo (proporzioni fisse,
+          // vedi canvasW/canvasH), non la dimensione reale con cui la card verrà mostrata dal
+          // vivo — renderizzarla letteralmente a pochi px (w.w×w.h) la fa sembrare sbagliata
+          // (contenuto/font della card non proporzionali a un box così piccolo). Si renderizza
+          // invece alla dimensione "vera" equivalente (stesso rapporto della miniatura rispetto
+          // a uno schermo reale) e poi si scala l'intero risultato in miniatura con
+          // transform:scale — stessa proporzione di _SS_EDITOR_ZOOM per entrambi i preset
+          // (315/1080 = 560/1920), quindi un'unica costante indipendente dall'orientamento.
+          const realW=w.w/_SS_EDITOR_ZOOM, realH=w.h/_SS_EDITOR_ZOOM;
+          el.style.width=realW+'px'; el.style.height=realH+'px';
+          el.style.transformOrigin='top left';
+          el.style.transform='scale('+_SS_EDITOR_ZOOM+')';
           holder.appendChild(el);
           _edActiveCards.add(w.id);
         }catch(e){ console.warn('[Frarik] editor card preview:',e&&e.message); }
