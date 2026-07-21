@@ -16843,7 +16843,7 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
 
 (function(){
   const LS='dash_screensaver';
-  function cfg(){ try{return Object.assign({on:true,sec:300,weather:'',temp:'',imgDay:'',imgNight:'',dayFrom:'07:00',nightFrom:'20:00',ssEnt1:'',ssEnt2:'',ssEnt3:'',ssCardId:''}, JSON.parse(localStorage.getItem(LS)||'{}'));}catch(e){return {on:true,sec:300};} }
+  function cfg(){ try{return Object.assign({on:true,sec:300,weather:'',temp:'',imgDay:'',imgNight:'',dayFrom:'07:00',nightFrom:'20:00',ssEnt1:'',ssEnt2:'',ssEnt3:'',ssCardId:'',widgets:null}, JSON.parse(localStorage.getItem(LS)||'{}'));}catch(e){return {on:true,sec:300};} }
   function save(o){ localStorage.setItem(LS, JSON.stringify(Object.assign(cfg(),o||{}))); }
   window.screensaverCfg=function(o){ if(o) save(o); reset(); return cfg(); };
   const COND={'sunny':'☀️','clear-day':'☀️','clear-night':'🌙','partlycloudy':'⛅','partly-cloudy-day':'⛅','partly-cloudy-night':'☁️','cloudy':'☁️','rainy':'🌧️','rain':'🌧️','pouring':'🌧️','lightning':'⛈️','lightning-rainy':'⛈️','thunderstorm':'⛈️','snowy':'❄️','snow':'❄️','snowy-rainy':'🌨️','hail':'🌨️','fog':'🌫️','windy':'💨','windy-variant':'💨','exceptional':'⚠️'};
@@ -16855,71 +16855,133 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
   let ov,started=false,idleTimer=null,tickTimer=null,active=false;
   function build(){
     const st=document.createElement('style'); st.textContent=`
-    #screensaver{position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+    #screensaver{position:fixed;inset:0;z-index:100000;
       background:radial-gradient(1200px 820px at 50% -12%,rgba(99,102,241,.20),transparent 60%),radial-gradient(900px 720px at 50% 122%,rgba(168,85,247,.15),transparent 55%),#05070f;
       color:#fff;font-family:'Inter',system-ui,sans-serif;opacity:0;pointer-events:none;transition:opacity .6s ease;cursor:none;text-align:center}
     #screensaver.on{opacity:1;pointer-events:auto}
-    #ss-clock{font-size:clamp(72px,16vw,210px);font-weight:800;letter-spacing:-4px;line-height:1;text-shadow:0 0 60px rgba(99,102,241,.4)}
-    #ss-clock .s{font-size:.38em;font-weight:600;opacity:.5;vertical-align:top;margin-left:4px}
-    #ss-card{display:none;width:min(92vw,680px);max-height:62vh;overflow:hidden}
-    #ss-card .card{margin:0 auto}
-    #ss-date{font-size:clamp(16px,3vw,30px);font-weight:600;color:#fff;text-transform:capitalize}
-    #ss-wx{display:flex;align-items:center;gap:14px;font-size:clamp(22px,4.4vw,42px);font-weight:700;margin-top:8px}
-    #ss-wx .e{font-size:1.25em}
-    #ss-entities{display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(20px,5vw,52px);margin-top:22px}
-    .ss-ent{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:90px}
-    .ss-ent .ic{font-size:clamp(26px,4vw,40px);line-height:1}
-    .ss-ent .vl{font-size:clamp(20px,2.8vw,32px);font-weight:800;line-height:1.1}
-    .ss-ent .nm{font-size:clamp(11px,1.5vw,15px);font-weight:600;color:#fff}
-    #ss-hint{position:absolute;bottom:32px;font-size:11px;letter-spacing:1.5px;color:#fff;text-transform:uppercase}`;
+    #ss-widgets{position:absolute;inset:0;overflow:hidden}
+    #ss-widgets>div{box-sizing:border-box;overflow:hidden}
+    #ss-hint{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:1.5px;color:#fff;text-transform:uppercase}`;
     document.head.appendChild(st);
     ov=document.createElement('div'); ov.id='screensaver';
-    ov.innerHTML='<div id="ss-card"></div><div id="ss-clock"></div><div id="ss-date"></div><div id="ss-wx"></div><div id="ss-entities"></div><div id="ss-hint">tocca per uscire</div>';
+    ov.innerHTML='<div id="ss-widgets"></div><div id="ss-hint">tocca per uscire</div>';
     document.body.appendChild(ov);
   }
   const G=['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
   const M=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
-  function tick(){
-    if(!ov) return; const d=new Date(),p=n=>String(n).padStart(2,'0');
-    ov.querySelector('#ss-clock').innerHTML=p(d.getHours())+':'+p(d.getMinutes())+'<span class="s">'+p(d.getSeconds())+'</span>';
-    ov.querySelector('#ss-date').textContent=G[d.getDay()]+' '+d.getDate()+' '+M[d.getMonth()];
+
+  /* ── Migrazione: dai vecchi campi fissi (ssEnt1/2/3, ssCardId) a widgets[] ──
+     Eseguita una sola volta: se "widgets" esiste già (anche vuoto) non tocca nulla. */
+  function _ssMigrateWidgets(){
+    const c=cfg();
+    if(Array.isArray(c.widgets)) return c.widgets;
+    const widgets=[];
+    if(c.ssCardId){
+      widgets.push({id:'w0',type:'card',cardId:c.ssCardId,xPct:10,yPct:10,wPct:80,hPct:70});
+    } else {
+      widgets.push({id:'w0',type:'orologio',xPct:20,yPct:22,wPct:60,hPct:30});
+      widgets.push({id:'w1',type:'data',xPct:25,yPct:52,wPct:50,hPct:8});
+      widgets.push({id:'w2',type:'meteo',xPct:30,yPct:61,wPct:40,hPct:10});
+      const ents=[c.ssEnt1,c.ssEnt2,c.ssEnt3].map(x=>(x||'').trim()).filter(Boolean);
+      const n=ents.length;
+      ents.forEach((eid,i)=>{ widgets.push({id:'w'+(3+i),type:'entita',entity:eid,xPct:(50-n*12)+i*24,yPct:74,wPct:18,hPct:14}); });
+    }
+    save({widgets});
+    return widgets;
+  }
+
+  /* ── Render dei singoli tipi di widget (box = {x,y,width,height} in px reali) ── */
+  function _ssClockHtml(box){
+    const d=new Date(), p=n=>String(n).padStart(2,'0');
+    const fs=Math.max(28,Math.min(box.width/4.2,box.height*0.75));
+    return '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-weight:800;letter-spacing:-3px;line-height:1;text-shadow:0 0 40px rgba(99,102,241,.4);font-size:'+fs+'px">'+p(d.getHours())+':'+p(d.getMinutes())+'<span style="font-size:.38em;font-weight:600;opacity:.5;vertical-align:top;margin-left:4px">'+p(d.getSeconds())+'</span></div>';
+  }
+  function _ssDateHtml(box){
+    const d=new Date();
+    const fs=Math.max(12,Math.min(box.width/14,box.height*0.55));
+    return '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-weight:600;text-transform:capitalize;font-size:'+fs+'px">'+G[d.getDay()]+' '+d.getDate()+' '+M[d.getMonth()]+'</div>';
+  }
+  function _ssWeatherHtml(box){
     const t=pickTemp(),w=pickWeather();
+    if(t==null&&!w) return '';
     const e=(w&&COND[String(w).toLowerCase()])||'⛅';
     const tv=(t!=null&&!isNaN(parseFloat(t)))?parseFloat(t).toFixed(1)+'°':'';
-    ov.querySelector('#ss-wx').innerHTML=(tv||w)?('<span class="e">'+e+'</span><span>'+tv+'</span>'):'';
-    _ssRenderEntities();
-    _ssApplyBg();
+    const fs=Math.max(16,Math.min(box.width/9,box.height*0.6));
+    return '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:.35em;font-weight:700;font-size:'+fs+'px"><span style="font-size:1.25em">'+e+'</span><span>'+tv+'</span></div>';
   }
-  /* Fino a 3 entità centrate sotto l'orologio (icona + valore + nome) */
-  function _ssRenderEntities(){
-    const el=ov&&ov.querySelector('#ss-entities'); if(!el) return;
-    const c=cfg(); const ids=[c.ssEnt1,c.ssEnt2,c.ssEnt3].map(x=>(x||'').trim()).filter(Boolean).slice(0,3);
-    if(!ids.length){ el.innerHTML=''; return; }
-    el.innerHTML=ids.map(eid=>{
-      const a=(typeof ha!=='undefined'&&ha[eid])||{};
-      const stRaw=(typeof hs!=='undefined'&&hs[eid]!=null)?hs[eid]:'—';
-      const unit=a.unit_of_measurement||'';
-      const name=a.friendly_name||eid.split('.').slice(1).join('.').replace(/_/g,' ');
-      let icHtml=''; try{ icHtml=_renderIcon(a.icon||(typeof _haAutoIcon==='function'?_haAutoIcon(eid):''),34,'#fff'); }catch(e){}
-      const val=(typeof _stateIt==='function'?_stateIt(stRaw):stRaw)+(unit?' '+unit:'');
-      return `<div class="ss-ent">${icHtml?`<div class="ic">${icHtml}</div>`:''}<div class="vl">${eh(val)}</div><div class="nm">${eh(name)}</div></div>`;
-    }).join('');
+  function _ssEntityHtml(box,eid){
+    if(!eid) return '';
+    const a=(typeof ha!=='undefined'&&ha[eid])||{};
+    const stRaw=(typeof hs!=='undefined'&&hs[eid]!=null)?hs[eid]:'—';
+    const unit=a.unit_of_measurement||'';
+    const name=a.friendly_name||eid.split('.').slice(1).join('.').replace(/_/g,' ');
+    let icHtml=''; try{ icHtml=_renderIcon(a.icon||(typeof _haAutoIcon==='function'?_haAutoIcon(eid):''),Math.max(18,Math.min(box.width*0.3,box.height*0.4)),'#fff'); }catch(e){}
+    const val=(typeof _stateIt==='function'?_stateIt(stRaw):stRaw)+(unit?' '+unit:'');
+    const vfs=Math.max(14,Math.min(box.width/6,box.height*0.28));
+    const nfs=Math.max(9,vfs*0.5);
+    return '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px">'+(icHtml?'<div>'+icHtml+'</div>':'')+'<div style="font-weight:800;line-height:1.1;font-size:'+vfs+'px">'+eh(val)+'</div><div style="font-weight:600;color:#fff;font-size:'+nfs+'px">'+eh(name)+'</div></div>';
   }
-  /* Trova una card della dashboard per id (per "card al posto dell'orologio") */
+
+  /* Trova una card della dashboard per id */
   function _ssFindCard(id){ if(!id) return null; try{ for(const pg of (cfg.pages||[])){ const c=(pg.cards||[]).find(x=>x.id===id); if(c) return c; } }catch(e){} return null; }
-  function _ssClearCard(){ const ce=ov&&ov.querySelector('#ss-card'); if(!ce) return; try{ const cur=cfg().ssCardId; if(cur) _stopYamlCard(cur+'_ss'); }catch(e){} ce.innerHTML=''; ce.style.display='none'; }
-  function _ssApplyCard(){
-    const ce=ov&&ov.querySelector('#ss-card'), clk=ov&&ov.querySelector('#ss-clock'); if(!ce||!clk) return;
-    const card=_ssFindCard(cfg().ssCardId);
-    if(card && typeof buildCard==='function'){
-      try{
-        ce.innerHTML='';
-        const el=buildCard(Object.assign({}, card, {id:card.id+'_ss', colSpan:1, rowSpan:1}));
-        ce.appendChild(el); ce.style.display=''; clk.style.display='none'; return;
-      }catch(e){ console.warn('[Frarik] screensaver card:',e&&e.message); }
-    }
-    ce.style.display='none'; clk.style.display='';   // fallback: orologio
+
+  function _ssWidgetBox(w){
+    const wrap=ov&&ov.querySelector('#ss-widgets');
+    const ww=(wrap&&wrap.clientWidth)||window.innerWidth||1280;
+    const wh=(wrap&&wrap.clientHeight)||window.innerHeight||800;
+    return { x:(w.xPct||0)/100*ww, y:(w.yPct||0)/100*wh, width:(w.wPct||10)/100*ww, height:(w.hPct||10)/100*wh };
   }
+
+  /* Riposiziona/ridisegna tutti i widget non-card ogni tick; le card mantengono
+     solo posizione/dimensione sincronizzate (contenuto gestito da _ssApplyCardWidgets). */
+  function _ssRenderWidgets(){
+    const wrap=ov&&ov.querySelector('#ss-widgets'); if(!wrap) return;
+    const widgets=_ssMigrateWidgets();
+    const wanted=new Set(widgets.map(w=>w.id));
+    Array.from(wrap.children).forEach(c=>{ if(!wanted.has(c.dataset.ssW)) c.remove(); });
+    widgets.forEach(w=>{
+      let node=wrap.querySelector('[data-ss-w="'+w.id+'"]');
+      const box=_ssWidgetBox(w);
+      if(!node){
+        node=document.createElement('div');
+        node.dataset.ssW=w.id;
+        node.style.position='absolute';
+        node.innerHTML='<div class="ss-w-inner" style="width:100%;height:100%"></div>';
+        wrap.appendChild(node);
+      }
+      node.style.left=box.x+'px'; node.style.top=box.y+'px'; node.style.width=box.width+'px'; node.style.height=box.height+'px';
+      if(w.type==='card') return;   // contenuto card popolato una volta sola da _ssApplyCardWidgets
+      const inner=node.querySelector('.ss-w-inner'); if(!inner) return;
+      if(w.type==='orologio') inner.innerHTML=_ssClockHtml(box);
+      else if(w.type==='data') inner.innerHTML=_ssDateHtml(box);
+      else if(w.type==='meteo') inner.innerHTML=_ssWeatherHtml(box);
+      else if(w.type==='entita') inner.innerHTML=_ssEntityHtml(box,w.entity);
+    });
+  }
+
+  /* ── Widget "card": possono essere più di una contemporaneamente ── */
+  let _ssActiveCardIds=[];
+  function _ssApplyCardWidgets(){
+    const wrap=ov&&ov.querySelector('#ss-widgets'); if(!wrap) return;
+    _ssActiveCardIds.forEach(id=>{ try{ _stopYamlCard(id); }catch(e){} });
+    _ssActiveCardIds=[];
+    const widgets=_ssMigrateWidgets().filter(w=>w.type==='card');
+    widgets.forEach((w,idx)=>{
+      const holder=wrap.querySelector('[data-ss-w="'+w.id+'"] .ss-w-inner'); if(!holder) return;
+      holder.innerHTML='';
+      const card=_ssFindCard(w.cardId); if(!card||typeof buildCard!=='function') return;
+      const instId=card.id+'_ss'+idx;
+      try{
+        const el=buildCard(Object.assign({},card,{id:instId,colSpan:1,rowSpan:1}));
+        el.style.width='100%'; el.style.height='100%'; el.style.gridColumn=''; el.style.gridRow='';
+        holder.appendChild(el);
+        _ssActiveCardIds.push(instId);
+      }catch(e){ console.warn('[Frarik] screensaver card widget:',e&&e.message); }
+    });
+  }
+
+  function tick(){ if(!ov) return; _ssRenderWidgets(); _ssApplyBg(); }
+
   /* ── Immagine di sfondo screensaver con fasce giorno/notte ── */
   let _ssCurImg=null;
   function _ssPickImg(){
@@ -16944,19 +17006,261 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     else { ov.style.backgroundImage=''; }
   }
   function _open(){
-    if(!ov) build(); active=true; _ssCurImg=null; _ssApplyBg(); _ssApplyCard(); tick();
+    if(!ov) build(); active=true; _ssCurImg=null; _ssApplyBg();
+    _ssRenderWidgets(); _ssApplyCardWidgets(); tick();
     ov.classList.add('on'); clearInterval(tickTimer); tickTimer=setInterval(tick,1000);
     try{ const pw=window.parent&&window.parent!==window?window.parent:null; if(pw) pw.document.querySelectorAll('[id^="frarik-yaml-"]').forEach(el=>{ el.dataset.ssHide='1'; el.style.display='none'; }); }catch(e){}
   }
   function show(){ if(active) return; if(typeof editMode!=='undefined'&&editMode) return; _open(); }
   function hide(){
-    if(!active) return; active=false; if(ov) ov.classList.remove('on'); clearInterval(tickTimer); tickTimer=null; _ssClearCard();
+    if(!active) return; active=false; if(ov) ov.classList.remove('on'); clearInterval(tickTimer); tickTimer=null;
+    _ssActiveCardIds.forEach(id=>{ try{ _stopYamlCard(id); }catch(e){} });
+    _ssActiveCardIds=[];
+    const wrap=ov&&ov.querySelector('#ss-widgets'); if(wrap) wrap.innerHTML='';
     try{ const pw=window.parent&&window.parent!==window?window.parent:null; if(pw) pw.document.querySelectorAll('[id^="frarik-yaml-"][data-ss-hide]').forEach(el=>{ delete el.dataset.ssHide; el.style.display=''; }); }catch(e){}
   }
   function reset(){ if(active) hide(); clearTimeout(idleTimer); const c=cfg(); if(!c.on) return; idleTimer=setTimeout(show, Math.max(10,c.sec|0)*1000); }
   ['mousemove','mousedown','keydown','touchstart','wheel','scroll'].forEach(ev=>document.addEventListener(ev,reset,{passive:true,capture:true}));
+  window.addEventListener('resize',()=>{ if(active) _ssRenderWidgets(); });
   if(document.readyState!=='loading') reset(); else document.addEventListener('DOMContentLoaded',reset);
   window.screensaverNow=function(){ active=false; _open(); };  // test forzato (anche in modifica)
+
+  /* ══════════════ EDITOR LAYOUT (drag/resize/snap, stile Canvas Libero) ══════════════ */
+  function _ssPctToPx(widget,cw,ch){
+    return Object.assign({}, widget, {
+      x:(widget.xPct||0)/100*cw, y:(widget.yPct||0)/100*ch,
+      w:(widget.wPct!=null?widget.wPct:10)/100*cw, h:(widget.hPct!=null?widget.hPct:10)/100*ch
+    });
+  }
+  const _SS_DEFAULT_SIZE={orologio:[280,100],data:[220,40],meteo:[200,50],entita:[90,70],card:[240,170]};
+  const _SS_WIDGET_LABEL={orologio:'🕐 Orologio',data:'📅 Data',meteo:'⛅ Meteo'};
+
+  window._ssOpenEditor=function(){
+    let canvasW=560, canvasH=315;   // preset Orizzontale (16:9) — solo proporzioni, non risoluzione reale
+    const state={ widgets:_ssMigrateWidgets().map(w=>_ssPctToPx(w,canvasW,canvasH)), selIdx:-1 };
+    const SNAP=10;
+    const clampV=(v,mn,mx)=>Math.max(mn,Math.min(mx,v));
+    const snapv=v=>Math.round(v/SNAP)*SNAP;
+
+    function widgetLabel(w){ return _SS_WIDGET_LABEL[w.type]||(w.type==='entita'?('🔢 '+(w.entity||'Entità')):w.type==='card'?('🧩 '+(w.cardId||'Card')):w.type); }
+
+    const modal=document.createElement('div');
+    modal.id='ss-ed-ov';
+    modal.style.cssText='position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center';
+    modal.innerHTML='<style>'
+      +'#ss-ed-modal{width:min(1100px,96vw);height:min(760px,92vh);background:#06060f;border:1px solid rgba(139,92,246,.28);border-radius:20px;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.85);overflow:hidden}'
+      +'#ss-ed-hdr{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}'
+      +'#ss-ed-body{flex:1;display:flex;overflow:hidden;min-height:0}'
+      +'#ss-ed-left{width:300px;flex-shrink:0;border-right:1px solid rgba(255,255,255,.08);padding:14px;overflow-y:auto}'
+      +'#ss-ed-right{flex:1;overflow:auto;padding:20px;display:flex;align-items:flex-start;justify-content:center;background:rgba(255,255,255,.02)}'
+      +'#ss-ed-canvas{position:relative;flex-shrink:0;background:#05070f;border-radius:12px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.1)}'
+      +'.ss-ed-w{position:absolute;box-sizing:border-box;cursor:move;border:1px dashed rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.65);font-size:10px;font-weight:700;text-align:center;overflow:hidden;padding:2px}'
+      +'.ss-ed-w.sel{outline:2px solid #38bdf8;outline-offset:1px}'
+      +'.ss-ed-resize{position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;cursor:se-resize;background:#38bdf8;border-radius:3px 0 4px 0;opacity:0;transition:opacity .15s}'
+      +'.ss-ed-w:hover .ss-ed-resize,.ss-ed-w.sel .ss-ed-resize{opacity:.9}'
+      +'.ss-ed-addbtn{flex:1;min-width:80px;padding:9px;border-radius:10px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#fff;font-size:11px;font-weight:800;cursor:pointer}'
+      +'.ss-ed-chip{display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:20px;font-size:11px;font-weight:800;cursor:pointer;color:#fff}'
+      +'</style>'
+      +'<div id="ss-ed-modal">'
+      +'<div id="ss-ed-hdr">'
+      +'<div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3)">🎨</div>'
+      +'<div style="flex:1;font-size:14px;font-weight:800;color:#fff">Layout salvaschermo</div>'
+      +'<div style="display:flex;gap:6px">'
+      +'<button id="ss-ed-preset-h" style="padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-size:11px;font-weight:700;cursor:pointer">▭ Orizzontale</button>'
+      +'<button id="ss-ed-preset-v" style="padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-size:11px;font-weight:700;cursor:pointer">▯ Verticale</button>'
+      +'</div>'
+      +'<button id="ss-ed-close" style="width:30px;height:30px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:15px;cursor:pointer">✕</button>'
+      +'</div>'
+      +'<div id="ss-ed-body">'
+      +'<div id="ss-ed-left">'
+      +'<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);margin-bottom:8px">Aggiungi widget</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">'
+      +'<button class="ss-ed-addbtn" data-add="orologio">+ 🕐 Orologio</button>'
+      +'<button class="ss-ed-addbtn" data-add="data">+ 📅 Data</button>'
+      +'<button class="ss-ed-addbtn" data-add="meteo">+ ⛅ Meteo</button>'
+      +'<button class="ss-ed-addbtn" data-add="entita">+ 🔢 Entità</button>'
+      +'<button class="ss-ed-addbtn" data-add="card">+ 🧩 Card</button>'
+      +'</div>'
+      +'<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);margin-bottom:8px">Widget aggiunti</div>'
+      +'<div id="ss-ed-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>'
+      +'<div id="ss-ed-props"></div>'
+      +'</div>'
+      +'<div id="ss-ed-right"><div id="ss-ed-canvas"></div></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;padding:14px 20px;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0">'
+      +'<button id="ss-ed-cancel" style="flex:1;padding:11px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
+      +'<button id="ss-ed-save" style="flex:2;padding:11px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#fff">💾 Salva layout</button>'
+      +'</div>'
+      +'</div>';
+    document.body.appendChild(modal);
+
+    function elHtml(w,idx){
+      const style='position:absolute;left:'+w.x+'px;top:'+w.y+'px;width:'+w.w+'px;height:'+w.h+'px';
+      return '<div class="ss-ed-w" data-idx="'+idx+'" style="'+style+'">'+eh(widgetLabel(w))+'<div class="ss-ed-resize"></div></div>';
+    }
+    function renderCanvas(){
+      const box=modal.querySelector('#ss-ed-canvas'); if(!box) return;
+      box.style.width=canvasW+'px'; box.style.height=canvasH+'px';
+      box.innerHTML=state.widgets.map((w,i)=>elHtml(w,i)).join('');
+      box.querySelectorAll('.ss-ed-w').forEach(div=>{
+        const idx=parseInt(div.dataset.idx,10);
+        if(idx===state.selIdx) div.classList.add('sel');
+        bindDrag(div,idx);
+      });
+    }
+    let drag=null;
+    function onMove(cx,cy){
+      if(!drag) return;
+      const w=state.widgets[drag.idx]; if(!w) return;
+      const div=modal.querySelector('.ss-ed-w[data-idx="'+drag.idx+'"]'); if(!div) return;
+      const dx=cx-drag.startX, dy=cy-drag.startY;
+      if(drag.mode==='move'){
+        w.x=clampV(snapv(drag.origX+dx),0,Math.max(0,canvasW-w.w));
+        w.y=clampV(snapv(drag.origY+dy),0,Math.max(0,canvasH-w.h));
+        div.style.left=w.x+'px'; div.style.top=w.y+'px';
+      } else {
+        w.w=clampV(snapv(drag.origW+dx),40,canvasW-w.x);
+        w.h=clampV(snapv(drag.origH+dy),30,canvasH-w.y);
+        div.style.width=w.w+'px'; div.style.height=w.h+'px';
+      }
+    }
+    function onUp(){ drag=null; }
+    function onMouseMove(e){ onMove(e.clientX,e.clientY); }
+    function onMouseUp(){ onUp(); }
+    function onTouchMove(e){ if(!drag) return; const t=e.touches&&e.touches[0]; if(!t) return; e.preventDefault(); onMove(t.clientX,t.clientY); }
+    function onTouchEnd(){ onUp(); }
+    document.addEventListener('mousemove',onMouseMove);
+    document.addEventListener('mouseup',onMouseUp);
+    document.addEventListener('touchmove',onTouchMove,{passive:false});
+    document.addEventListener('touchend',onTouchEnd);
+    function cleanupDrag(){
+      document.removeEventListener('mousemove',onMouseMove);
+      document.removeEventListener('mouseup',onMouseUp);
+      document.removeEventListener('touchmove',onTouchMove);
+      document.removeEventListener('touchend',onTouchEnd);
+    }
+    function selectWidget(idx){
+      state.selIdx=idx;
+      modal.querySelectorAll('.ss-ed-w.sel').forEach(d=>d.classList.remove('sel'));
+      const div=modal.querySelector('.ss-ed-w[data-idx="'+idx+'"]'); if(div) div.classList.add('sel');
+      renderChips(); renderProps();
+    }
+    function bindDrag(div,idx){
+      const handle=div.querySelector('.ss-ed-resize');
+      div.addEventListener('mousedown',e=>{
+        if(handle&&e.target===handle) return;
+        e.preventDefault(); selectWidget(idx);
+        const w=state.widgets[idx];
+        drag={idx,mode:'move',startX:e.clientX,startY:e.clientY,origX:w.x,origY:w.y};
+      });
+      div.addEventListener('touchstart',e=>{
+        if(handle&&e.target===handle) return;
+        const t=e.touches&&e.touches[0]; if(!t) return;
+        selectWidget(idx);
+        const w=state.widgets[idx];
+        drag={idx,mode:'move',startX:t.clientX,startY:t.clientY,origX:w.x,origY:w.y};
+      },{passive:true});
+      if(handle){
+        handle.addEventListener('mousedown',e=>{
+          e.preventDefault(); e.stopPropagation(); selectWidget(idx);
+          const w=state.widgets[idx];
+          drag={idx,mode:'resize',startX:e.clientX,startY:e.clientY,origW:w.w,origH:w.h};
+        });
+        handle.addEventListener('touchstart',e=>{
+          e.stopPropagation();
+          const t=e.touches&&e.touches[0]; if(!t) return;
+          selectWidget(idx);
+          const w=state.widgets[idx];
+          drag={idx,mode:'resize',startX:t.clientX,startY:t.clientY,origW:w.w,origH:w.h};
+        },{passive:true});
+      }
+    }
+    function renderChips(){
+      const box=modal.querySelector('#ss-ed-chips'); if(!box) return;
+      if(!state.widgets.length){ box.innerHTML='<div style="font-size:11px;color:rgba(255,255,255,.4)">Nessun widget — aggiungine uno sopra</div>'; return; }
+      box.innerHTML=state.widgets.map((w,i)=>
+        '<div class="ss-ed-chip" data-idx="'+i+'" style="background:'+(i===state.selIdx?'rgba(56,189,248,.22)':'rgba(255,255,255,.06)')+';border:1px solid '+(i===state.selIdx?'rgba(56,189,248,.5)':'rgba(255,255,255,.12)')+'">'
+        +eh(widgetLabel(w))+'<span data-idx="'+i+'" class="ss-ed-chip-x" style="opacity:.6;margin-left:2px">✕</span></div>'
+      ).join('');
+      box.querySelectorAll('.ss-ed-chip').forEach(chip=>{
+        chip.addEventListener('click',e=>{
+          if(e.target.classList.contains('ss-ed-chip-x')) return;
+          selectWidget(parseInt(chip.dataset.idx,10));
+          renderCanvas();
+        });
+      });
+      box.querySelectorAll('.ss-ed-chip-x').forEach(x=>{
+        x.addEventListener('click',e=>{
+          e.stopPropagation();
+          const idx=parseInt(x.dataset.idx,10);
+          state.widgets.splice(idx,1);
+          if(state.selIdx===idx) state.selIdx=-1; else if(state.selIdx>idx) state.selIdx--;
+          renderCanvas(); renderChips(); renderProps();
+        });
+      });
+    }
+    function propsHtml(){
+      if(state.selIdx<0||!state.widgets[state.selIdx]) return '<div style="padding:14px 0;font-size:11px;color:rgba(255,255,255,.4);text-align:center">Seleziona un widget per modificarlo</div>';
+      const w=state.widgets[state.selIdx];
+      const lbl='font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.5);margin-bottom:3px;display:block';
+      const inp='width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px;box-sizing:border-box;outline:none';
+      let out='';
+      if(w.type==='entita'){
+        out+='<div style="margin-bottom:9px"><label style="'+lbl+'">Entità</label><input id="ss-ed-p-entity" type="text" value="'+eh(w.entity||'')+'" placeholder="sensor.temperatura" style="'+inp+';font-family:monospace"></div>';
+      } else if(w.type==='card'){
+        const o=['<option value="">— scegli —</option>'];
+        (cfg.pages||[]).forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='header-bar'||c.type==='footer-bar') return; o.push('<option value="'+c.id+'"'+(w.cardId===c.id?' selected':'')+'>'+eh(c.label||c.type||c.id)+'</option>'); }));
+        out+='<div style="margin-bottom:9px"><label style="'+lbl+'">Card</label><select id="ss-ed-p-card" style="'+inp+'">'+o.join('')+'</select></div>';
+      } else {
+        out+='<div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:9px">Nessuna proprietà — trascina e ridimensiona sul canvas.</div>';
+      }
+      out+='<button id="ss-ed-p-del" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#f87171;font-size:12px;font-weight:700;cursor:pointer">🗑 Elimina widget</button>';
+      return out;
+    }
+    function renderProps(){
+      const box=modal.querySelector('#ss-ed-props'); if(!box) return;
+      box.innerHTML=propsHtml();
+      const entInp=modal.querySelector('#ss-ed-p-entity'); if(entInp) entInp.addEventListener('input',()=>{ state.widgets[state.selIdx].entity=entInp.value; renderChips(); });
+      const cardSel=modal.querySelector('#ss-ed-p-card'); if(cardSel) cardSel.addEventListener('change',()=>{ state.widgets[state.selIdx].cardId=cardSel.value; renderChips(); });
+      const delBtn=modal.querySelector('#ss-ed-p-del'); if(delBtn) delBtn.addEventListener('click',deleteSelected);
+    }
+    function deleteSelected(){
+      if(state.selIdx<0) return;
+      state.widgets.splice(state.selIdx,1);
+      state.selIdx=-1;
+      renderCanvas(); renderChips(); renderProps();
+    }
+    function addWidget(type){
+      const sz=_SS_DEFAULT_SIZE[type]||[160,100];
+      const w={id:'w'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),type,x:20,y:20,w:Math.min(sz[0],canvasW-20),h:Math.min(sz[1],canvasH-20)};
+      if(type==='entita') w.entity='';
+      if(type==='card') w.cardId='';
+      state.widgets.push(w);
+      state.selIdx=state.widgets.length-1;
+      renderCanvas(); renderChips(); renderProps();
+    }
+    function setPreset(w,h){
+      const oldW=canvasW, oldH=canvasH;
+      canvasW=w; canvasH=h;
+      state.widgets.forEach(wi=>{ wi.x=wi.x/oldW*canvasW; wi.y=wi.y/oldH*canvasH; wi.w=wi.w/oldW*canvasW; wi.h=wi.h/oldH*canvasH; });
+      renderCanvas();
+    }
+    modal.querySelector('#ss-ed-preset-h').addEventListener('click',()=>setPreset(560,315));
+    modal.querySelector('#ss-ed-preset-v').addEventListener('click',()=>setPreset(315,560));
+    modal.querySelectorAll('[data-add]').forEach(btn=>btn.addEventListener('click',()=>addWidget(btn.dataset.add)));
+    function closeEditor(){ cleanupDrag(); modal.remove(); }
+    modal.querySelector('#ss-ed-close').addEventListener('click',closeEditor);
+    modal.querySelector('#ss-ed-cancel').addEventListener('click',closeEditor);
+    modal.addEventListener('click',e=>{ if(e.target===modal) closeEditor(); });
+    modal.querySelector('#ss-ed-save').addEventListener('click',()=>{
+      const out=state.widgets.map(w=>({ id:w.id, type:w.type, xPct:w.x/canvasW*100, yPct:w.y/canvasH*100, wPct:w.w/canvasW*100, hPct:w.h/canvasH*100, entity:w.entity, cardId:w.cardId }));
+      screensaverCfg({widgets:out});
+      if(typeof showToast==='function') showToast('✅ Layout salvaschermo salvato');
+      closeEditor();
+    });
+
+    renderCanvas(); renderChips(); renderProps();
+  };
 })();
 
 (function(){
@@ -17030,13 +17334,6 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
       if($('sys-ss-img-night')) $('sys-ss-img-night').value=ss.imgNight||'';
       if($('sys-ss-day-from')) $('sys-ss-day-from').value=ss.dayFrom||'07:00';
       if($('sys-ss-night-from')) $('sys-ss-night-from').value=ss.nightFrom||'20:00';
-      if($('sys-ss-e1')) $('sys-ss-e1').value=ss.ssEnt1||'';
-      if($('sys-ss-e2')) $('sys-ss-e2').value=ss.ssEnt2||'';
-      if($('sys-ss-e3')) $('sys-ss-e3').value=ss.ssEnt3||'';
-      const _scard=$('sys-ss-card');
-      if(_scard){ const o=['<option value="">— Orologio (default) —</option>'];
-        (cfg.pages||[]).forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='header-bar'||c.type==='footer-bar') return; o.push('<option value="'+c.id+'"'+(ss.ssCardId===c.id?' selected':'')+'>'+eh(c.label||c.type||c.id)+'</option>'); }));
-        _scard.innerHTML=o.join(''); }
       const th=themeScheduleCfg(); _setTog('sys-th-tog',th.on);
       if($('sys-th-mode')) $('sys-th-mode').value=th.mode||'time';
       if($('sys-th-light')) $('sys-th-light').value=th.light||'07:00';
@@ -17062,13 +17359,6 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     dayFrom:($('sys-ss-day-from')||{}).value||'07:00',
     nightFrom:($('sys-ss-night-from')||{}).value||'20:00'
   }); };
-  window._ssSaveEnt=function(){ screensaverCfg({
-    ssEnt1:(($('sys-ss-e1')||{}).value||'').trim(),
-    ssEnt2:(($('sys-ss-e2')||{}).value||'').trim(),
-    ssEnt3:(($('sys-ss-e3')||{}).value||'').trim()
-  }); };
-  window._ssSaveCard=function(){ screensaverCfg({ ssCardId:($('sys-ss-card')||{}).value||'' }); };
-  window._ssPickEnt=function(n){ _epPickerOpen(function(v){ const inp=document.getElementById('sys-ss-e'+n); if(inp) inp.value=v; window._ssSaveEnt(); }); };
   window._sysSaveTH=function(){ const mode=$('sys-th-mode').value; if($('sys-th-times'))$('sys-th-times').style.display=(mode==='sun')?'none':''; themeScheduleCfg({mode:mode,light:$('sys-th-light').value,dark:$('sys-th-dark').value}); };
   window._sysSaveNV=function(){ navbarCfg({pos:$('sys-nv-pos').value}); };
   window._applyMobCol=function(mode){ mode=mode||'auto'; localStorage.setItem('dash_mobcol',mode); document.body.classList.toggle('mobcol-off',mode==='off'); document.body.classList.toggle('mobcol-always',mode==='always'); };

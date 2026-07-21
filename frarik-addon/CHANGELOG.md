@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.1.13 — 2026-07-21
+
+### feat: Salvaschermo — editor a widget multipli (ispirato a Oikos)
+
+- Sostituito il vecchio salvaschermo fisso (orologio+data+meteo centrati,
+  fino a 3 entità in riga, oppure UNA sola card al posto dell'orologio)
+  con un **editor a widget liberamente posizionabili**: Orologio, Data,
+  Meteo, Entità (una per widget, non più limitate a 3) e Card dashboard
+  — quest'ultima ora aggiungibile **più volte contemporaneamente**, non
+  solo una.
+- Nuovo pannello "🎨 Modifica layout" (Impostazioni → Screensaver):
+  trascina, ridimensiona (calamita a griglia) e disponi i widget su un
+  canvas con due preset Orizzontale/Verticale, stessa tecnica di
+  drag/resize già collaudata in Canvas Libero.
+- **Migrazione automatica**: chi aveva già configurato entità/card nel
+  vecchio formato le ritrova convertite in widget al primo avvio, senza
+  perdere nulla.
+- Posizioni salvate in percentuale (non pixel), quindi il layout si
+  adatta automaticamente a schermi di dimensioni diverse.
+
 ## 2.1.12 — 2026-07-21
 
 ### remove: tab "Crea Card" di Vanessa
