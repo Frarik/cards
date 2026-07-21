@@ -17046,14 +17046,21 @@ function _dashPages(){ return (typeof cfg!=='undefined'&&cfg&&cfg.pages)||[]; }
      della .card), uno più grande lascia solo spazio vuoto intorno a un contenuto rimasto piccolo.
      Soluzione: la card viene sempre renderizzata alla sua dimensione di riferimento (quella di
      default con cui un widget "card" viene aggiunto, vedi _SS_DEFAULT_SIZE.card) e poi scalata
-     come un'unica unità (transform:scale, un fattore per asse) sulla dimensione reale del box —
-     frame e contenuto si ingrandiscono/rimpiccioliscono insieme, riempiendo sempre il box. */
+     come un'unica unità sulla dimensione reale del box. IMPORTANTE: la scala deve essere
+     UNIFORME (stesso fattore per larghezza e altezza) — un fattore diverso per asse (provato in
+     v2.1.24) stira/schiaccia visibilmente frame e testo quando il widget ha un rapporto
+     larghezza/altezza molto diverso da quello di riferimento. Si preserva quindi le proporzioni
+     e si centra la card scalata nel box (eventuale spazio vuoto ai lati, mai contenuto tagliato
+     né distorto). */
   const _SS_CARD_REF_W=240, _SS_CARD_REF_H=170;
   function _ssFitCard(el, boxW, boxH){
     el.style.width=_SS_CARD_REF_W+'px';
     el.style.height=_SS_CARD_REF_H+'px';
+    const scale=Math.max(0.05,Math.min(boxW/_SS_CARD_REF_W, boxH/_SS_CARD_REF_H));
     el.style.transformOrigin='top left';
-    el.style.transform='scale('+(boxW/_SS_CARD_REF_W)+','+(boxH/_SS_CARD_REF_H)+')';
+    el.style.transform='scale('+scale+')';
+    el.style.marginLeft=Math.max(0,(boxW-_SS_CARD_REF_W*scale)/2)+'px';
+    el.style.marginTop=Math.max(0,(boxH-_SS_CARD_REF_H*scale)/2)+'px';
   }
 
   function _ssWidgetBox(w){

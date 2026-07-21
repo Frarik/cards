@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.1.25 — 2026-07-21
+
+### fix: widget "Card" del salvaschermo, la scala non uniforme stirava/schiacciava la card
+
+- La v2.1.24 usava un fattore di scala **diverso per larghezza e
+  altezza** per riempire esattamente qualsiasi box: se il widget aveva
+  proporzioni molto diverse da quelle di riferimento (es. molto largo e
+  basso), il risultato era una card visibilmente stirata in orizzontale
+  e schiacciata in verticale, con testo e layout deformati.
+- Ora la scala è **uniforme** (stesso fattore per entrambi gli assi):
+  la card si ingrandisce/rimpicciolisce sempre mantenendo le sue
+  proporzioni originali, senza distorsioni, centrata nel box scelto
+  (può restare un margine vuoto ai lati se il box ha proporzioni molto
+  diverse dalla card, ma il contenuto non viene mai né tagliato né
+  stirato).
+
 ## 2.1.24 — 2026-07-21
 
 ### fix: widget "Card" del salvaschermo, allargandolo il contenuto non si ingrandiva
