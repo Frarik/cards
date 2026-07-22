@@ -10824,6 +10824,31 @@ function _handleHassAction(detail){
   }catch(e){ console.warn('[Frarik] _handleHassAction:',e&&e.message); }
 }
 
+/* Vero/falso: c'è un qualsiasi popup/modale di Frarik aperto in questo momento?
+   Serve a _mountYamlCard/syncPos per nascondere l'overlay della card YAML (che vive nel DOM
+   del parent HA, vedi frarik_yaml_overlay_zindex — il suo z-index non si confronta mai con
+   quello di un popup dentro l'iframe). L'app usa diverse convenzioni per mostrare/nascondere
+   i popup (classe ".off", opacity+pointer-events, display diretto, creazione/rimozione dal
+   DOM): elencati qui tutti quelli individuati. Se in futuro se ne aggiunge uno nuovo con una
+   convenzione diversa, va aggiunto in una delle liste sotto. */
+function _anyFrarikPopupOpen(){
+  if(document.querySelector('.mbg:not(.off), #yaml-modal:not(.off), .sos-ov:not(.off), #fe-modal:not(.off)')) return true;
+  if(document.querySelector('.views-menu, .mfab-menu, #ss-ed-ov, #ss-card-picker, #ss-img-picker')) return true;
+  for(const id of ['ntf-icon-modal','notif-center','lic-overlay','confirm-overlay']){
+    const el=document.getElementById(id);
+    if(el && getComputedStyle(el).display!=='none') return true;
+  }
+  for(const sel of ['#ep-picker','.cfg-modal-ov','.cardmenu-ov']){
+    const el=document.querySelector(sel);
+    if(el){ const cs=getComputedStyle(el); if(parseFloat(cs.opacity||'0')>0.05) return true; }
+  }
+  // popup dei custom element (shadow DOM) montati come div senza id direttamente su body
+  for(let _c=document.body.firstElementChild;_c;_c=_c.nextElementSibling){
+    if(_c.tagName==='DIV'&&!_c.id&&_c.shadowRoot) return true;
+  }
+  return false;
+}
+
 async function _mountYamlCard(card, container){
   _cleanupYamlOverlay(card.id);
   if(container._yamlTimer){ clearInterval(container._yamlTimer); container._yamlTimer=null; }
@@ -10880,22 +10905,10 @@ async function _mountYamlCard(card, container){
         if(document.body.classList.contains('oik-settings-open')){
           overlay.style.display='none'; return;
         }
-        // Nascosto quando un popup di una card JS è aperto (host shadow DOM senza ID su document.body).
-        // I popup dei custom element si montano come div senza id/class direttamente su body —
-        // dato che vivono nell'iframe, hanno z-index alto al loro interno, ma l'overlay YAML nel
-        // DOM del parent li coprirebbe sempre senza questo check.
-        for(let _c=document.body.firstElementChild;_c;_c=_c.nextElementSibling){
-          if(_c.tagName==='DIV'&&!_c.id&&_c.shadowRoot){ overlay.style.display='none'; return; }
-        }
-        // Nascosto quando è aperto un qualsiasi altro popup dell'app (viveno tutti nell'iframe,
-        // stesso problema del caso sopra: l'overlay YAML nel DOM del parent li coprirebbe sempre).
-        // ".mbg:not(.off)" copre la maggior parte dei modali (Configura Card, Store, ecc.);
-        // gli altri sono elencati per id (editor/selettori screensaver, selettore entità).
-        if(document.querySelector('.mbg:not(.off)')){ overlay.style.display='none'; return; }
-        if(document.getElementById('ss-ed-ov')){ overlay.style.display='none'; return; }
-        if(document.getElementById('ss-card-picker')){ overlay.style.display='none'; return; }
-        if(document.getElementById('ss-img-picker')){ overlay.style.display='none'; return; }
-        if(document.getElementById('ep-picker')?.classList.contains('open')){ overlay.style.display='none'; return; }
+        // Nascosto quando è aperto un qualsiasi popup di Frarik (vivono tutti nell'iframe: hanno
+        // z-index alto al loro interno, ma l'overlay YAML — nel DOM del parent HA — non si
+        // confronta mai con quello, quindi lo coprirebbe sempre senza questo check).
+        if(_anyFrarikPopupOpen()){ overlay.style.display='none'; return; }
         const fr=_findFrameElement();
         if(!fr){ overlay.style.display='none'; return; }
         const ir=fr.getBoundingClientRect();

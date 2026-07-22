@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.1.30 — 2026-07-22
+
+### fix: card YAML ancora sopra ai popup — copertura molto più ampia
+
+- La v2.1.29 copriva solo alcuni popup (Configura Card e simili con la
+  classe condivisa, editor screensaver, selettore entità) — ma l'app usa
+  **molte convenzioni diverse** per mostrare/nascondere i propri popup
+  (classe `.off`, dissolvenza con opacity, `display` diretto, menu creati
+  e distrutti al bisogno): mancavano ancora Store da GitHub/locale,
+  editor YAML, Canvas Libero, popup SOS, selettore icone/notifiche,
+  licenza, conferme, menù viste/mobile e altri.
+- Centralizzata la verifica in un'unica funzione (`_anyFrarikPopupOpen`)
+  che controlla tutte queste convenzioni insieme — copertura molto più
+  completa di "qualcosa è aperto sopra la dashboard".
+
 ## 2.1.29 — 2026-07-22
 
 ### fix: card YAML sopra ai popup (z-index cross-realm)
