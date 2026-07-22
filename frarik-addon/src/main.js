@@ -10887,6 +10887,15 @@ async function _mountYamlCard(card, container){
         for(let _c=document.body.firstElementChild;_c;_c=_c.nextElementSibling){
           if(_c.tagName==='DIV'&&!_c.id&&_c.shadowRoot){ overlay.style.display='none'; return; }
         }
+        // Nascosto quando è aperto un qualsiasi altro popup dell'app (viveno tutti nell'iframe,
+        // stesso problema del caso sopra: l'overlay YAML nel DOM del parent li coprirebbe sempre).
+        // ".mbg:not(.off)" copre la maggior parte dei modali (Configura Card, Store, ecc.);
+        // gli altri sono elencati per id (editor/selettori screensaver, selettore entità).
+        if(document.querySelector('.mbg:not(.off)')){ overlay.style.display='none'; return; }
+        if(document.getElementById('ss-ed-ov')){ overlay.style.display='none'; return; }
+        if(document.getElementById('ss-card-picker')){ overlay.style.display='none'; return; }
+        if(document.getElementById('ss-img-picker')){ overlay.style.display='none'; return; }
+        if(document.getElementById('ep-picker')?.classList.contains('open')){ overlay.style.display='none'; return; }
         const fr=_findFrameElement();
         if(!fr){ overlay.style.display='none'; return; }
         const ir=fr.getBoundingClientRect();

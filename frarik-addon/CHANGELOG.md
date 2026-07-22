@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.1.29 — 2026-07-22
+
+### fix: card YAML sopra ai popup (z-index cross-realm)
+
+- Le card YAML si disegnano come overlay nella finestra reale di Home
+  Assistant (fuori dall'iframe di Frarik, per renderle fedeli), quindi
+  il loro z-index non si confronta mai davvero con quello dei popup di
+  Frarik — se non nascoste esplicitamente restano sempre sopra,
+  qualsiasi z-index si dia al popup dentro l'iframe.
+- Il codice nascondeva già l'overlay durante le Impostazioni e i popup
+  dei soli custom element (shadow DOM) — mancava la copertura per la
+  maggior parte degli altri popup (Configura Card e simili, tutti quelli
+  con la classe condivisa `.mbg`, più l'editor screensaver e i suoi
+  selettori, il selettore entità universale). Ora nascosta anche in
+  questi casi — aggiornamento quasi istantaneo, il ciclo che sincronizza
+  la posizione dell'overlay gira già ad ogni frame.
+
 ## 2.1.28 — 2026-07-21
 
 ### fix: resize Card non live nell'editor + secondi minimi forzati a 10
