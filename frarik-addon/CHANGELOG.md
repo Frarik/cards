@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.1.31 — 2026-07-27
+
+### fix: card YAML ancora sopra ad alcuni popup — verifica indipendente dal tipo di popup
+
+- Le v2.1.29/30 elencavano manualmente le convenzioni con cui l'app
+  mostra/nasconde i propri popup — approccio fragile: il popup di
+  configurazione di alcune card JS (es. automazioni a programma) non
+  rientrava in nessuna delle convenzioni note, e la card YAML restava
+  visibile sopra.
+- Sostituito con una verifica indipendente dall'implementazione: ad
+  ogni aggiornamento di posizione si chiede al browser cosa c'è
+  davvero disegnato sopra al punto dove dovrebbe apparire la card
+  (dentro l'iframe) — se non è la card stessa, qualcosa la sta
+  coprendo, qualunque popup sia e in qualunque modo sia mostrato, senza
+  bisogno di elencarlo esplicitamente.
+
 ## 2.1.30 — 2026-07-22
 
 ### fix: card YAML ancora sopra ai popup — copertura molto più ampia

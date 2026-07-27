@@ -10824,29 +10824,25 @@ function _handleHassAction(detail){
   }catch(e){ console.warn('[Frarik] _handleHassAction:',e&&e.message); }
 }
 
-/* Vero/falso: c'è un qualsiasi popup/modale di Frarik aperto in questo momento?
-   Serve a _mountYamlCard/syncPos per nascondere l'overlay della card YAML (che vive nel DOM
-   del parent HA, vedi frarik_yaml_overlay_zindex — il suo z-index non si confronta mai con
-   quello di un popup dentro l'iframe). L'app usa diverse convenzioni per mostrare/nascondere
-   i popup (classe ".off", opacity+pointer-events, display diretto, creazione/rimozione dal
-   DOM): elencati qui tutti quelli individuati. Se in futuro se ne aggiunge uno nuovo con una
-   convenzione diversa, va aggiunto in una delle liste sotto. */
-function _anyFrarikPopupOpen(){
-  if(document.querySelector('.mbg:not(.off), #yaml-modal:not(.off), .sos-ov:not(.off), #fe-modal:not(.off)')) return true;
-  if(document.querySelector('.views-menu, .mfab-menu, #ss-ed-ov, #ss-card-picker, #ss-img-picker')) return true;
-  for(const id of ['ntf-icon-modal','notif-center','lic-overlay','confirm-overlay']){
-    const el=document.getElementById(id);
-    if(el && getComputedStyle(el).display!=='none') return true;
-  }
-  for(const sel of ['#ep-picker','.cfg-modal-ov','.cardmenu-ov']){
-    const el=document.querySelector(sel);
-    if(el){ const cs=getComputedStyle(el); if(parseFloat(cs.opacity||'0')>0.05) return true; }
-  }
-  // popup dei custom element (shadow DOM) montati come div senza id direttamente su body
-  for(let _c=document.body.firstElementChild;_c;_c=_c.nextElementSibling){
-    if(_c.tagName==='DIV'&&!_c.id&&_c.shadowRoot) return true;
-  }
-  return false;
+/* L'overlay della card YAML vive nel DOM del parent HA (vedi frarik_yaml_overlay_zindex): il
+   suo z-index non si confronta MAI con quello di un popup dentro l'iframe di Frarik, quindi va
+   nascosto esplicitamente ogni volta che qualcosa lo copre. Enumerare ogni singolo tipo di
+   popup per selettore/classe si è dimostrato inaffidabile (l'app usa troppe convenzioni diverse
+   per mostrarli/nasconderli, e ognuna nuova andrebbe aggiunta a mano). Soluzione robusta e
+   indipendente dall'implementazione: chiedere al browser cosa c'è DAVVERO disegnato sopra al
+   punto (dentro l'iframe) dove dovrebbe apparire la card — se non è il contenitore stesso (o un
+   suo discendente/antenato), qualcosa lo sta coprendo, qualunque cosa sia e in qualunque modo
+   sia stata mostrata. */
+function _yamlSpotCovered(container){
+  try{
+    const cr=container.getBoundingClientRect();
+    if(cr.width<=0||cr.height<=0) return false;
+    const cx=cr.left+cr.width/2, cy=cr.top+cr.height/2;
+    if(cx<0||cy<0||cx>window.innerWidth||cy>window.innerHeight) return false;
+    const top=document.elementFromPoint(cx,cy);
+    if(!top) return false;
+    return !(top===container||container.contains(top)||top.contains(container));
+  }catch(e){ return false; }
 }
 
 async function _mountYamlCard(card, container){
@@ -10905,10 +10901,9 @@ async function _mountYamlCard(card, container){
         if(document.body.classList.contains('oik-settings-open')){
           overlay.style.display='none'; return;
         }
-        // Nascosto quando è aperto un qualsiasi popup di Frarik (vivono tutti nell'iframe: hanno
-        // z-index alto al loro interno, ma l'overlay YAML — nel DOM del parent HA — non si
-        // confronta mai con quello, quindi lo coprirebbe sempre senza questo check).
-        if(_anyFrarikPopupOpen()){ overlay.style.display='none'; return; }
+        // Nascosto quando qualcosa (un popup, un modale, un altro elemento sopra la pila)
+        // copre davvero il punto dove dovrebbe apparire la card, dentro l'iframe di Frarik.
+        if(_yamlSpotCovered(container)){ overlay.style.display='none'; return; }
         const fr=_findFrameElement();
         if(!fr){ overlay.style.display='none'; return; }
         const ir=fr.getBoundingClientRect();
