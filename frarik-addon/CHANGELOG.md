@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.1.35 — 2026-07-27
+
+### fix: il ridimensionamento di una card non restava impostato — trovata la vera causa
+
+- Il resize dall'angolo (v2.1.33/34) funzionava solo mentre si
+  trascinava: al rilascio, il ridisegno della vista **ricostruiva il
+  contenitore della card ignorando completamente** la dimensione
+  scelta (c'era ancora, invariato, il codice di una scelta precedente
+  che diceva esplicitamente "niente ridimensionamento manuale, sempre
+  grandezza naturale/di griglia") — la card tornava sempre alla sua
+  dimensione automatica, come se il resize non fosse mai avvenuto.
+- Ora la ricostruzione della vista rispetta la dimensione fissata con
+  la maniglia (stessa logica già corretta altrove, nella vista popup),
+  quindi il ridimensionamento resta impostato anche dopo aver
+  rilasciato il mouse e aver cambiato pagina/ricaricato.
+
 ## 2.1.34 — 2026-07-27
 
 ### fix: card YAML rimpicciolita dalla maniglia, il contenuto veniva tagliato invece di adattarsi
