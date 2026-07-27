@@ -10922,6 +10922,17 @@ async function _mountYamlCard(card, container){
         overlay.style.cssText='position:fixed;z-index:10;background:transparent;overflow:visible;display:block;'
           +'left:'+L+'px;top:'+T+'px;width:'+W+'px;pointer-events:auto;';
         el.style.width=W+'px';
+        // Altezza fissata dall'utente (maniglia di resize, card.fixedH): la card va costretta
+        // in quello spazio — se il suo contenuto naturale non ci sta, meglio scorrevole
+        // (overflow-y:auto) che tagliato in silenzio senza nessun indizio che manca qualcosa.
+        // Senza un'altezza fissata, resta come sempre libera di crescere al suo contenuto.
+        if(card.fixedH && card.height>0){
+          el.style.height=cr.height+'px';
+          el.style.overflowY='auto';
+        } else {
+          el.style.height='';
+          el.style.overflowY='';
+        }
         // "Buco" nell'angolo in basso a destra: l'overlay (nel DOM del parent HA) sta sempre
         // sopra all'iframe di Frarik a prescindere dal suo z-index interno, quindi intercetterebbe
         // sempre i click sulla maniglia di resize della card (dentro l'iframe, stesso angolo).
@@ -10934,9 +10945,13 @@ async function _mountYamlCard(card, container){
 
       syncPos();
 
-      // Aggiorna l'altezza del container Frarik quando la card HA cambia dimensione
+      // Aggiorna l'altezza del container Frarik quando la card HA cambia dimensione —
+      // ma non se l'utente ha fissato un'altezza a mano con la maniglia di resize
+      // (altrimenti il contenuto "naturale" della card la sovrascriverebbe sempre,
+      // vanificando il ridimensionamento: vedi card.fixedH sopra in syncPos).
       const cardRO=new pw.ResizeObserver(()=>{
         if(!overlay.isConnected) return;
+        if(card.fixedH) return;
         const h=el.offsetHeight||el.scrollHeight||0;
         if(h>10 && Math.abs(h-container.offsetHeight)>4){
           container.style.minHeight=h+'px';

@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.1.34 — 2026-07-27
+
+### fix: card YAML rimpicciolita dalla maniglia, il contenuto veniva tagliato invece di adattarsi
+
+- Rimpicciolendo una card YAML con la maniglia di resize, la card vera
+  (che vive nel DOM del parent HA, non nell'iframe) continuava a
+  disegnarsi alla sua altezza naturale — un osservatore la
+  "ringrandiva" sempre indietro non appena l'utente la stringeva,
+  lasciando il contenuto in eccesso tagliato dal contenitore più
+  piccolo, senza nessun modo di vederlo.
+- Ora, quando l'altezza è stata fissata a mano con la maniglia, la card
+  viene davvero costretta in quello spazio (l'osservatore che la
+  faceva tornare grande viene disattivato) e diventa scorrevole
+  verticalmente se il contenuto non ci sta — niente più tagliato in
+  silenzio, il resto si vede scorrendo.
+
 ## 2.1.33 — 2026-07-27
 
 ### feat: riattivato il ridimensionamento libero dall'angolo per tutte le card
