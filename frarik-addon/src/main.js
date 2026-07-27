@@ -10903,7 +10903,15 @@ async function _mountYamlCard(card, container){
         }
         // Nascosto quando qualcosa (un popup, un modale, un altro elemento sopra la pila)
         // copre davvero il punto dove dovrebbe apparire la card, dentro l'iframe di Frarik.
-        if(_yamlSpotCovered(container)){ overlay.style.display='none'; return; }
+        // Richiede 2 controlli consecutivi "coperto" (girano ad ogni frame, ~16ms) prima di
+        // nascondere davvero: un singolo frame anomalo (reflow/scroll in corso) non deve far
+        // sparire e riapparire la card di scatto.
+        if(_yamlSpotCovered(container)){
+          container._yamlCoverStreak=(container._yamlCoverStreak||0)+1;
+          if(container._yamlCoverStreak>=2){ overlay.style.display='none'; return; }
+        } else {
+          container._yamlCoverStreak=0;
+        }
         const fr=_findFrameElement();
         if(!fr){ overlay.style.display='none'; return; }
         const ir=fr.getBoundingClientRect();

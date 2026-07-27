@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.1.32 — 2026-07-27
+
+### fix: card YAML, sparizione/ricomparsa (flicker) occasionale
+
+- Il controllo "qualcosa la copre?" (v2.1.31) girava ad ogni frame e
+  poteva dare un falso positivo per un singolo frame anomalo (durante
+  scroll/reflow), nascondendo e subito rimostrando la card — visibile
+  come uno sfarfallio "come se ricaricasse".
+- Ora servono 2 controlli consecutivi "coperto" prima di nascondere
+  davvero la card, filtrando i falsi positivi di un singolo frame senza
+  perdere reattività percepibile (~16ms in più).
+
 ## 2.1.31 — 2026-07-27
 
 ### fix: card YAML ancora sopra ad alcuni popup — verifica indipendente dal tipo di popup
