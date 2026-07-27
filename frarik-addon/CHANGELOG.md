@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.1.36 — 2026-07-27
+
+### fix: card YAML ridimensionata, il contenuto ora si rimpicciolisce davvero
+
+- Non potendo sapere se il contenuto di una specifica card YAML (può
+  essere qualunque cosa) sa adattarsi da sé a qualunque dimensione, la
+  scelta di renderla scorrevole (v2.1.34) non bastava: l'utente vuole
+  che rimpicciolendola il contenuto si rimpicciolisca visibilmente,
+  senza limiti.
+- Ora, quando la card viene ridimensionata a mano, si tiene a mente
+  l'ultima dimensione "naturale" nota (prima del ridimensionamento) e
+  si scala l'intera card — cornice e contenuto insieme — sulla
+  dimensione scelta. Scala sempre uniforme (un solo fattore, non uno
+  per larghezza e uno per altezza) per non stirare o schiacciare il
+  contenuto: si rimpicciolisce/ingrandisce sempre in proporzione,
+  qualunque sia la card.
+
 ## 2.1.35 — 2026-07-27
 
 ### fix: il ridimensionamento di una card non restava impostato — trovata la vera causa

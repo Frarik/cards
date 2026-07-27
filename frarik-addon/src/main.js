@@ -10922,17 +10922,33 @@ async function _mountYamlCard(card, container){
         if(W<=0){ overlay.style.display='none'; return; }
         overlay.style.cssText='position:fixed;z-index:10;background:transparent;overflow:visible;display:block;'
           +'left:'+L+'px;top:'+T+'px;width:'+W+'px;pointer-events:auto;';
-        el.style.width=W+'px';
-        // Altezza fissata dall'utente (maniglia di resize, card.fixedH): la card va costretta
-        // in quello spazio — se il suo contenuto naturale non ci sta, meglio scorrevole
-        // (overflow-y:auto) che tagliato in silenzio senza nessun indizio che manca qualcosa.
-        // Senza un'altezza fissata, resta come sempre libera di crescere al suo contenuto.
+        // Card ridimensionata a mano (maniglia di resize, card.fixedH): non possiamo sapere se
+        // il contenuto di QUESTA specifica card YAML (qualunque essa sia, fuori dal nostro
+        // controllo) sa adattarsi da sé a qualunque dimensione — quindi la card viene sempre
+        // renderizzata alla sua ultima dimensione "naturale" nota (quella di quando non era
+        // ancora stata ridimensionata) e poi scalata come un'unica unità (frame+contenuto
+        // insieme) sulla dimensione scelta dall'utente: si rimpicciolisce/ingrandisce SEMPRE,
+        // qualunque sia il contenuto, senza tagli né testo che sborda. Scala UNIFORME (un solo
+        // fattore, non uno per asse) per non stirare/schiacciare — vedi la stessa lezione già
+        // imparata per i widget "card" del salvaschermo.
         if(card.fixedH && card.height>0){
-          el.style.height=cr.height+'px';
-          el.style.overflowY='auto';
+          const refW=card._yamlRefW||W, refH=card._yamlRefH||cr.height;
+          const scale=Math.max(0.05,Math.min(W/refW, cr.height/refH));
+          el.style.width=refW+'px';
+          el.style.height=refH+'px';
+          el.style.overflowY='';
+          el.style.transformOrigin='top left';
+          el.style.transform='scale('+scale+')';
         } else {
+          el.style.width=W+'px';
           el.style.height='';
           el.style.overflowY='';
+          el.style.transform='';
+          el.style.transformOrigin='';
+          // aggiorna il riferimento "naturale" mentre la card non è ridimensionata a mano,
+          // così è sempre pronto e aggiornato appena l'utente inizia a trascinare la maniglia
+          const natH=el.offsetHeight||el.scrollHeight||0;
+          if(natH>10){ card._yamlRefW=W; card._yamlRefH=natH; }
         }
         // "Buco" nell'angolo in basso a destra: l'overlay (nel DOM del parent HA) sta sempre
         // sopra all'iframe di Frarik a prescindere dal suo z-index interno, quindi intercetterebbe
