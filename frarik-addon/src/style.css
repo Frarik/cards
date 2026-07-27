@@ -278,14 +278,17 @@ body.editing .dash-card-wrap{outline:1px dashed rgba(99,102,241,.25);outline-off
 .ovb-sm{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;background:rgba(255,255,255,0.12);color:#fff;transition:all .12s}
 .ovb-sm:hover{background:rgba(255,255,255,0.22);color:#fff}
 .ov-size{display:flex;align-items:center;gap:4px;font-size:9px;color:#fff;font-weight:600;letter-spacing:.5px}
-/* maniglia di resize: SEMPRE visibile (discreta), si afferra dall'angolo per allargare/stringere/alzare/abbassare la card */
-.resize-handle{display:none !important}  /* maniglia di ridimensionamento rimossa: card a grandezza naturale dalla griglia */
+/* maniglia di resize: si afferra dall'angolo per allargare/stringere/alzare/abbassare la card.
+   Visibile e utilizzabile solo in modalità modifica (come il trascinamento). */
+.resize-handle{position:absolute;right:-2px;bottom:-2px;width:16px;height:16px;cursor:se-resize;z-index:31;opacity:0;pointer-events:none;transition:opacity .15s}
 .resize-handle::before,.resize-handle::after{content:'';position:absolute;background:rgba(255,255,255,0.6);border-radius:2px}
 .resize-handle::before{width:2px;height:11px;right:1px;bottom:1px}
 .resize-handle::after{width:11px;height:2px;right:1px;bottom:1px}
-body.editing .resize-handle{opacity:.55}
-.card:hover .resize-handle{opacity:.7}
-.resize-handle:hover{opacity:1}
+body.editing .resize-handle{opacity:.55;pointer-events:auto}
+body.editing .card:hover .resize-handle{opacity:.7}
+body.editing .resize-handle:hover{opacity:1}
+/* header-bar/footer-bar: furniture di pagina a larghezza fissa, initResize() non le gestisce */
+.card-hbar .resize-handle,.card-fbar .resize-handle{display:none !important}
 .card.dov{outline:2px dashed var(--acc);outline-offset:3px}
 #empty{display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:80px 20px;text-align:center;color:var(--muted);width:100%}
 #empty .eico{font-size:48px}

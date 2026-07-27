@@ -10922,6 +10922,14 @@ async function _mountYamlCard(card, container){
         overlay.style.cssText='position:fixed;z-index:10;background:transparent;overflow:visible;display:block;'
           +'left:'+L+'px;top:'+T+'px;width:'+W+'px;pointer-events:auto;';
         el.style.width=W+'px';
+        // "Buco" nell'angolo in basso a destra: l'overlay (nel DOM del parent HA) sta sempre
+        // sopra all'iframe di Frarik a prescindere dal suo z-index interno, quindi intercetterebbe
+        // sempre i click sulla maniglia di resize della card (dentro l'iframe, stesso angolo).
+        // pointer-events:none su questo piccolo children lascia passare il click all'iframe.
+        let notch=overlay.querySelector(':scope > .frarik-yaml-resize-notch');
+        if(!notch){ notch=pw.document.createElement('div'); notch.className='frarik-yaml-resize-notch'; notch.style.cssText='position:absolute;pointer-events:none;'; overlay.appendChild(notch); }
+        notch.style.width='22px'; notch.style.height='22px';
+        notch.style.left=Math.max(0,W-22)+'px'; notch.style.top=Math.max(0,cr.height-22)+'px';
       }
 
       syncPos();

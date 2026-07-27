@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.1.33 — 2026-07-27
+
+### feat: riattivato il ridimensionamento libero dall'angolo per tutte le card
+
+- La maniglia per ridimensionare una card trascinando il suo angolo
+  (larghezza e altezza insieme) esisteva già nel codice ma era stata
+  disattivata in passato (`display:none` su tutte le card). Riattivata
+  per ogni tipo di card, visibile e utilizzabile solo in modalità
+  modifica (come lo spostamento) — non per header-bar/footer-bar
+  (furniture di pagina a larghezza fissa, non gestite dal resize).
+- **Card YAML**: la maniglia da sola non bastava — l'overlay che
+  disegna la card vera (nel DOM del parent HA, vedi
+  frarik_yaml_overlay_zindex) copre sempre l'iframe di Frarik a
+  prescindere dal suo z-index interno, quindi avrebbe sempre
+  intercettato i click sull'angolo prima che arrivassero alla maniglia
+  sottostante. Aggiunto un piccolo "buco" (pointer-events:none)
+  nell'angolo in basso a destra dell'overlay, che lascia passare il
+  click alla maniglia dentro l'iframe.
+
 ## 2.1.32 — 2026-07-27
 
 ### fix: card YAML, sparizione/ricomparsa (flicker) occasionale
