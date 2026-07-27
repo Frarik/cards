@@ -6591,7 +6591,10 @@ function initResize(cardId){
     if(page.sections){
       // Sezioni: ridimensiona la card (il suo contenitore) dentro la colonna, che resta fissa (griglia 1fr).
       const wrap=ce.closest('.dash-card-wrap');
-      const colWrap=ce.closest('.dash-col-outer');
+      // .dash-col-wrap (non .dash-col-outer) è il contenitore diretto delle card, senza un
+      // proprio padding: .dash-col-outer include anche il padding di .dash-col-box (8px per
+      // lato), che farebbe sbordare la card oltre il bordo visibile della colonna di quei 16px.
+      const colWrap=ce.closest('.dash-col-wrap');
       const sy=clientY, sh=wrap?wrap.offsetHeight:ce.offsetHeight;
       const sx=clientX, sw=wrap?wrap.offsetWidth:ce.offsetWidth;
       const maxW=colWrap?colWrap.clientWidth:sw;   // la card non può superare la larghezza della colonna

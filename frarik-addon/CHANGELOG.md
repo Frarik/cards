@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.1.37 — 2026-07-27
+
+### fix: allargando una card, superava il bordo della colonna di 16px
+
+- Il limite massimo di larghezza durante il resize veniva misurato
+  sulla colonna intera (`.dash-col-outer`), che include anche il
+  padding del suo riquadro interno (8px per lato) — la card poteva
+  quindi crescere 16px oltre il bordo visibile della colonna prima di
+  fermarsi.
+- Corretto misurando il contenitore diretto delle card (senza
+  padding proprio): ora si blocca esattamente al bordo.
+
 ## 2.1.36 — 2026-07-27
 
 ### fix: card YAML ridimensionata, il contenuto ora si rimpicciolisce davvero
