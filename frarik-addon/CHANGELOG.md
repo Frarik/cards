@@ -1,16 +1,5 @@
 # Changelog
 
-## 2.1.38 — 2026-10-15
-
-### fix: errore "Invalid token for access /store/reload" ogni 5 minuti
-
-- L'add-on ricarica lo store di Home Assistant ogni 5 minuti per far
-  comparire subito gli aggiornamenti, ma col ruolo `default` il
-  Supervisor rifiutava la chiamata e scriveva un errore nel registro
-  (circa 290 volte al giorno).
-- Ruolo dell'add-on portato a `manager`, quello richiesto da
-  `/store/reload`.
-
 ## 2.1.37 — 2026-07-27
 
 ### fix: allargando una card, superava il bordo della colonna di 16px
